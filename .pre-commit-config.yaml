@@ -1,20 +1,25 @@
 repos:
+  # standard end of line/end of file cleanup
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
-      - id: check-yaml
-      - id: check-toml
+      # standard end of line/end of file cleanup
+      - id: mixed-line-ending
       - id: end-of-file-fixer
       - id: trailing-whitespace
+      # ensure syntaxes are valid
+      - id: check-toml
+      - id: check-yaml
       - id: check-added-large-files
         args: [--maxkb=2048]
   - repo: https://github.com/PyCQA/isort
     rev: 5.12.0
     hooks:
+      # auto sort Python imports
       - id: isort
         args: ["--profile", "black", "-p", "config"]
   - repo: https://github.com/psf/black
     rev: 23.3.0
     hooks:
+      # auto format Python code
       - id: black
-        args: ["--line-length", "88", "--target-version", "py310"]
