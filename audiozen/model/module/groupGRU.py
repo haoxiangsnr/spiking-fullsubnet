@@ -3,8 +3,17 @@ import torch.nn as nn
 
 
 class SharedGroupGRULayer(nn.Module):
-    def __init__(self, input_size: int, hidden_size: int, is_first_layer, num_groups: int, batch_first: bool = True, bias: bool = True,
-                 dropout: float = 0, bidirectional: bool = False):
+    def __init__(
+        self,
+        input_size: int,
+        hidden_size: int,
+        is_first_layer,
+        num_groups: int,
+        batch_first: bool = True,
+        bias: bool = True,
+        dropout: float = 0,
+        bidirectional: bool = False,
+    ):
         super().__init__()
         assert hidden_size % num_groups == 0, "Should be divided by input size"
 
@@ -36,10 +45,15 @@ class SharedGroupGRULayer(nn.Module):
 
         # Several small GRUs
         self.GRU_layers = nn.ModuleList(
-            (nn.GRU(self.input_size, self.hidden_size, **kwargs) for _ in range(num_groups))
+            (
+                nn.GRU(self.input_size, self.hidden_size, **kwargs)
+                for _ in range(num_groups)
+            )
         )
 
-    def initialize_h0(self, batch_size: int = 1, device: torch.device = torch.device("cpu")):
+    def initialize_h0(
+        self, batch_size: int = 1, device: torch.device = torch.device("cpu")
+    ):
         return torch.zeros(
             self.num_groups * self.num_directions,
             batch_size,
@@ -68,8 +82,10 @@ class SharedGroupGRULayer(nn.Module):
         # 实际上并没有并行的哈，循环执行四次，将大型矩阵运算变成了四个小矩阵矩阵运算后的加法
         for i, GRU_layer in enumerate(self.GRU_layers):
             o, s = GRU_layer(
-                input if self.is_first_layer else input[..., i * self.input_size: (i + 1) * self.input_size],
-                h0[i * self.num_directions: (i + 1) * self.num_directions].detach(),
+                input
+                if self.is_first_layer
+                else input[..., i * self.input_size : (i + 1) * self.input_size],
+                h0[i * self.num_directions : (i + 1) * self.num_directions].detach(),
             )
             outputs.append(o)
             output_states.append(s)
@@ -81,9 +97,19 @@ class SharedGroupGRULayer(nn.Module):
 
 
 class SharedGroupGRU(nn.Module):
-    def __init__(self, input_size: int, hidden_size: int, num_layers: int = 1, num_groups: int = 4, bias: bool = True,
-                 batch_first: bool = True, dropout: float = 0, bidirectional: bool = False, shuffle: bool = True,
-                 add_outputs: bool = False, ):
+    def __init__(
+        self,
+        input_size: int,
+        hidden_size: int,
+        num_layers: int = 1,
+        num_groups: int = 4,
+        bias: bool = True,
+        batch_first: bool = True,
+        dropout: float = 0,
+        bidirectional: bool = False,
+        shuffle: bool = True,
+        add_outputs: bool = False,
+    ):
         super().__init__()
 
         kwargs = {
@@ -120,9 +146,15 @@ class SharedGroupGRU(nn.Module):
                 SharedGroupGRULayer(hidden_size, hidden_size, False, **kwargs)
             )
 
-    def initialize_h0(self, batch_size: int, device: torch.device = torch.device("cpu")):
+    def initialize_h0(
+        self, batch_size: int, device: torch.device = torch.device("cpu")
+    ):
         return torch.zeros(
-            (self.num_layers * self.num_groups * self.num_directions, batch_size, self.hidden_size),
+            (
+                self.num_layers * self.num_groups * self.num_directions,
+                batch_size,
+                self.hidden_size,
+            ),
             device=device,
         )
 
@@ -143,19 +175,26 @@ class SharedGroupGRU(nn.Module):
             state = self.initialize_h0(batch_size, input.device)
 
         output = torch.zeros(
-            dim0, dim1, self.hidden_size * self.num_directions * self.num_groups, device=input.device
+            dim0,
+            dim1,
+            self.hidden_size * self.num_directions * self.num_groups,
+            device=input.device,
         )
 
         output_states = []
         h = self.num_groups * self.num_directions
 
         for i, GRU in enumerate(self.GRUs):
-            input, hidden_state = GRU(input, state[i * h: (i + 1) * h])
+            input, hidden_state = GRU(input, state[i * h : (i + 1) * h])
             output_states.append(hidden_state)
 
-            if self.shuffle and i < self.num_layers - 1:  # TODO: Not the final layer, but WHY?
+            if (
+                self.shuffle and i < self.num_layers - 1
+            ):  # TODO: Not the final layer, but WHY?
                 input = (
-                    input.view(dim0, dim1, -1, self.num_groups).transpose(2, 3).reshape(dim0, dim1, -1)
+                    input.view(dim0, dim1, -1, self.num_groups)
+                    .transpose(2, 3)
+                    .reshape(dim0, dim1, -1)
                 )
 
             if self.add_outputs:
@@ -168,10 +207,20 @@ class SharedGroupGRU(nn.Module):
 
 
 class GroupGRULayer(nn.Module):
-    def __init__(self, input_size: int, hidden_size: int, num_groups: int, batch_first: bool = True, bias: bool = True,
-                 dropout: float = 0, bidirectional: bool = False):
+    def __init__(
+        self,
+        input_size: int,
+        hidden_size: int,
+        num_groups: int,
+        batch_first: bool = True,
+        bias: bool = True,
+        dropout: float = 0,
+        bidirectional: bool = False,
+    ):
         super().__init__()
-        assert input_size % num_groups == 0 and hidden_size % num_groups == 0, "Should be divided by input size"
+        assert (
+            input_size % num_groups == 0 and hidden_size % num_groups == 0
+        ), "Should be divided by input size"
 
         kwargs = {
             "bias": bias,
@@ -192,10 +241,15 @@ class GroupGRULayer(nn.Module):
 
         # Several small GRUs
         self.GRU_layers = nn.ModuleList(
-            (nn.GRU(self.input_size, self.hidden_size, **kwargs) for _ in range(num_groups))
+            (
+                nn.GRU(self.input_size, self.hidden_size, **kwargs)
+                for _ in range(num_groups)
+            )
         )
 
-    def initialize_h0(self, batch_size: int = 1, device: torch.device = torch.device("cpu")):
+    def initialize_h0(
+        self, batch_size: int = 1, device: torch.device = torch.device("cpu")
+    ):
         return torch.zeros(
             self.num_groups * self.num_directions,
             batch_size,
@@ -224,8 +278,10 @@ class GroupGRULayer(nn.Module):
         # 实际上并没有并行的哈，循环执行四次，将大型矩阵运算变成了四个小矩阵矩阵运算后的加法
         for i, GRU_layer in enumerate(self.GRU_layers):
             o, s = GRU_layer(
-                input[..., i * self.input_size: (i + 1) * self.input_size],  # iterative sub_input
-                h0[i * self.num_directions: (i + 1) * self.num_directions].detach(),
+                input[
+                    ..., i * self.input_size : (i + 1) * self.input_size
+                ],  # iterative sub_input
+                h0[i * self.num_directions : (i + 1) * self.num_directions].detach(),
             )
             outputs.append(o)
             output_states.append(s)
@@ -237,9 +293,19 @@ class GroupGRULayer(nn.Module):
 
 
 class GroupGRU(nn.Module):
-    def __init__(self, input_size: int, hidden_size: int, num_layers: int = 1, num_groups: int = 4, bias: bool = True,
-                 batch_first: bool = True, dropout: float = 0, bidirectional: bool = False, shuffle: bool = True,
-                 add_outputs: bool = False, ):
+    def __init__(
+        self,
+        input_size: int,
+        hidden_size: int,
+        num_layers: int = 1,
+        num_groups: int = 4,
+        bias: bool = True,
+        batch_first: bool = True,
+        dropout: float = 0,
+        bidirectional: bool = False,
+        shuffle: bool = True,
+        add_outputs: bool = False,
+    ):
         super().__init__()
 
         kwargs = {
@@ -250,7 +316,9 @@ class GroupGRU(nn.Module):
             "bidirectional": bidirectional,
         }
 
-        assert input_size % num_groups == 0 and hidden_size % num_groups == 0, "Should be divided by input size"
+        assert (
+            input_size % num_groups == 0 and hidden_size % num_groups == 0
+        ), "Should be divided by input size"
 
         self.num_groups = num_groups
         self.num_layers = num_layers
@@ -272,13 +340,17 @@ class GroupGRU(nn.Module):
             GroupGRULayer(input_size, hidden_size, **kwargs)
         )
         for _ in range(1, num_layers):  # Other layers
-            self.GRUs.append(
-                GroupGRULayer(hidden_size, hidden_size, **kwargs)
-            )
+            self.GRUs.append(GroupGRULayer(hidden_size, hidden_size, **kwargs))
 
-    def initialize_h0(self, batch_size: int, device: torch.device = torch.device("cpu")):
+    def initialize_h0(
+        self, batch_size: int, device: torch.device = torch.device("cpu")
+    ):
         return torch.zeros(
-            (self.num_layers * self.num_groups * self.num_directions, batch_size, self.hidden_size),
+            (
+                self.num_layers * self.num_groups * self.num_directions,
+                batch_size,
+                self.hidden_size,
+            ),
             device=device,
         )
 
@@ -299,19 +371,26 @@ class GroupGRU(nn.Module):
             state = self.initialize_h0(batch_size, input.device)
 
         output = torch.zeros(
-            dim0, dim1, self.hidden_size * self.num_directions * self.num_groups, device=input.device
+            dim0,
+            dim1,
+            self.hidden_size * self.num_directions * self.num_groups,
+            device=input.device,
         )
 
         output_states = []
         h = self.num_groups * self.num_directions
 
         for i, GRU in enumerate(self.GRUs):
-            input, hidden_state = GRU(input, state[i * h: (i + 1) * h])
+            input, hidden_state = GRU(input, state[i * h : (i + 1) * h])
             output_states.append(hidden_state)
 
-            if self.shuffle and i < self.num_layers - 1:  # TODO: Not the final layer, but WHY?
+            if (
+                self.shuffle and i < self.num_layers - 1
+            ):  # TODO: Not the final layer, but WHY?
                 input = (
-                    input.view(dim0, dim1, -1, self.num_groups).transpose(2, 3).reshape(dim0, dim1, -1)
+                    input.view(dim0, dim1, -1, self.num_groups)
+                    .transpose(2, 3)
+                    .reshape(dim0, dim1, -1)
                 )
 
             if self.add_outputs:
@@ -324,9 +403,17 @@ class GroupGRU(nn.Module):
 
 
 class GroupedLinear(nn.Module):
-    def __init__(self, input_size: int, hidden_size: int, num_groups: int = 1, shuffle: bool = True):
+    def __init__(
+        self,
+        input_size: int,
+        hidden_size: int,
+        num_groups: int = 1,
+        shuffle: bool = True,
+    ):
         super().__init__()
-        assert input_size % num_groups == 0 and hidden_size % num_groups == 0, "Should be divided by input size"
+        assert (
+            input_size % num_groups == 0 and hidden_size % num_groups == 0
+        ), "Should be divided by input size"
 
         self.groups = num_groups
 
@@ -345,20 +432,24 @@ class GroupedLinear(nn.Module):
         outputs = []
 
         for i, layer in enumerate(self.layers):
-            outputs.append(layer(x[..., i * self.input_size: (i + 1) * self.input_size]))
+            outputs.append(
+                layer(x[..., i * self.input_size : (i + 1) * self.input_size])
+            )
 
         output = torch.cat(outputs, dim=-1)
 
         if self.shuffle:
             orig_shape = output.shape
             output = (
-                output.view(-1, self.hidden_size, self.groups).transpose(-1, -2).reshape(orig_shape)
+                output.view(-1, self.hidden_size, self.groups)
+                .transpose(-1, -2)
+                .reshape(orig_shape)
             )
 
         return output
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     g = 10  # groups
     h = 400  # hidden_size
     i = 33  # input_size

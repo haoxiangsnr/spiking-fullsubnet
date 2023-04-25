@@ -31,5 +31,7 @@ class Dataset(BaseDataset):
 
     def __getitem__(self, item):
         noisy_file_path = self.noisy_files_list[item]
-        noisy = load_wav(os.path.abspath(os.path.expanduser(noisy_file_path)), sr=self.sr)
+        noisy = load_wav(
+            os.path.abspath(os.path.expanduser(noisy_file_path)), sr=self.sr
+        )
         return noisy, noisy_file_path

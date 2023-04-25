@@ -25,7 +25,9 @@ def cart2sph(cart, include_r=False):
         - 2D array: [x, y] <=> [azimuth, radius] <=> [phi, r]
     """
     _, num_coordinates, _ = cart.shape  # [B, 2 or 3, T]
-    assert num_coordinates == 2 or num_coordinates == 3, "Only support 2D or 3D coordinates."
+    assert (
+        num_coordinates == 2 or num_coordinates == 3
+    ), "Only support 2D or 3D coordinates."
 
     radius = torch.sqrt(torch.sum(torch.pow(cart, 2), dim=1))  # [B, 1, T]
     phi = torch.atan2(cart[:, 1, :], cart[:, 0, :])  # [B, 1, T]
@@ -34,7 +36,11 @@ def cart2sph(cart, include_r=False):
         sph = torch.stack((phi, radius), dim=-1) if include_r else phi
     else:
         theta = torch.acos(cart[:, 2, :] / radius)
-        sph = torch.stack((theta, phi, radius), dim=-1) if include_r else torch.stack((theta, phi), dim=-1)
+        sph = (
+            torch.stack((theta, phi, radius), dim=-1)
+            if include_r
+            else torch.stack((theta, phi), dim=-1)
+        )
 
     return sph
 
@@ -61,7 +67,9 @@ def sph2cart(sph):
         The output is the **unity cartesian**, i.e., the radius is supposed to be 1.
     """
     _, num_coordinates, _ = sph.shape  # [B, 1 or 2, T]
-    assert num_coordinates == 1 or num_coordinates == 2, "Only support 1D or 2D coordinates now."
+    assert (
+        num_coordinates == 1 or num_coordinates == 2
+    ), "Only support 1D or 2D coordinates now."
 
     if num_coordinates == 1:
         x = torch.cos(sph[:, 0, :])

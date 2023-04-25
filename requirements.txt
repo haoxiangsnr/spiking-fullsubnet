@@ -15,4 +15,5 @@ joblib
 matplotlib
 flit
 onnxruntime
+pre-commit
 openpyxl # for saving results to excel
