@@ -10,6 +10,7 @@ repos:
       # ensure syntaxes are valid
       - id: check-toml
       - id: check-yaml
+      - id: requirements-txt-fixer
       - id: check-added-large-files
         args: [--maxkb=2048]
   - repo: https://github.com/PyCQA/isort
