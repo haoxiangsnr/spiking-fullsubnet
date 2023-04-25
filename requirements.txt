@@ -1,19 +1,19 @@
-numpy
-pandas
-scipy
+einops
+flit
 joblib
+joblib
+jupyterlab
 librosa
+matplotlib
+numpy
+onnxruntime
+openpyxl # for saving results to excel
+pandas
+pesq
+pre-commit
+pystoi
+scipy
 soundfile
 toml
-tqdm
-jupyterlab
-pesq
-pystoi
-einops
 torchinfo
-joblib
-matplotlib
-flit
-onnxruntime
-pre-commit
-openpyxl # for saving results to excel
+tqdm
