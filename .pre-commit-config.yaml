@@ -13,15 +13,17 @@ repos:
       - id: requirements-txt-fixer
       - id: check-added-large-files
         args: [--maxkb=2048]
+
+  # Autoformat imports to conform to the isort code style
   - repo: https://github.com/PyCQA/isort
     rev: 5.12.0
     hooks:
-      # auto sort Python imports
       - id: isort
         args: ["--profile", "black"]
+
+  # Autoformat Python code to conform to the Black code style
   - repo: https://github.com/psf/black
     rev: 23.3.0
     hooks:
-      # auto format Python code
       - id: black
       - id: black-jupyter
