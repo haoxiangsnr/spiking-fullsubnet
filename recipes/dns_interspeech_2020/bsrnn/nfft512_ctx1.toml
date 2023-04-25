@@ -1,0 +1,128 @@
+[meta]
+save_dir = "bsrnn/exp"
+description = "This is a description of audiozen experiment."
+seed = 3407
+use_amp = false
+use_deterministic_algorithms = false
+
+[acoustics]
+n_fft = 512
+win_length = 512
+sr = 16000
+hop_length = 256
+
+
+[loss_function]
+name = "mse_loss"
+[loss_function.args]
+
+
+[optimizer]
+lr = 0.001
+beta1 = 0.9
+beta2 = 0.999
+
+# -------------------- Trainer -------------------- #
+[trainer]
+path = "trainer.Trainer"
+[trainer.train]
+max_epoch = 9999
+clip_grad_norm_value = 10
+save_max_score = true
+save_checkpoint_interval = 5
+[trainer.validate]
+validation_interval = 5
+max_num_checkpoints = 10
+
+# -------------------- Training data -------------------- #
+[train_dataset]
+path = "dataset_train.Dataset"
+[train_dataset.args]
+clean_dataset = "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/clean.txt"
+clean_dataset_limit = false
+clean_dataset_offset = 0
+noise_dataset = "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/noise.txt"
+noise_dataset_limit = false
+noise_dataset_offset = 0
+num_workers = 36
+pre_load_clean_dataset = false
+pre_load_noise = false
+pre_load_rir = false
+reverb_proportion = 0.75
+rir_dataset = "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/rir.txt"
+rir_dataset_limit = false
+rir_dataset_offset = 0
+silence_length = 0.2
+snr_range = [-5, 20]
+sr = 16000
+sub_sample_length = 3.0
+target_dB_FS = -25
+target_dB_FS_floating_value = 10
+
+[train_dataset.dataloader]
+batch_size = 32
+num_workers = 32
+drop_last = true
+pin_memory = false
+
+# -------------------- Validation DNS 1 -------------------- #
+[validation_dataset_dns_1_with_reverb]
+path = "dataset_validation_dns_1.Dataset"
+[validation_dataset_dns_1_with_reverb.args]
+dataset_dir_list = [
+    "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/with_reverb",
+]
+sr = 16000
+offset = 0
+limit = false
+
+# -------------------- Validation DNS 4 small set -------------------- #
+[validation_dataset_dns_1_no_reverb]
+path = "dataset_validation_dns_1.Dataset"
+[validation_dataset_dns_1_no_reverb.args]
+dataset_dir_list = [
+    "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/no_reverb",
+]
+sr = 16000
+offset = 0
+limit = false
+
+# -------------------- Test DNS 1 -------------------- #
+[test_dataset_dns_1_with_reverb]
+path = "dataset_validation_dns_1.Dataset"
+[test_dataset_dns_1_with_reverb.args]
+dataset_dir_list = [
+    "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/with_reverb",
+]
+sr = 16000
+offset = 0
+limit = false
+
+# -------------------- Test DNS 4  -------------------- #
+[test_dataset_dns_1_no_reverb]
+path = "dataset_validation_dns_1.Dataset"
+[test_dataset_dns_1_no_reverb.args]
+dataset_dir_list = [
+    "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/no_reverb",
+]
+sr = 16000
+offset = 0
+limit = false
+
+
+# -------------------- Model -------------------- #
+[model]
+path = "model.Separator"
+
+[model.args]
+sr = 16000
+win = 512
+stride = 256
+feature_dim = 128
+num_layer = 1
+num_repeat = 6
+group = 1
+context = 1
+dropout = 0.0
+bi_comm = true
+band_bidirectional = false

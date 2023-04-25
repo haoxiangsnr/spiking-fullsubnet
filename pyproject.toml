@@ -1,0 +1,50 @@
+# ----------------- Build System -----------------
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+# ----------------- Metadata -----------------
+[project]
+name = "audiozen"
+description = "Audio ZEN is a library for audio/speech signal processing."
+authors = [{ name = "HAO Xiang", email = "haoxiangsnr@gmail.com" }]
+readme = "README.md"
+requires-python = ">=3.10"
+version = "0.0.1"
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Development Status :: 2 - Pre-Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: GPU :: NVIDIA CUDA",
+    "Operating System :: OS Independent",
+]
+keywords = [
+    "multiple purposes",
+    "speaker localization/tracking",
+    "dereverberation",
+    "enhancement",
+    "separation",
+    "recognition",
+]
+[project.optional-dependencies]
+test = ["pytest", "pytest-cov"]
+docs = ["importlib_metadata", "sphinx-autoapi", "sphinx-rtd-theme", "myst-parser", "myst-nb"]
+build = ["flit", "python-semantic-release"]
+[project.urls]
+Source = "https://github.com/haoxiangsnr/audiozen"
+# [project.scripts]
+# todo mixsim = "mixsim.main:main" # call the function main() imported from mixsim
+
+# ----------------- Tools Configuration -----------------
+[tool.semantic_release]
+version_toml = "pyproject.toml:project.version" # version location
+branch = "main" # branch to make releases
+changelog_file = "CHANGELOG.md" # changelog file`
+build_command = "flit build" # build dists
+upload_to_release = true # auto-create GitHub release
+upload_to_repository = false # don't auto-upload to PyPI
+remove_dist = false # don't remove dists
+patch_without_tag = false # patch release by default
+commit_author = "haoxiangsnr <haoxiangsnr@gmail.com>"
+commit_subject = "Release {version}"
+commit_message = "" # commit message

@@ -1,0 +1,18 @@
+numpy
+pandas
+scipy
+joblib
+librosa
+soundfile
+toml
+tqdm
+jupyterlab
+pesq
+pystoi
+einops
+torchinfo
+joblib
+matplotlib
+flit
+onnxruntime
+openpyxl # for saving results to excel

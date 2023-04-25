@@ -1,0 +1,20 @@
+{
+    "Token":"vOwUVHKwR__zYB3t5tBleQ",
+    "business_flag": "TEG_AILAB_SPEECH_shenzhen",
+    "mount_ceph_business_flag": "TEG_AILAB_TRC_CGC",
+    "task_flag": "hx_fullsubnet_lookAhead2",
+    "GPUName": "P40",
+    "model_local_file_path": "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/proj/audiozen/launch",
+    "init_cmd": "taiji_client mount -l sz -tk MeTKgi2s6aolfGLaIVz6iA /mnt/private_xianghao",
+    "host_num": 1,
+    "host_gpu_num": 8,
+    "keep_alive": true,
+    "cuda_version": "10.2",
+    "is_elasticity": false,
+    "image_full_name": "mirrors.tencent.com/xianghao/tlinux2.2-cuda10.2-py3.10-pytorch1.12",
+    "permission": {
+        "admin_group": "xianghao",
+        "view_group":"",
+        "alert_group": "xianghao"
+    }
+}
