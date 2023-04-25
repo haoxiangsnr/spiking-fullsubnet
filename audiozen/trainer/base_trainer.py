@@ -296,7 +296,6 @@ class BaseTrainer:
 
     def train(self, train_dataloader, validation_dataloaders):
         for epoch in range(self.start_epoch, self.max_epoch):
-
             self.current_epoch = epoch
 
             if self.rank == 0:

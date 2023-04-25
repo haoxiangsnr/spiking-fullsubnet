@@ -134,7 +134,7 @@ class CausalConvBlock(nn.Module):
             kernel_size=(3, 2),
             stride=(2, 1),
             padding=(0, 1),
-            **kwargs  # 这里不是左右 pad，而是上下 pad 为 0，左右分别 pad 1...
+            **kwargs,  # 这里不是左右 pad，而是上下 pad 为 0，左右分别 pad 1...
         )
         self.norm = nn.BatchNorm2d(out_channels)
         self.activation = getattr(nn, encoder_activate_function)()
@@ -209,7 +209,7 @@ class CausalConvBlock(nn.Module):
             kernel_size=(3, 2),
             stride=(2, 1),
             padding=(0, 1),
-            **kwargs  # 这里不是左右 pad，而是上下 pad 为 0，左右分别 pad 1...
+            **kwargs,  # 这里不是左右 pad，而是上下 pad 为 0，左右分别 pad 1...
         )
         self.norm = nn.BatchNorm2d(out_channels)
         self.activation = getattr(nn, encoder_activate_function)()

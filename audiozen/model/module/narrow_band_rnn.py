@@ -1,10 +1,10 @@
 import math
-from torch import Tensor
+from typing import List, Tuple
+
 import torch
 import torch.nn as nn
-from torch import jit
+from torch import Tensor, jit
 from torch.nn import Parameter
-from typing import List, Tuple
 
 
 class SubBandLSTMCell(nn.Module):
