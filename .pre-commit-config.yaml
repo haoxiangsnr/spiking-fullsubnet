@@ -24,3 +24,4 @@ repos:
     hooks:
       # auto format Python code
       - id: black
+      - id: black-jupyter
