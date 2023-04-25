@@ -31,23 +31,23 @@ def config_path_to_task_flag(config_path, username="hx"):
 
 def main(args):
     config = {
-        "Token": "vOwUVHKwR__zYB3t5tBleQ",
-        "business_flag": "TEG_AILAB_SPEECH_shenzhen",
-        "mount_ceph_business_flag": "TEG_AILAB_TRC_CGC",
-        "GPUName": "P40",
-        "model_local_file_path": "",
-        "init_cmd": "taiji_client mount -l sz -tk MeTKgi2s6aolfGLaIVz6iA /mnt/private_xianghao",
-        "host_num": 1,
-        "host_gpu_num": 8,
-        "keep_alive": True,
-        "cuda_version": "10.2",
-        "is_elasticity": False,
+        "Token": "vOwUVHKwR__zYB3t5tBleQ",  # 申请的token
+        "business_flag": "TEG_AILAB_SPEECH_shenzhen",  # 业务标识
+        "mount_ceph_business_flag": "TEG_AILAB_TRC_CGC",  # 挂载ceph的业务标识
+        "GPUName": "P40",  # GPU类型
+        "model_local_file_path": "",  # 模型文件路径，本脚本会指定一个临时目录，在这个目录下创建start.sh和config.json
+        "init_cmd": "taiji_client mount -l sz -tk MeTKgi2s6aolfGLaIVz6iA /mnt/private_xianghao",  # 初始化命令，用来挂载个人ceph
+        "host_num": 1,  # 主机数量
+        "host_gpu_num": 8,  # 每台主机的GPU数量
+        "keep_alive": True,  # 是否在任务结束后保留主机30分钟
+        "cuda_version": "10.2",  # cuda版本，目前支持10.2和11.0，但大部分母鸡只有10.2
+        "is_elasticity": False,  # 是否弹性扩容
         "is_store_core_file": False,  # 是否存储core文件
-        "image_full_name": "mirrors.tencent.com/xianghao/tlinux2.2-cuda10.2-py3.10-pytorch1.12",
+        "image_full_name": "mirrors.tencent.com/xianghao/tlinux2.2-cuda10.2-py3.10-pytorch1.12",  # 镜像名称
         "permission": {
-            "admin_group": "xianghao",
+            "admin_group": "xianghao",  # 管理员组
             "view_group": "",
-            "alert_group": "xianghao",
+            "alert_group": "xianghao",  # 报警组
         },
     }
 
