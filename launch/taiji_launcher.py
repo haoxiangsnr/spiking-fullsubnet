@@ -75,7 +75,7 @@ def main(args):
                     f"cd /mnt/private_xianghao/proj/audiozen \n"
                     f"pip install -e . -i https://mirrors.tencent.com/pypi/simple/ \n"
                     f"cd /mnt/private_xianghao/proj/audiozen/recipes/{data_name} \n"
-                    f"torchrun --nnodes=1 --nproc_per_node={args.gpu_num} run.py -C {model_name}/{config_name}.toml -M train -R"
+                    f"torchrun --nnodes=1 --nproc_per_node={args.gpu_num} run.py -C {model_name}/{config_name}.toml -M train"
                 )
 
             f.write(content)

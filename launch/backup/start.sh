@@ -1,8 +1,8 @@
 # sleep 2d
-recipe = /apdcephfs/share_1149801/speech_user/tomasyu/xianghao/proj/audiozen/recipes/dns_interspeech_2020
+recipe = /mnt/private_xianghao/proj/audiozen/recipes/dns_interspeech_2020
 config = fullsubnet/lookAhead2.toml
 
-cd /apdcephfs/share_1149801/speech_user/tomasyu/xianghao/proj/audiozen
+cd /mnt/private_xianghao/proj/audiozen/
 pip install -e . -i https://mirrors.tencent.com/pypi/simple/
 
 cd $recipe
