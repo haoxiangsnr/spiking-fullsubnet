@@ -29,8 +29,7 @@ Clone the repository and install PyPI dependencies:
 
 ```shell
 # Clone the repository
-git clone git@github.com:haoxiangsnr/audiozen.git
-cd audiozen
+git clone git@github.com:haoxiangsnr/audiozen.git && cd audiozen
 
 # Install PyPI dependencies
 pip install -r requirements.txt
@@ -44,7 +43,7 @@ If your network is unstable, you may use the [THU mirror site](https://mirrors.t
 
 ## Project Structure
 
-The project directory structure is as follows:
+The directory structure is as follows:
 
 ```shell
 .
@@ -67,15 +66,15 @@ The project directory structure is as follows:
 └── tools
 ```
 
-- `audiozen/`: The core code of the project. It contains the following subdirectories:
-  - `acoustics/`: The directory contains the code for audio signal processing.
-  - `dataset/`: The directory contains the data loading and processing code.
-  - `model/`: The directory contains the code for model definition and training.
-  - `trainer/`: The directory contains the code for training and evaluation.
+- `audiozen/`: The core of the project. It contains the following subdirectories:
+  - `acoustics/`: Contain the code for audio signal processing.
+  - `dataset/`: Contain the data loading and processing code.
+  - `model/`: Contain the code for model definition and training.
+  - `trainer/`: Contain the code for training and evaluation.
   - ...
-- `docs/`: The directory contains the project's documentation.
-- `recipes/`: The directory contains the code for experiments. Name the subdirectory after the dataset and create a subdirectory for the dataset named after the model. For example, `dns_icassp_2020/` represents the dataset `dns_icassp_2020`, and this directory contains data loading classes, training, and inference scripts for this dataset. `cirm_lstm/` contains the model for this dataset, including the structure and trainers for each model.
-- `tools/`: The directory contains the code for additional tools, such as data preprocessing, model conversion, etc.
+- `docs/`: Contains the project's documentation.
+- `recipes/`: Contains the code for experiments. Name the subdirectory after the dataset and create a subdirectory for the dataset named after the model. For example, `dns_icassp_2020/` represents the dataset `dns_icassp_2020`, and this directory contains data loading classes, training, and inference scripts for this dataset. `cirm_lstm/` contains the model for this dataset, including the structure and trainers for each model.
+- `tools/`: Contains the code for additional tools, such as data preprocessing, model conversion, etc.
 
 For the dataset directory, take `recipes/dns_icassp_2020` as an example. Its directory structure is as follows:
 
