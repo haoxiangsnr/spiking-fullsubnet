@@ -116,7 +116,13 @@ class SequenceModel(nn.Module):
         Returns:
             [B, F, T]
         """
-        assert x.dim() == 3, f"Shape is {x.shape}."
+        n_dim = x.dim()
+        assert n_dim in (3, 4), f"Shape is {x.shape}."
+
+        if n_dim == 4:
+            batch_size, num_channels, _, num_frames = x.shape
+            x = x.view(batch_size, -1, num_frames)
+
         batch_size, _, _ = x.shape
 
         if self.sequence_model_name == "LayerNormLSTM":
@@ -139,7 +145,12 @@ class SequenceModel(nn.Module):
         if self.output_activate_function:
             o = self.activate_function(o)
 
-        return o.permute(1, 2, 0).contiguous()  # [T, B, F] => [B, F, T]
+        o = o.permute(1, 2, 0).contiguous()  # [T, B, F] => [B, F, T]
+
+        if n_dim == 4:
+            o = o.reshape(batch_size, num_channels, -1, num_frames)
+
+        return o
 
 
 def _print_networks(nets: list):
