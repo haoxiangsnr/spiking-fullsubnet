@@ -1,11 +1,10 @@
-from typing import Iterable, Optional
+from typing import Iterable
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 from torch.autograd import Function
-from typing_extensions import Final
 
 from audiozen.constant import EPSILON
 
@@ -144,6 +143,69 @@ class CombineLoss(nn.Module):
         loss1 = self.mulres_loss(input, target)
         loss2 = self.l1_loss(input, target)
         return loss1 + loss2
+
+
+def freq_MAE(estimation, target, win=2048, stride=512, srs=None, sudo_sr=None):
+    est_spec = torch.stft(
+        estimation.view(-1, estimation.shape[-1]),
+        n_fft=win,
+        hop_length=stride,
+        window=torch.hann_window(win).to(estimation.device).float(),
+        return_complex=True,
+    )
+    est_target = torch.stft(
+        target.view(-1, target.shape[-1]),
+        n_fft=win,
+        hop_length=stride,
+        window=torch.hann_window(win).to(estimation.device).float(),
+        return_complex=True,
+    )
+
+    if srs is None:
+        return (est_spec.real - est_target.real).abs().mean() + (
+            est_spec.imag - est_target.imag
+        ).abs().mean()
+    else:
+        loss = 0
+        for i, sr in enumerate(srs):
+            max_freq = int(est_spec.shape[-2] * sr / sudo_sr)
+            loss += (
+                est_spec[i][:max_freq].real - est_target[i][:max_freq].real
+            ).abs().mean() + (
+                est_spec[i][:max_freq].imag - est_target[i][:max_freq].imag
+            ).abs().mean()
+        loss = loss / len(srs)
+        return loss
+
+
+def mag_MAE(estimation, target, win=2048, stride=512, srs=None, sudo_sr=None):
+    est_spec = torch.stft(
+        estimation.view(-1, estimation.shape[-1]),
+        n_fft=win,
+        hop_length=stride,
+        window=torch.hann_window(win).to(estimation.device).float(),
+        return_complex=True,
+    )
+    est_target = torch.stft(
+        target.view(-1, target.shape[-1]),
+        n_fft=win,
+        hop_length=stride,
+        window=torch.hann_window(win).to(estimation.device).float(),
+        return_complex=True,
+    )
+    if srs is None:
+        return (est_spec.abs() - est_target.abs()).abs().mean()
+    else:
+        loss = 0
+        for i, sr in enumerate(srs):
+            max_freq = int(est_spec.shape[-2] * sr / sudo_sr)
+            loss += (
+                (est_spec[i][:max_freq].abs() - est_target[i][:max_freq].abs())
+                .abs()
+                .mean()
+            )
+        loss = loss / len(srs)
+    return loss
 
 
 if __name__ == "__main__":
