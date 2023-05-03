@@ -28,11 +28,13 @@ class STOI:
         Returns:
             _description_
         """
-        check_same_shape(est, ref)
-
         if est.ndim != 1:
             est = est.reshape(-1)
+
+        if ref.ndim != 1:
             ref = ref.reshape(-1)
+
+        check_same_shape(est, ref)
 
         stoi_val = stoi_backend(
             ref.detach().cpu().numpy(),
@@ -58,11 +60,13 @@ class PESQ:
             raise ValueError(f"Unsupported mode: {self.mode}. Expected 'wb' or 'nb'.")
 
     def __call__(self, est, ref):
-        check_same_shape(est, ref)
-
         if est.ndim != 1:
             est = est.reshape(-1)
+
+        if ref.ndim != 1:
             ref = ref.reshape(-1)
+
+        check_same_shape(est, ref)
 
         ref = ref.detach().cpu().numpy()
         est = est.detach().cpu().numpy()
@@ -98,9 +102,10 @@ class SISDR:
             >>> si_sdr(est, ref)
             >>> tensor(18.4030)
         """
-        if est.ndim != 1:
-            est = est.reshape(-1)
-            ref = ref.reshape(-1)
+        est = est.reshape(-1)
+        ref = ref.reshape(-1)
+
+        check_same_shape(est, ref)
 
         eps = torch.finfo(est.dtype).eps
 
