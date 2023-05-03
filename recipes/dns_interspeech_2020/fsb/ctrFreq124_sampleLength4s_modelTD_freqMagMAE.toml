@@ -55,7 +55,7 @@ rir_dataset_offset = 0
 silence_length = 0.2
 snr_range = [-5, 20]
 sr = 16000
-sub_sample_length = 3.0
+sub_sample_length = 4
 target_dB_FS = -25
 target_dB_FS_floating_value = 10
 
@@ -112,9 +112,10 @@ limit = false
 
 # -------------------- Model -------------------- #
 [model]
-path = "model.Model"
+path = "model_td.Separator"
 
 [model.args]
+sr = 16000
 fdrc = 0.5
 n_fft = 512
 hop_length = 256

@@ -5,12 +5,8 @@ import torch
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-from audiozen.acoustics.audio_feature import (
-    build_complex_ideal_ratio_mask,
-    decompress_cIRM,
-    drop_band,
-    tune_dB_FS,
-)
+from audiozen.acoustics.audio_feature import tune_dB_FS
+from audiozen.loss import freq_MAE, mag_MAE
 from audiozen.metrics import DNSMOS, PESQ, SISDR, STOI
 from audiozen.trainer.base_trainer import BaseTrainer
 
@@ -31,17 +27,9 @@ class Trainer(BaseTrainer):
         noisy = noisy.to(self.device)
         clean = clean.to(self.device)
 
-        noisy_mag, noisy_phase, noisy_real, noisy_imag = self.torch_stft(noisy)
-        _, _, clean_real, clean_imag = self.torch_stft(clean)
+        enhanced = self.model(noisy)
 
-        cIRM = build_complex_ideal_ratio_mask(
-            noisy_real, noisy_imag, clean_real, clean_imag
-        )  # [B, F, T, 2]
-
-        noisy_mag = noisy_mag.unsqueeze(1)
-        cRM = self.model(noisy_mag)  # [B, 2, F ,T]
-        cRM = cRM.permute(0, 2, 3, 1)
-        loss = self.loss_function(cIRM, cRM)
+        loss = freq_MAE(enhanced, clean) + mag_MAE(enhanced, clean)
 
         return loss
 
@@ -57,27 +45,7 @@ class Trainer(BaseTrainer):
         clean = clean.to(self.device)
         noisy = noisy.to(self.device)
 
-        noisy_mag, noisy_phase, noisy_real, noisy_imag = self.torch_stft(noisy)
-        _, _, clean_real, clean_imag = self.torch_stft(clean)
-        cIRM = build_complex_ideal_ratio_mask(
-            noisy_real, noisy_imag, clean_real, clean_imag
-        )  # [B, F, T, 2]
-
-        noisy_mag = noisy_mag.unsqueeze(1)
-        cRM = self.model(noisy_mag)  # [B, 2, F ,T]
-        cRM = cRM.permute(0, 2, 3, 1)
-
-        cRM = decompress_cIRM(cRM)
-
-        enhanced_real = cRM[..., 0] * noisy_real - cRM[..., 1] * noisy_imag
-        enhanced_imag = cRM[..., 1] * noisy_real + cRM[..., 0] * noisy_imag
-        enhanced = self.torch_istft(
-            (enhanced_real, enhanced_imag),
-            length=noisy.size(-1),
-            input_type="real_imag",
-        )
-
-        enhanced, *_ = tune_dB_FS(enhanced, target_dB_FS=-26)
+        enhanced = self.model(noisy)
 
         return noisy, clean, enhanced, fpath
 
@@ -105,9 +73,10 @@ class Trainer(BaseTrainer):
 
             df_metrics = pd.DataFrame(rows)
 
-            logger.info(f"\n {df_metrics.describe()}")
-
             df_metrics_mean = df_metrics.mean(numeric_only=True)
+            df_metrics_mean_df = df_metrics_mean.to_frame().T
+
+            logger.info(f"\n{df_metrics_mean_df.to_markdown()}")
 
             score += df_metrics_mean["OVRL"]
 
