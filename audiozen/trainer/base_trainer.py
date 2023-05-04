@@ -34,6 +34,7 @@ class BaseTrainer:
         model,
         loss_function,
         optimizer,
+        lr_scheduler,
     ) -> None:
         self.args = config
 
@@ -48,13 +49,16 @@ class BaseTrainer:
         self.rank = rank
         self.device = rank  # alias of rank
 
-        # DDP model
+        # Distributed data parallel
         self.model = DistributedDataParallel(
             model.to(rank), device_ids=[rank], output_device=rank
         )
 
         # Optimizer
         self.optimizer = optimizer
+
+        # LR scheduler
+        self.lr_scheduler = lr_scheduler
 
         # Loss function
         self.loss_function = loss_function
@@ -72,6 +76,7 @@ class BaseTrainer:
         self.clip_grad_norm_value = self.train_config["clip_grad_norm_value"]
         self.save_max_score = self.train_config["save_max_score"]
         self.save_checkpoint_interval = self.train_config["save_checkpoint_interval"]
+        self.patience = self.train_config["patience"]
 
         # Trainer.validation args
         self.validate_config = config["trainer"]["validate"]
@@ -174,6 +179,19 @@ class BaseTrainer:
         self.source_code_backup_dir = self.exp_dir / f"source_code__{time_now}"
         self.config_path = self.exp_dir / f"config__{time_now}.toml"
 
+    def _load_state_dict(self, checkpoint_dict):
+        self.start_epoch = checkpoint_dict["epoch"] + 1
+        self.best_score = checkpoint_dict["best_score"]
+        self.wait_count = checkpoint_dict["wait_count"]
+        self.optimizer.load_state_dict(checkpoint_dict["optimizer"])
+        self.scaler.load_state_dict(checkpoint_dict["scaler"])
+        self.lr_scheduler.load_state_dict(checkpoint_dict["lr_scheduler"])
+
+        if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
+            self.model.module.load_state_dict(checkpoint_dict["model"])
+        else:
+            self.model.load_state_dict(checkpoint_dict["model"])
+
     def _load_checkpoint(self, ckpt_path="latest"):
         """load a checkpoint from the checkpints directory.
 
@@ -195,15 +213,7 @@ class BaseTrainer:
         # https://stackoverflow.com/questions/61642619/pytorch-distributed-data-parallel-confusion
         checkpoint_dict = torch.load(ckpt_path.as_posix(), map_location="cpu")
 
-        self.start_epoch = checkpoint_dict["epoch"] + 1
-        self.best_score = checkpoint_dict["best_score"]
-        self.optimizer.load_state_dict(checkpoint_dict["optimizer"])
-        self.scaler.load_state_dict(checkpoint_dict["scaler"])
-
-        if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
-            self.model.module.load_state_dict(checkpoint_dict["model"])
-        else:
-            self.model.load_state_dict(checkpoint_dict["model"])
+        self._load_state_dict(checkpoint_dict)
 
         if self.rank == 0:
             logger.info(f"Model checkpoint on epoch {self.start_epoch - 1} loaded.")
@@ -249,6 +259,19 @@ class BaseTrainer:
             True
         )  # enable deterministic operations in PyTorch
 
+    def _create_state_dict(self, epoch):
+        """Create a state dict for saving."""
+        state_dict = {
+            "epoch": epoch,
+            "best_score": self.best_score,
+            "wait_count": self.wait_count,
+            "model": self.model.module.state_dict() if isinstance(self.model, torch.nn.parallel.DistributedDataParallel) else self.model.state_dict(),  # fmt: skip
+            "optimizer": self.optimizer.state_dict(),
+            "scaler": self.scaler.state_dict(),
+            "lr_scheduler": self.lr_scheduler.state_dict(),
+        }
+        return state_dict
+
     def _save_checkpoint(self, epoch, is_best_epoch):
         """Save checkpoint.
 
@@ -256,14 +279,7 @@ class BaseTrainer:
             epoch: the current epoch.
             is_best_epoch: whether the current epoch is the best epoch.
         """
-        state_dict = {
-            "epoch": epoch,
-            "best_score": self.best_score,
-            "model": self.model.module.state_dict() if isinstance(self.model, torch.nn.parallel.DistributedDataParallel) else self.model.state_dict(),  # fmt: skip
-            "optimizer": self.optimizer.state_dict(),
-            "scaler": self.scaler.state_dict(),
-        }
-
+        state_dict = self._create_state_dict(epoch)
         checkpoint_fpath = self.checkpoints_dir / f"epoch_{str(epoch).zfill(4)}.tar"
         torch.save(state_dict, checkpoint_fpath.as_posix())
         torch.save(state_dict, self.checkpoints_dir / "latest.tar")
@@ -293,6 +309,26 @@ class BaseTrainer:
             step_kwargs["dataloader_idx"] = dataloader_idx
 
         return step_kwargs
+
+    def run_early_stop_check(self, score, epoch):
+        should_stop = False
+
+        if self._check_improvement(score, save_max_score=self.save_max_score):
+            logger.info(f"Found new best score: {score:.4f}, saving checkpoint...")
+            self._save_checkpoint(epoch, is_best_epoch=True)
+            self.wait_count = 0
+        else:
+            logger.info(f"Score did not improve from {self.best_score:.4f}.")
+            self.wait_count += 1
+            logger.info(
+                f"Early stopping counter: {self.wait_count} out of {self.patience}"
+            )
+
+            if self.wait_count >= self.patience:
+                logger.info(f"Early stopping triggered, stopping training...")
+                should_stop = True
+
+        return should_stop
 
     def train(self, train_dataloader, validation_dataloaders):
         for epoch in range(self.start_epoch, self.max_epoch):
@@ -351,17 +387,15 @@ class BaseTrainer:
 
                         score = self.validate(validation_dataloaders)
 
-                        if self.is_best_epoch(
-                            score, save_max_score=self.save_max_score
-                        ):
-                            logger.info(
-                                f"Found new best score: {score:.4f}, saving checkpoint..."
-                            )
-                            self._save_checkpoint(epoch, is_best_epoch=True)
+                        should_stop = self.run_early_stop_check(score, epoch)
+
+                        if should_stop:
+                            break
 
                         logger.info(f"Validation finished.")
 
             dist.barrier()
+            self.lr_scheduler.step()
 
     @torch.no_grad()
     def validate(self, dataloaders):
@@ -425,7 +459,7 @@ class BaseTrainer:
 
             self.test_epoch_end(test_output)
 
-    def is_best_epoch(self, score, save_max_score=True):
+    def _check_improvement(self, score, save_max_score=True):
         """Check if the current model got the best metric score"""
         if save_max_score:
             if score >= self.best_score:
