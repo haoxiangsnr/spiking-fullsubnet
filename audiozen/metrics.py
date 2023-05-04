@@ -13,41 +13,32 @@ from audiozen.utils import check_same_shape
 logger = logging.getLogger(__name__)
 
 
+def preprocessing(est, ref):
+    if est.ndim != 1 or ref.ndim != 1:
+        est = est.reshape(-1)
+        ref = ref.reshape(-1)
+
+    check_same_shape(est, ref)
+
+    if torch.is_tensor(est) or torch.is_tensor(ref):
+        est = est.detach().cpu().numpy()
+        ref = ref.detach().cpu().numpy()
+
+    return est, ref
+
+
 class STOI:
-    def __init__(self, sr) -> None:
+    def __init__(self, sr=16000) -> None:
         self.sr = sr
 
     def __call__(self, est, ref, extended=False):
-        """_description_
-
-        Args:
-            est: _description_
-            ref: _description_
-            extended: _description_. Defaults to False.
-
-        Returns:
-            _description_
-        """
-        if est.ndim != 1:
-            est = est.reshape(-1)
-
-        if ref.ndim != 1:
-            ref = ref.reshape(-1)
-
-        check_same_shape(est, ref)
-
-        stoi_val = stoi_backend(
-            ref.detach().cpu().numpy(),
-            est.detach().cpu().numpy(),
-            self.sr,
-            extended=extended,
-        )
-
+        est, ref = preprocessing(est, ref)
+        stoi_val = stoi_backend(ref, est, self.sr, extended=extended)
         return {"stoi": stoi_val}
 
 
 class PESQ:
-    def __init__(self, sr, mode="wb") -> None:
+    def __init__(self, sr=16000, mode="wb") -> None:
         self.sr = sr
         self.mode = mode
 
@@ -60,17 +51,7 @@ class PESQ:
             raise ValueError(f"Unsupported mode: {self.mode}. Expected 'wb' or 'nb'.")
 
     def __call__(self, est, ref):
-        if est.ndim != 1:
-            est = est.reshape(-1)
-
-        if ref.ndim != 1:
-            ref = ref.reshape(-1)
-
-        check_same_shape(est, ref)
-
-        ref = ref.detach().cpu().numpy()
-        est = est.detach().cpu().numpy()
-
+        est, ref = preprocessing(est, ref)
         if self.sr not in (8000, 16000):
             ref = librosa.resample(ref, orig_sr=self.sr, target_sr=16000)
             est = librosa.resample(est, orig_sr=self.sr, target_sr=16000)
@@ -106,6 +87,10 @@ class SISDR:
         ref = ref.reshape(-1)
 
         check_same_shape(est, ref)
+
+        if not torch.is_tensor(est) or not torch.is_tensor(ref):
+            est = torch.tensor(est)
+            ref = torch.tensor(ref)
 
         eps = torch.finfo(est.dtype).eps
 
@@ -180,7 +165,8 @@ class DNSMOS:
         if audio.ndim != 1:
             audio = audio.reshape(-1)
 
-        audio = audio.detach().cpu().numpy()
+        if torch.is_tensor(audio):
+            audio = audio.detach().cpu().numpy()
 
         SAMPLERATE = 16000
         INPUT_LENGTH = 9.01
@@ -233,8 +219,8 @@ class DNSMOS:
             predicted_p_mos_bak_seg_raw.append(p_mos_bak_raw)
 
         clip_dict = {}
-        clip_dict["sr"] = SAMPLERATE
-        clip_dict["len"] = actual_audio_len / SAMPLERATE
+        # clip_dict["sr"] = SAMPLERATE
+        # clip_dict["len"] = actual_audio_len / SAMPLERATE
         clip_dict["P808"] = np.mean(predicted_p808_mos)
         clip_dict["SIG"] = np.mean(predicted_mos_sig_seg_raw)
         clip_dict["BAK"] = np.mean(predicted_mos_bak_seg_raw)
