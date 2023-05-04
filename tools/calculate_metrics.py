@@ -1,20 +1,64 @@
-"""Need to rewrite for new-version audiozen"""
 import argparse
 import os
-import sys
-from inspect import getmembers, isfunction
 from pathlib import Path
 
 import librosa
-import numpy as np
+import pandas as pd
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-import audiozen.metrics as metrics
-from audiozen.utils import prepare_empty_dir
+from audiozen.metrics import DNSMOS, PESQ, SISDR, STOI
+
+"""
+Steps:
+    1. Check alignment of reference and estimated wav files
+    2. Compute metrics
+"""
 
 
-def load_wav_paths_from_scp(scp_path, to_abs=True):
+class MetricComputer:
+    def __init__(self, sr=16000) -> None:
+        self.dns_mos = DNSMOS(input_sr=sr)
+        self.stoi = STOI(sr=sr)
+        self.pesq_wb = PESQ(sr=sr, mode="wb")
+        self.pesq_nb = PESQ(sr=sr, mode="nb")
+        self.si_sdr = SISDR()
+        self.sr = sr
+
+    def compute_per_item(self, ref_wav_path, est_wav_path):
+        ref, _ = librosa.load(ref_wav_path, sr=self.sr)
+        est, _ = librosa.load(est_wav_path, sr=self.sr)
+
+        basename = get_basename(ref_wav_path)
+
+        if len(ref) != len(est):
+            raise ValueError(
+                f"{ref_wav_path} and {est_wav_path} are not in the same length."
+            )
+
+        pesq_wb = self.pesq_wb(est, ref)
+        pesq_nb = self.pesq_nb(est, ref)
+        stoi = self.stoi(est, ref)
+        si_sdr = self.si_sdr(est, ref)
+        dns_mos = self.dns_mos(est)
+
+        return {"name": basename} | pesq_wb | pesq_nb | stoi | si_sdr | dns_mos
+
+    def compute(self, reference_wav_paths, estimated_wav_paths, n_jobs=20):
+        rows = Parallel(n_jobs=n_jobs, prefer="threads")(
+            delayed(self.compute_per_item)(ref, est)
+            for ref, est in tqdm(zip(reference_wav_paths, estimated_wav_paths))
+        )
+
+        df_metrics = pd.DataFrame(rows)
+
+        df_metrics_mean = df_metrics.mean(numeric_only=True)
+        df_metrics_mean_df = df_metrics_mean.to_frame().T
+
+        print(df_metrics_mean_df.to_markdown())
+
+
+def load_wav_paths_from_text_file(scp_path, to_abs=True):
     wav_paths = [
         line.rstrip("\n")
         for line in open(os.path.abspath(os.path.expanduser(scp_path)), "r")
@@ -29,7 +73,6 @@ def load_wav_paths_from_scp(scp_path, to_abs=True):
 
 def shrink_multi_channel_path(full_dataset_list: list, num_channels: int) -> list:
     """
-
     Args:
         full_dataset_list: [
             028000010_room1_rev_RT600.06_mic1_micpos1.5p0.5p1.93_srcpos0.46077p1.1p1.68_langle180_angle150_ds1.2_mic1.wav
@@ -57,7 +100,7 @@ def get_basename(path):
     return os.path.splitext(os.path.basename(path))[0]
 
 
-def pre_processing(est_list, ref_list, specific_dataset=None):
+def pre_processing(est_list, ref_list, align_mode=None):
     """Merge and validate filepath"""
     reference_wav_paths = []
     estimated_wav_paths = []
@@ -67,27 +110,30 @@ def pre_processing(est_list, ref_list, specific_dataset=None):
         if est.is_dir():
             estimated_wav_paths += librosa.util.find_files(est.as_posix(), ext="wav")
         else:
-            estimated_wav_paths += load_wav_paths_from_scp(est.as_posix())
+            estimated_wav_paths += load_wav_paths_from_text_file(est.as_posix())
 
     for ref in ref_list:
         ref = Path(ref).expanduser().absolute()
         if ref.is_dir():
             reference_wav_paths += librosa.util.find_files(ref.as_posix(), ext="wav")
         else:
-            reference_wav_paths += load_wav_paths_from_scp(ref.as_posix())
+            reference_wav_paths += load_wav_paths_from_text_file(ref.as_posix())
 
     reference_wav_paths.sort(key=lambda x: os.path.basename(x))
     estimated_wav_paths.sort(key=lambda x: os.path.basename(x))
 
-    if not specific_dataset:  # two lists should be aligned in default
-        print(len(reference_wav_paths))
-        print(len(estimated_wav_paths))
+    print(f"#Ref: {len(reference_wav_paths)}, #Est: {len(estimated_wav_paths)}")
+    print("Checking whether files in two lists have the same basename...")
+
+    # ================== Keep two lists aligned ==================
+    if align_mode is None:
         check_two_aligned_list(reference_wav_paths, estimated_wav_paths)
-    else:  # 针对不同的数据集，进行手工对齐，保证两个列表一一对应
+    else:
+        # Reorder estimated_wav_paths according to reference_wav_paths for specific dataset
         reordered_estimated_wav_paths = []
-        if specific_dataset == "dns_1":
-            # 按照 reference_wav_paths 中文件的后缀名重排 estimated_wav_paths
-            # 提取后缀
+        if align_mode == "dns_1":
+            # Recoder estimated_wav_paths according to the suffix of reference_wav_paths
+            # ref:
             for ref_path in reference_wav_paths:
                 for est_path in estimated_wav_paths:
                     est_basename = get_basename(est_path)
@@ -95,7 +141,18 @@ def pre_processing(est_list, ref_list, specific_dataset=None):
                         est_basename.split("_")[-2:]
                     ) == get_basename(ref_path):
                         reordered_estimated_wav_paths.append(est_path)
-        elif specific_dataset == "dns_2":
+        elif align_mode == "dns_1_custom":
+            for ref_path in reference_wav_paths:
+                for est_path in estimated_wav_paths:
+                    # e.g., clnsp74_fan_out_56236_0_snr9_tl-28_fileid_210.wav-denoise.wav
+                    # clean_fileid_207.wav
+                    est_basename = get_basename(est_path)[:-12]  # remove ".wav-denoise"
+                    expected_basename = "clean_" + "_".join(
+                        est_basename.split("_")[-2:]
+                    )
+                    if expected_basename == get_basename(ref_path):
+                        reordered_estimated_wav_paths.append(est_path)
+        elif align_mode == "dns_2":
             for ref_path in reference_wav_paths:
                 for est_path in estimated_wav_paths:
                     # synthetic_french_acejour_orleans_sb_64kb-01_jbq2HJt9QXw_snr14_tl-26_fileid_47
@@ -104,7 +161,7 @@ def pre_processing(est_list, ref_list, specific_dataset=None):
                     file_id = est_basename.split("_")[-1]
                     if f"synthetic_clean_fileid_{file_id}" == get_basename(ref_path):
                         reordered_estimated_wav_paths.append(est_path)
-        elif specific_dataset == "maxhub_noisy":
+        elif align_mode == "maxhub_noisy":
             # Reference_channel = 0
             # 寻找对应的干净语音
             reference_channel = 0
@@ -115,10 +172,13 @@ def pre_processing(est_list, ref_list, specific_dataset=None):
                 for ref_path in reference_wav_paths:
                     ref_basename = get_basename(ref_path)
         else:
-            raise NotImplementedError(
-                f"Not supported specific dataset {specific_dataset}."
-            )
+            raise NotImplementedError(f"Not supported specific dataset {align_mode}.")
+
         estimated_wav_paths = reordered_estimated_wav_paths
+
+    print(
+        f"After checking, #Ref: {len(reference_wav_paths)}, #Est: {len(estimated_wav_paths)}"
+    )
 
     return reference_wav_paths, estimated_wav_paths
 
@@ -131,94 +191,28 @@ def check_two_aligned_list(a, b):
         )
 
 
-def compute_metric(reference_wav_paths, estimated_wav_paths, sr, metric_type="SI_SDR"):
-    metrics_dict = {o[0]: o[1] for o in getmembers(metrics) if isfunction(o[1])}
-    assert metric_type in metrics_dict, f"不支持的评价指标： {metric_type}"
-    metric_function = metrics_dict[metric_type]
-
-    def calculate_metric(ref_wav_path, est_wav_path):
-        ref_wav, _ = librosa.load(ref_wav_path, sr=sr)
-        est_wav, _ = librosa.load(est_wav_path, sr=sr, mono=False)
-        if est_wav.ndim > 1:
-            est_wav = est_wav[0]
-
-        basename = get_basename(ref_wav_path)
-
-        ref_wav_len = len(ref_wav)
-        est_wav_len = len(est_wav)
-
-        if ref_wav_len != est_wav_len:
-            print(
-                f"[Warning] ref {ref_wav_len} and est {est_wav_len} are not in the same length"
-            )
-            pass
-
-        return basename, metric_function(ref_wav[: len(est_wav)], est_wav)
-
-    metrics_result_store = Parallel(n_jobs=40)(
-        delayed(calculate_metric)(ref, est)
-        for ref, est in tqdm(zip(reference_wav_paths, estimated_wav_paths))
-    )
-    return metrics_result_store
-
-
 def main(args):
     sr = args.sr
-    metric_types = args.metric_types
-    export_dir = args.export_dir
-    specific_dataset = args.specific_dataset.lower()
+    align_mode = args.align_mode.lower()
 
-    print("123", args.estimated, args.reference)
     reference_wav_paths, estimated_wav_paths = pre_processing(
-        args.estimated, args.reference, specific_dataset
+        args.estimated, args.reference, align_mode
     )
 
-    if export_dir:
-        export_dir = Path(export_dir).expanduser().absolute()
-        prepare_empty_dir([export_dir])
-
-    for metric_type in metric_types.split(","):
-        metrics_result_store = compute_metric(
-            reference_wav_paths, estimated_wav_paths, sr, metric_type=metric_type
-        )
-
-        # Print result
-        metric_value = np.mean(list(zip(*metrics_result_store))[1])
-        print(f"{metric_type}: {metric_value}")
-
-        # Export result
-        if export_dir:
-            import tablib
-
-            export_path = export_dir / f"{metric_type}.xlsx"
-            print(f"Export result to {export_path}")
-
-            headers = ("Speech", "Noise", "T60", "SNR", f"{metric_type}")
-            metric_seq = [
-                [
-                    basename,
-                    basename.split("_")[3],
-                    basename.split("_")[4][:-1],
-                    float(basename.split("_")[5][:-2]),
-                    metric_value,
-                ]
-                for basename, metric_value in metrics_result_store
-            ]
-            data = tablib.Dataset(*metric_seq, headers=headers)
-            with open(export_path.as_posix(), "wb") as f:
-                f.write(data.export("xlsx"))
+    metric_computer = MetricComputer(sr=sr)
+    metric_computer.compute(reference_wav_paths, estimated_wav_paths, n_jobs=40)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="输入两个目录或列表，计算各种评价指标的均值",
+        description="Calculate speech enhancement metrics for estimated speech and reference speech.",
         epilog="python calculate_metrics.py -E 'est_dir' -R 'ref_dir' -M SI_SDR,STOI,WB_PESQ,NB_PESQ,SSNR,LSD,SRMR",
     )
     parser.add_argument(
         "-R",
         "--reference",
         required=True,
-        help="It can be a list of dir paths or text paths.",
+        help="It can be a list of dir paths seprated using comma or a list of scp text paths.",
         type=lambda s: [i for i in s.split(",")],
     )
     parser.add_argument(
@@ -228,23 +222,14 @@ if __name__ == "__main__":
         help="",
         type=lambda s: [i for i in s.split(",")],
     )
+
+    parser.add_argument("--sr", type=int, default=16000, help="Sample rate.")
     parser.add_argument(
-        "-M",
-        "--metric_types",
-        required=True,
+        "-A",
+        "--align_mode",
         type=str,
-        help="哪个评价指标，要与 util.metrics 中的内容一致.",
-    )
-    parser.add_argument("--sr", type=int, default=16000, help="采样率")
-    parser.add_argument("-D", "--export_dir", type=str, default="", help="")
-    parser.add_argument("--limit", type=int, default=None, help="[正在开发]从列表中读取文件的上限数量.")
-    parser.add_argument("--offset", type=int, default=0, help="[正在开发]从列表中指定位置开始读取文件.")
-    parser.add_argument(
-        "-S",
-        "--specific_dataset",
-        type=str,
-        default="",
-        help="指定数据集类型，e.g. DNS_1, DNS_2, 大小写均可",
+        default=None,
+        help="Use corresponding pre-processing method for specific dataset. It can be 'dns_1', 'dns_2'",
     )
     args = parser.parse_args()
     main(args)
