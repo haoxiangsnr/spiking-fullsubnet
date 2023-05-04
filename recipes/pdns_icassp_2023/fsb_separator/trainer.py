@@ -8,7 +8,7 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 
 from audiozen.acoustics.audio_feature import save_wav, tune_dB_FS
-from audiozen.metrics import DNSMOS, PESQ, SISDR, STOI
+from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
 from audiozen.trainer.base_trainer import BaseTrainer
 
 logger = logging.getLogger(__name__)

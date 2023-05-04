@@ -11,7 +11,7 @@ from audiozen.acoustics.audio_feature import (
     drop_band,
     tune_dB_FS,
 )
-from audiozen.metrics import DNSMOS, PESQ, SISDR, STOI
+from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
 from audiozen.trainer.base_trainer import BaseTrainer
 
 logger = logging.getLogger(__name__)
@@ -110,10 +110,10 @@ class Trainer(BaseTrainer):
 
             df_metrics = pd.DataFrame(rows)
 
-            with pd.option_context("display.max_columns", 2000):
-                logger.info(f"\n {df_metrics.describe()}")
-
             df_metrics_mean = df_metrics.mean(numeric_only=True)
+            df_metrics_mean_df = df_metrics_mean.to_frame().T
+
+            logger.info(f"\n{df_metrics_mean_df.to_markdown()}")
 
             score += df_metrics_mean["OVRL"]
 

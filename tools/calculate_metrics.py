@@ -7,7 +7,7 @@ import pandas as pd
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-from audiozen.metrics import DNSMOS, PESQ, SISDR, STOI
+from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
 
 """
 Steps:

@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from audiozen.acoustics.audio_feature import tune_dB_FS
 from audiozen.loss import freq_MAE, mag_MAE
-from audiozen.metrics import DNSMOS, PESQ, SISDR, STOI
+from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
 from audiozen.trainer.base_trainer import BaseTrainer
 
 logger = logging.getLogger(__name__)
