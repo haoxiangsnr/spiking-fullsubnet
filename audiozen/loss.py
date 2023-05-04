@@ -8,9 +8,6 @@ from torch.autograd import Function
 
 from audiozen.constant import EPSILON
 
-l1_loss = torch.nn.L1Loss
-mse_loss = torch.nn.MSELoss
-
 
 def si_snr_loss():
     def si_snr(x, s, eps=EPSILON):

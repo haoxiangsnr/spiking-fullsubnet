@@ -1,5 +1,9 @@
-from torch.optim import lr_scheduler
+from torch.optim.lr_scheduler import _LRScheduler
 
-step_lr_scheduler = lr_scheduler.StepLR
-reduce_lr_on_plateau_scheduler = lr_scheduler.ReduceLROnPlateau
-constant_lr_scheduler = lr_scheduler.ConstantLR
+
+class CustomLRScheduler(_LRScheduler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get_lr(self):
+        pass
