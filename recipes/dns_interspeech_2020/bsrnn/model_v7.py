@@ -571,8 +571,7 @@ if __name__ == "__main__":
 
     torch.set_num_threads(1)
     model = model.eval()
-    for i in tqdm(range(100)):
-        y = model(x)
+    y = model(x)
 
     # s = 0
     # for param in model.parameters():

@@ -13,7 +13,7 @@ hop_length = 256
 
 
 [loss_function]
-name = "mse_loss"
+name = "torch.nn.MSELoss"
 [loss_function.args]
 
 
@@ -21,6 +21,12 @@ name = "mse_loss"
 lr = 0.001
 beta1 = 0.9
 beta2 = 0.999
+
+[lr_scheduler]
+name = "constant_lr_scheduler"
+[lr_scheduler.args]
+factor = 1
+total_iters = 1
 
 # -------------------- Trainer -------------------- #
 [trainer]

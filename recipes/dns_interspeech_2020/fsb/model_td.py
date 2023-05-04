@@ -542,14 +542,14 @@ if __name__ == "__main__":
         fb_hidden_size=512,
         fb_output_activate_function=False,
         freq_cutoffs=[20, 80],
-        sb_num_center_freqs=[1, 2, 4],
+        sb_num_center_freqs=[1, 4, 8],
         sb_num_neighbor_freqs=[15, 15, 15],
-        fb_num_center_freqs=[1, 2, 4],
+        fb_num_center_freqs=[1, 4, 8],
         fb_num_neighbor_freqs=[0, 0, 0],
         sb_hidden_size=384,
         sb_output_activate_function=False,
         norm_type="offline_laplace_norm",
     )
-    noisy_y = torch.rand(1, 16400)
+    noisy_y = torch.rand(1, 16000)
     print(model(noisy_y).shape)
     summary(model, input_data=(noisy_y,), device="cpu")

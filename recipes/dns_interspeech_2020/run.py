@@ -4,10 +4,8 @@ import sys
 from pathlib import Path
 
 import toml
-import torch
 from torch.utils.data import DataLoader, DistributedSampler
 
-import audiozen.loss as loss
 from audiozen.logger import init_logging_logger
 from audiozen.utils import initialize_ddp, instantiate, set_random_seed
 
@@ -78,14 +76,19 @@ def run(config, resume):
         args=config["model"]["args"],
     )
 
-    optimizer = torch.optim.Adam(
-        params=model.parameters(),
-        lr=config["optimizer"]["lr"],
-        betas=(config["optimizer"]["beta1"], config["optimizer"]["beta2"]),
+    optimizer = instantiate(
+        config["optimizer"]["path"],
+        args={"params": model.parameters()} | config["optimizer"]["args"],
     )
 
-    loss_function = getattr(loss, config["loss_function"]["name"])(
-        **config["loss_function"]["args"],
+    loss_function = instantiate(
+        config["loss_function"]["path"],
+        args=config["loss_function"]["args"],
+    )
+
+    lr_scheduler = instantiate(
+        config["lr_scheduler"]["path"],
+        args={"optimizer": optimizer} | config["lr_scheduler"]["args"],
     )
 
     trainer = instantiate(config["trainer"]["path"], initialize=False)(
@@ -95,6 +98,7 @@ def run(config, resume):
         model=model,
         loss_function=loss_function,
         optimizer=optimizer,
+        lr_scheduler=lr_scheduler,
     )
 
     for flag in args.mode:

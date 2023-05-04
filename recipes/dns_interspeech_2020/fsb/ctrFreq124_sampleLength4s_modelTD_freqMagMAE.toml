@@ -13,7 +13,7 @@ hop_length = 256
 
 
 [loss_function]
-name = "mse_loss"
+name = "torch.nn.MSELoss"
 [loss_function.args]
 
 

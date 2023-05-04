@@ -13,14 +13,22 @@ hop_length = 160
 
 
 [loss_function]
-name = "mse_loss"
+name = "torch.nn.MSELoss"
 [loss_function.args]
 
 
 [optimizer]
+name = "torch.optim.Adam"
+[optimizer.args]
 lr = 0.001
 beta1 = 0.9
 beta2 = 0.999
+
+[lr_scheduler]
+name = "torch.optim.lr_scheduler.StepLR"
+[lr_scheduler.args]
+step_size = 1
+gamma = 0.5
 
 # -------------------- Trainer -------------------- #
 [trainer]

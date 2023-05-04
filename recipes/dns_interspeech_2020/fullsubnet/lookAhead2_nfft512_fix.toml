@@ -13,7 +13,7 @@ hop_length = 256
 
 
 [loss_function]
-name = "mse_loss"
+name = "torch.nn.MSELoss"
 [loss_function.args]
 
 
@@ -89,7 +89,7 @@ dataset_dir_list = [
 ]
 sr = 16000
 offset = 0
-limit = false
+limit = 2
 
 # -------------------- Validation DNS 4 small set -------------------- #
 [validation_dataset_dns_1_no_reverb]
@@ -100,7 +100,7 @@ dataset_dir_list = [
 ]
 sr = 16000
 offset = 0
-limit = false
+limit = 2
 
 # -------------------- Test DNS 1 -------------------- #
 [test_dataset_dns_1_with_reverb]
