@@ -77,9 +77,14 @@ def instantiate(path: str, args: Optional[dict] = None, initialize: bool = True)
         Otherwise, return the found class or callable
 
     Examples:
-        >>> instantiate("torch.nn.CrossEntropyLoss", args={"label_smoothing": 0.2})
-        >>> instantiate("torch.optim.Adam", args={"lr": 1e-3})
-        >>> instantiate("fsb.model.FullSubNetModel", args={"n_frames": 32})
+        >>> # Use official loss function
+        >>> instantiate("torch.nn.CrossEntropyLoss", args={"label_smoothing": 0.2}, initialize=True)
+        >>> # Use official optimizer
+        >>> instantiate("torch.optim.Adam", args={"lr": 1e-3}, initialize=True)
+        >>> # Use custom model in a recipe
+        >>> instantiate("fsb.model.FullSubNetModel", args={"n_frames": 32}, initialize=True)
+        >>> # Use custom loss function in audiozen
+        >>> instantiate("audiozen.loss.CRMLoss", initialize=False)
     """
     # e.g., path = "fsb.model.FullSubNetModel"
     # module_path = "fsb.model"
