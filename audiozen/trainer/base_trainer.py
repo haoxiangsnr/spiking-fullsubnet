@@ -89,6 +89,7 @@ class BaseTrainer:
         # Other
         self.start_epoch = 1
         self.current_epoch = 1
+        self.wait_count = 0
         self.best_score = -np.inf if self.save_max_score else np.inf
         pd.set_option("display.float_format", lambda x: "%.3f" % x)
 
@@ -331,6 +332,8 @@ class BaseTrainer:
         return should_stop
 
     def train(self, train_dataloader, validation_dataloaders):
+        early_stop_mark = torch.zeros(1, device=self.rank)
+
         for epoch in range(self.start_epoch, self.max_epoch):
             self.current_epoch = epoch
 
@@ -390,12 +393,18 @@ class BaseTrainer:
                         should_stop = self.run_early_stop_check(score, epoch)
 
                         if should_stop:
-                            break
+                            early_stop_mark += 1
 
                         logger.info(f"Validation finished.")
 
             dist.barrier()
             self.lr_scheduler.step()
+
+            dist.all_reduce(early_stop_mark, op=dist.ReduceOp.SUM)
+
+            if early_stop_mark != 0:
+                # Call it out of DDP training loop to avoid hanging
+                break
 
     @torch.no_grad()
     def validate(self, dataloaders):
@@ -462,13 +471,13 @@ class BaseTrainer:
     def _check_improvement(self, score, save_max_score=True):
         """Check if the current model got the best metric score"""
         if save_max_score:
-            if score >= self.best_score:
+            if score > self.best_score:
                 self.best_score = score
                 return True
             else:
                 return False
         else:
-            if score <= self.best_score:
+            if score < self.best_score:
                 self.best_score = score
                 return True
             else:
