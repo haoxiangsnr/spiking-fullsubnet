@@ -52,7 +52,7 @@ def initialize_ddp(rank: int):
 
 
 def instantiate(path: str, args: Optional[dict] = None, initialize: bool = True):
-    """Load module or callable (like function) dynamically with "args".
+    """Load module or callable (like function) dynamically.
 
     Assume that the config items are as follows:
 
@@ -63,9 +63,9 @@ def instantiate(path: str, args: Optional[dict] = None, initialize: bool = True)
             ...
 
     This function will:
-        1. Load the "model" module.
+        1. Load the "model" module from python search path.
         2. Load "model.FullSubNetModel" class or callable in the "model" module.
-        3. If initialize is True, instantiate (or call) class (or callable) with args (in "[model.args]").
+        3. If the "initialize" is set to True, instantiate (or call) class (or callable) with args (in "[model.args]").
 
     Args:
         path: Target class or callable path.
@@ -75,9 +75,23 @@ def instantiate(path: str, args: Optional[dict] = None, initialize: bool = True)
     Returns:
         If initialize is True, return the instantiated class or the return of the call.
         Otherwise, return the found class or callable
+
+    Examples:
+        >>> instantiate("torch.nn.CrossEntropyLoss", args={"label_smoothing": 0.2})
+        >>> instantiate("torch.optim.Adam", args={"lr": 1e-3})
+        >>> instantiate("fsb.model.FullSubNetModel", args={"n_frames": 32})
     """
-    module_path = ".".join(path.split(".")[:-1])
-    class_or_function_name = path.split(".")[-1]
+    # e.g., path = "fsb.model.FullSubNetModel"
+    # module_path = "fsb.model"
+    # class_or_function_name = "FullSubNetModel"
+    splitted_path = path.split(".")
+
+    if len(splitted_path) < 2:
+        raise ValueError(f"Invalid path: {path}.")
+
+    module_path = ".".join(splitted_path[:-1])
+    class_or_function_name = splitted_path[-1]
+
     module = importlib.import_module(module_path)
     class_or_function = getattr(module, class_or_function_name)
 
