@@ -1,5 +1,5 @@
 [meta]
-save_dir = "bsrnn/exp"
+save_dir = "fsb/exp"
 description = "This is a description of audiozen experiment."
 seed = 3407
 use_amp = false
@@ -118,17 +118,23 @@ limit = false
 
 # -------------------- Model -------------------- #
 [model]
-path = "model_v7.Separator"
+path = "model_td.Separator"
 
 [model.args]
 sr = 16000
-win = 512
-stride = 256
-feature_dim = 128
-num_layer = 1
-num_repeat = 6
-group = 1
-context = 1
-dropout = 0.0
-bi_comm = true
-band_bidirectional = false
+fdrc = 0.5
+n_fft = 512
+hop_length = 256
+win_length = 512
+num_freqs = 256
+sequence_model = "LSTM"
+fb_hidden_size = 512
+fb_output_activate_function = false
+freq_cutoffs = [20, 80]
+sb_num_center_freqs = [1, 2, 4]
+sb_num_neighbor_freqs = [15, 15, 15]
+fb_num_center_freqs = [1, 2, 4]
+fb_num_neighbor_freqs = [0, 0, 0]
+sb_hidden_size = 384
+sb_output_activate_function = false
+norm_type = "offline_laplace_norm"

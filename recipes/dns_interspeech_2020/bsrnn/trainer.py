@@ -6,6 +6,7 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 
 from audiozen.acoustics.audio_feature import tune_dB_FS
+from audiozen.loss import freq_MAE, mag_MAE
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
 from audiozen.trainer.base_trainer import BaseTrainer
 
@@ -26,8 +27,9 @@ class Trainer(BaseTrainer):
         noisy = noisy.to(self.device)
         clean = clean.to(self.device)
 
-        enh = self.model(noisy)
-        loss = self.loss_function(clean, enh)
+        enhanced = self.model(noisy)
+
+        loss = freq_MAE(enhanced, clean) + mag_MAE(enhanced, clean)
 
         return loss
 
@@ -42,8 +44,9 @@ class Trainer(BaseTrainer):
         noisy, clean, fpath = batch
         clean = clean.to(self.device)
         noisy = noisy.to(self.device)
+
         enhanced = self.model(noisy)
-        enhanced, *_ = tune_dB_FS(enhanced, target_dB_FS=-26)
+
         return noisy, clean, enhanced, fpath
 
     def compute_validation_metrics(self, dataloader_idx, step_out):
@@ -70,9 +73,10 @@ class Trainer(BaseTrainer):
 
             df_metrics = pd.DataFrame(rows)
 
-            logger.info(f"\n {df_metrics.describe()}")
-
             df_metrics_mean = df_metrics.mean(numeric_only=True)
+            df_metrics_mean_df = df_metrics_mean.to_frame().T
+
+            logger.info(f"\n{df_metrics_mean_df.to_markdown()}")
 
             score += df_metrics_mean["OVRL"]
 
@@ -110,4 +114,5 @@ class Trainer(BaseTrainer):
 
             df_metrics = pd.DataFrame(rows)
 
+            logger.info(f"\n {df_metrics.describe()}")
             logger.info(f"\n {df_metrics.describe()}")

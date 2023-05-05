@@ -1,0 +1,15 @@
+[book]
+authors = ["haoxiangsnr"]
+language = "en"
+multilingual = false
+src = "src"
+title = "AudioZEN"
+description = "AudioZEN is a collection of audio processing algorithms implemented in Rust."
+
+[output.html]
+no-section-label = false
+git-repository-url = "https://github.com/haoxiangsnr/audiozen"
+git-repository-icon = "fa-github"
+
+[output.html.playground]
+line-numbers = true
