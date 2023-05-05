@@ -3,6 +3,23 @@ site_description: AudioZEN is a personal project used to conduct the research on
 repo_name: haoxiangsnr/audiozen
 repo_url: https://github.com/haoxiangsnr/audiozen
 edit_uri: edit/main/docs/
+copyright: Copyright &copy; - 2023 haoxiangsnr
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - getting_started/prerequisites.md
+      - getting_started/project_structure.md
+      - getting_started/running_an_experiment.md
+      - getting_started/logging_and_visualization.md
+      - getting_started/configurations.md
+  - Concepts:
+      - trainer.md
+  - About:
+      - FAQ.md
+      - CONTRIBUTING.md
+      - CODE_OF_CONDUCT.md
+      - CHANGELOG.md
 
 theme:
   name: material
@@ -33,6 +50,11 @@ markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
       linenums: true
+  - toc:
+      permalink: true
+  - def_list
+  - tables
+  - admonition
 
 extra:
   social:
@@ -40,19 +62,3 @@ extra:
       link: https://github.com/haoxiangsnr
       name: haoxiangsnr
   generator: false
-
-copyright: Copyright &copy; - 2023 haoxiangsnr
-
-nav:
-  - Home: index.md
-  - Get Started:
-      - get_started/prerequisites.md
-      - get_started/project_structure.md
-      - get_started/usage.md
-  - Concepts:
-      - trainer.md
-  - About:
-      - FAQ.md
-      - CONTRIBUTING.md
-      - CODE_OF_CONDUCT.md
-      - CHANGELOG.md

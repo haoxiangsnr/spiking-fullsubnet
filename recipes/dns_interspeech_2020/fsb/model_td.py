@@ -535,7 +535,7 @@ if __name__ == "__main__":
         sr=16000,
         fdrc=0.5,
         n_fft=512,
-        hop_length=128,
+        hop_length=256,
         win_length=512,
         num_freqs=256,
         sequence_model="LSTM",
