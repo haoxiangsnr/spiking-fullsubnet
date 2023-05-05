@@ -54,7 +54,7 @@ We support multiple ways to find modules by the `path` in the configuration file
 
 We have the following directory structure:
 
-```
+```text
 📁 recipes
 ├── 📁 dns_1
 │   ├── 📄 baseline.toml
@@ -80,7 +80,6 @@ path = "audiozen.trainer.custom_trainer.CustomTrainer"
 ```
 
 We will try to find the `CustomTrainer` class in `audiozen/trainer/custom_trainer.py`.
-
 
 !!! note
 
@@ -133,7 +132,7 @@ gamma = 0.5
 ## `acoustics`
 
 The `acoustics` section is used to configure the acoustic features.
-These configurations are used to the whole project, like visualization, except for the `dataloader` and `model` sections.
+These configurations are used for the whole project, like visualization, except for the `dataloader` and `model` sections.
 
 | Item         | Description                                      |
 | ------------ | ------------------------------------------------ |
