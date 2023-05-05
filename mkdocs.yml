@@ -1,0 +1,48 @@
+site_name: AudioZEN
+site_description: AudioZEN is a personal project used to conduct the research on the audio/speech signal processing.
+repo_name: haoxiangsnr/audiozen
+repo_url: https://github.com/haoxiangsnr/audiozen
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    - navigation.footer
+    - navigation.indexes
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            members_order: source
+            show_root_heading: True
+            show_root_full_path: False
+            show_category_heading: True
+            group_by_category: True
+            merge_init_into_class: True
+
+markdown_extensions:
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      linenums: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/haoxiangsnr
+
+nav:
+  - Home: index.md
+  - Get Started:
+      - get_started/prerequisites.md
+      - get_started/project_structure.md
+      - get_started/usage.md
+  - Concepts:
+      - trainer.md

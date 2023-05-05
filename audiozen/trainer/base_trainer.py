@@ -43,7 +43,7 @@ class BaseTrainer:
 
         # Control reproducibility
         if config["meta"]["use_deterministic_algorithms"]:
-            self.use_deterministic_algorithms()
+            self._use_deterministic_algorithms()
 
         # GPU
         self.rank = rank
@@ -64,7 +64,7 @@ class BaseTrainer:
         self.loss_function = loss_function
 
         # Acoustic args
-        self.setup_acoustic_args(config["acoustics"])
+        self._setup_acoustic_args(config["acoustics"])
 
         # Automatic mixed precision (AMP)
         self.use_amp = config["meta"]["use_amp"]
@@ -224,7 +224,7 @@ class BaseTrainer:
         for key, value in config.items():
             setattr(self, key, value)
 
-    def setup_acoustic_args(self, acoustic_args):
+    def _setup_acoustic_args(self, acoustic_args):
         """Setup acoustic arguments."""
         self.n_fft = acoustic_args["n_fft"]
         self.hop_length = acoustic_args["hop_length"]
@@ -248,7 +248,7 @@ class BaseTrainer:
         self.librosa_istft = partial(librosa.istft, n_fft=self.n_fft, hop_length=self.hop_length, win_length=self.win_length)  # fmt: skip
 
     @staticmethod
-    def use_deterministic_algorithms():
+    def _use_deterministic_algorithms():
         """Control reproducibility of the training process.
 
         Notes:
@@ -311,7 +311,7 @@ class BaseTrainer:
 
         return step_kwargs
 
-    def run_early_stop_check(self, score, epoch):
+    def _run_early_stop_check(self, score, epoch):
         should_stop = False
 
         if self._check_improvement(score, save_max_score=self.save_max_score):
@@ -390,7 +390,7 @@ class BaseTrainer:
 
                         score = self.validate(validation_dataloaders)
 
-                        should_stop = self.run_early_stop_check(score, epoch)
+                        should_stop = self._run_early_stop_check(score, epoch)
 
                         if should_stop:
                             early_stop_mark += 1
@@ -524,7 +524,9 @@ class BaseTrainer:
 
         The validation_epoch_output will be a list of list. For example, if you have two dataloaders, the validation_epoch_output will be
 
+        ```python
         [[batch1_output, batch2_output, ...], [batch1_output, batch2_output, ...]]
+        ```
 
         Args:
             validation_epoch_output: the output of the validation epoch. It is a list of list.

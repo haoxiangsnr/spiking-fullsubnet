@@ -61,3 +61,5 @@ test_epoch_end(test_epoch_output)
 
 return score
 ```
+
+::: audiozen.trainer.base_trainer.BaseTrainer

@@ -1,4 +1,4 @@
-## Prerequisites
+# Prerequisites
 
 To run experiments, you must use a Linux-based operating system that does not support the Windows platform. In addition, you need to install Anaconda or Miniconda, which will be used to create a virtual environment and install the dependencies. To use GPU parallel training, you must install CUDA (10.2+) and the corresponding version of the CuDNN acceleration library.
 
