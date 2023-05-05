@@ -33,12 +33,13 @@ jobs:
         with:
           python-version: "3.10"
       - name: Install MkDocs and Material for MkDocs
-        run: pip install mkdocs[i18n] mkdocs-material
+        run: pip install mkdocs[i18n] mkdocs-material mkdocstrings[crystal,python]
       - name: Setup caching
         uses: actions/cache@v3
         with:
           key: ${{ github.sha }}
           path: .cache
+      - name: Run editable
       - name: Build site
         run: mkdocs build
       - name: Upload artifact
