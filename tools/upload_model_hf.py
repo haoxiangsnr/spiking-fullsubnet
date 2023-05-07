@@ -1,54 +1,66 @@
 import argparse
+import textwrap
 from pathlib import Path
 
 from huggingface_hub import HfApi, login
 
 
 def get_repo_id(model_folder_path):
-    """Convert config path to task flag.
-
-    dns_icassp_2023/bsrnn => dns_icassp_2023_bsrnn
-
-    """
-    print(f"Convert model path to repo id: {model_folder_path.as_posix()}")
-
+    """recipes/dns_icassp_2023/bsrnn => dns_icassp_2023_bsrnn"""
     model_name = model_folder_path.name
     data_name = model_folder_path.parent.name
+    repo_id = f"haoxiangsnr/{data_name}_{model_name}"
 
-    return f"haoxiangsnr/{data_name}_{model_name}"
+    print(f"Converted model path {model_folder_path.as_posix()} to repo id {repo_id}")
 
-
-def setup():
-    login(token="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")
+    return f"{data_name}_{model_name}"
 
 
 def main(args):
-    setup()
+    # Login to HuggingFace Hub
+    login(token="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")
+
+    # Get HuggingFace API
     api = HfApi()
 
     model_folder_path = Path(args.model_folder_path).absolute()
     assert model_folder_path.exists(), f"{model_folder_path} does not exist"
 
-    repo_id = get_repo_id(model_folder_path)
-    api.create_repo(repo_id=repo_id, private=True, exist_ok=True).repo_id
+    repo_url = api.create_repo(
+        repo_id=get_repo_id(model_folder_path),
+        exist_ok=True,
+        private=True,
+    )
+    repo_id = repo_url.repo_id
+    print(f"Created repo {repo_id}")
 
     # Upload README.md
     if (model_folder_path / "README.md").exists():
+        print(f"Uploading README.md to {repo_id}")
         api.upload_file(
             repo_id=repo_id,
-            file_path=(model_folder_path / "README.md").as_posix(),
-            file_name="README.md",
+            path_or_fileobj=(model_folder_path / "README.md"),
+            path_in_repo="README.md",
         )
 
+    # Upload model files and tensorboard logs
+    print(f"Uploading model files to {repo_id}")
     api.upload_folder(
-        folder_path=model_folder_path.as_posix(),
+        folder_path=model_folder_path,
         repo_id=repo_id,
         ignore_patterns="*.tar",
+        repo_type="model",
     )
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        epilog=textwrap.dedent(
+            """\
+            python tools/upload_model_hf.py -m recipes/dns_icassp_2023/bsrnn
+            """
+        )
+    )
     parser.add_argument("-m", "--model_folder_path", type=str, default="bsrnn")
     args = parser.parse_args()
     main(args)
