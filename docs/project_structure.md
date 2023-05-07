@@ -1,8 +1,11 @@
 # Project Structure
 
 Before going to details, let's take a look at the overall structure of the project.
-The project structure looks like that of [ESPNet](https://github.com/espnet/espnet) and [SpeechBrain](https://github.com/speechbrain/speechbrain), however, it is more flexible and simpler as we only focus on speech enhancement.
- The directory structure is as follows:
+You may familiar with the project structure if you have used [ESPNet](https://github.com/espnet/espnet) and [SpeechBrain](https://github.com/speechbrain/speechbrain). AudioZEN is inspired by them, but it is more flexible and simpler.
+
+AudioZEN includes a core package and a series of recipes. The core package named `audiozen` provides common audio signal processing tools and deep learning trainers. As we have installed `audiozen` in editable mode, we can call `audiozen` package in everywhere of code. In addition, we can modify the source code of `audiozen` package directly. Any changes to the original package would reflect directly in your environment. For example, we can call `audiozen` package in `recipes` folder to train models on specific datasets and call `audiozen` package in `tools` folder to preprocess data. The recipes in the `recipes` folder are used to conduct the research on the audio/speech signal processing. Recipe introduced by [Kaldi](https://kaldi-asr.org/doc/about.html) firstly. It provides a convenient and reproducible way to organize and save the deep learning training pipelines.
+
+The directory structure is as follows:
 
 ```shell
 ├── 📁 audiozen
@@ -20,7 +23,13 @@ The project structure looks like that of [ESPNet](https://github.com/espnet/espn
 ├── 📁 recipes
 │   └── 📁 dns_icassp_2020
 │       ├── 📁 cirm_lstm
-│       ├── 📁 data
+│       │   ├── 📄 baseline.toml
+│       │   ├── 📄 model.py
+│       │   └── 📄 trainer.py
+│       ├── 📄 dataset_train.py
+│       ├── 📄 dataset_validation_dns_1.py
+│       ├── 📄 dataset_validation_dns_4_non_personalized.py
+│       └── 📄 run.py
 └── 📁 tools
 ```
 
@@ -34,30 +43,16 @@ The project structure looks like that of [ESPNet](https://github.com/espnet/espn
 - 📁 `recipes/`: Contains the recipes for specific experiments.
 - 📁 `tools/`: Contains the code for additional tools, such as data preprocessing, model conversion, etc.
 
-In the recipe directory, we name the subdirectory after the dataset. create a subdirectory for the dataset named after the model.
-For example, `dns_icassp_2020/` represents the dataset `dns_icassp_2020`, and this directory contains data loading classes, training, and inference scripts for this dataset. `cirm_lstm/` contains the model for this dataset, including the structure and trainers for each model.
-For the dataset directory, take `recipes/dns_icassp_2020` as an example. Its directory structure is as follows:
-
-```shell
-.
-├── 📁 cirm_lstm
-│   ├── 📄 baseline.toml
-│   ├── 📄 model.py
-│   └── 📄 trainer.py
-├── 📄 dataset_train.py
-├── 📄 dataset_validation_dns_1.py
-├── 📄 dataset_validation_dns_4_non_personalized.py
-└── 📄 run.py
-```
-
-The scripts in the `recipes/dns_icassp_2020` directory are common to all models in this dataset, covering entry files, data loading classes, etc.:
+In `recipes` folder, we name the subdirectory after the dataset. create a subdirectory for the dataset named after the model.
+For example, `recipes/dns_icassp_2020/` represents the dataset `dns_icassp_2020`, and this directory contains data loading classes, training, and inference scripts for this dataset:
 
 - 📄 `run.py`: The entry of the entire project, which can be used to train all models in the `dns_icassp_2020` directory.
 - 📄 `dataset_train.py`: The construction class of the training dataset.
 - 📄 `dataset_validation_dns_1.py`: The construction class of the first validation dataset.
 - 📄 `dataset_validation_dns_4_non_personalized.py`: The construction class of the second validation dataset.
 
-In addition, the `recipes/dns_icassp_2020` directory can contain multiple model directories, each corresponding to a model. Each model directory contains:
+
+`cirm_lstm/` contains the cIRM LSTM model for this dataset, including the structure and trainers for each model.
 
 - 📄 `<exp_id>.toml`: The training parameters for this model.
 - 📄 `trainer.py`: The trainer for this model, which contains the operations and operations to be executed in each training, validation and test round.

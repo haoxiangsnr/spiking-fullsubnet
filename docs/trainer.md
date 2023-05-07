@@ -1,10 +1,19 @@
 # Trainer
 
+For each experiment, we need to define a trainer to train the model. The custom trainer must inherit from `audiozen.trainer.base_trainer.BaseTrainer` and implement the following methods:
+
+- `training_step`: The training step. It contains the operations to be executed in each training iteration.
+- `training_epoch_end`: The training epoch end. It contains the operations to be executed at the end of each training epoch.
+- `validation_step`: The validation step. It contains the operations to be executed in each validation iteration.
+- `validation_epoch_end`: The validation epoch end. It contains the operations to be executed at the end of each validation epoch.
+- `test_step`: The test step. It contains the operations to be executed in each test iteration.
+- `test_epoch_end`: The test epoch end. It contains the operations to be executed at the end of each test epoch.
+
 ## Training
 
 Here is the persuade code for training a model.
 
-```python
+```python hl_lines="9 16"
 for epoch in range(start_epoch, end_epoch):
     self.model.train()
 

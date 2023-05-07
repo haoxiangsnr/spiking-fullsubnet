@@ -1,4 +1,4 @@
-# Configurations
+# Experiment arguments
 
 AudioZEN uses TOML configuration files to configure the experiment. Check any experiment configuration file in the `recipes` directory for more details.
 

@@ -6,15 +6,16 @@ edit_uri: edit/main/docs/
 copyright: Copyright &copy; - 2023 haoxiangsnr
 
 nav:
-  - Home: index.md
-  - Getting Started:
-      - getting_started/prerequisites.md
-      - getting_started/project_structure.md
-      - getting_started/running_an_experiment.md
-      - getting_started/logging_and_visualization.md
-      - getting_started/configurations.md
-  - Concepts:
-      - trainer.md
+  - index.md
+  - getting_started.md
+  - Usage:
+      - Quickstart:
+          - project_structure.md
+          - running_an_experiment.md
+          - logging_and_visualization.md
+      - Concepts:
+          - experiment_arguments.md
+          - trainer.md
   - About:
       - FAQ.md
       - CONTRIBUTING.md
@@ -26,12 +27,14 @@ theme:
   palette:
     primary: white
   features:
-    - navigation.tabs
-    - content.action.edit
-    - content.action.view
-    - content.code.annotate
-    - content.code.copy
-    - navigation.top
+    - navigation.tabs # tabs in the navigation bar
+    - navigation.top # back to top button
+    - navigation.expand # expand the navigation
+    - navigation.sections
+    - content.action.edit # edit button in page
+    - content.action.view # view button in page
+    - content.code.annotate # code annotation
+    - content.code.copy # copy code button
 plugins:
   - search
   - mkdocstrings:
@@ -62,3 +65,6 @@ extra:
       link: https://github.com/haoxiangsnr
       name: haoxiangsnr
   generator: false
+
+extra_css:
+  - stylesheets/extra.css

@@ -2,13 +2,13 @@
 
 First, we need to enter a dataset directory, such as `recipes/dns_icassp_2020` directory:
 
-```shell
+```shell title="/path/to/audiozen"
 cd recipes/dns_icassp_2020
 ```
 
 Then call the `run.py` script to run the experiment. For example, we can use the following command to train the `cirm_lstm` model:
 
-```shell
+```shell title="/path/to/audiozen/recipes/dns_icassp_2020"
 # Setup the environment variables
 export CUDA_VISIABLE_DEVICES=0,1
 
