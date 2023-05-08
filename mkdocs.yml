@@ -7,8 +7,8 @@ copyright: Copyright &copy; - 2023 haoxiangsnr
 
 nav:
   - index.md
-  - getting_started.md
-  - Usage:
+  - Getting Started:
+      - Installation.md
       - Quickstart:
           - project_structure.md
           - running_an_experiment.md
@@ -57,7 +57,7 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.highlight:
       anchor_linenums: true
-      linenums: true
+      # linenums: true
   - toc:
       permalink: true
   - def_list

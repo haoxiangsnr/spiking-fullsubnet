@@ -22,7 +22,7 @@ The `meta` section is used to configure the experiment meta information, such as
 | `save_dir`                     | The directory where the experiment is saved. The log information, model checkpoints, and enhanced audio files will be stored in this directory. |
 | `seed`                         | The random seed used to initialize the random number generator.                                                                                 |
 | `use_amp`                      | Whether to use automatic mixed precision (AMP) to accelerate the training.                                                                      |
-| `use_deterministic_algorithms` | Whether to use nondeterministic algorithms to accelerate the training.                                                                          |
+| `use_deterministic_algorithms` | Whether to use nondeterministic algorithms to accelerate the training. If it is True, the training will be slower but more reproducible.        |
 
 ## `trainer`
 
@@ -37,22 +37,22 @@ clip_grad_norm_value = 5
 ...
 ```
 
-It will load the `Trainer` class from the model directory and initialize it with the arguments in the `[trainer.args]` section.
+Using this configuration, AudioZEN will load the `Trainer` class from the current model directory and initialize it with the arguments in the `[trainer.args]` section.
 `Trainer` class must be a subclass of `audiozen.trainer.base_trainer.BaseTrainer`. It supports the following arguments:
 
-| Item                       | Description                                                                        |
-| -------------------------- | ---------------------------------------------------------------------------------- |
-| `max_epochs`               | The maximum number of epochs to train.                                             |
-| `clip_grad_norm_value`     | The maximum norm of the gradients used for clipping.                               |
-| `save_max_score`           | Whether to find the best model by the maximum score.                               |
-| `save_checkpoint_interval` | The interval of saving checkpoints.                                                |
-| `patience`                 | The number of epochs with no improvement after which the training will be stopped. |
+| Item                       | Description                                                                                          |
+| -------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `max_epochs`               | The maximum number of epochs to train.                                                               |
+| `clip_grad_norm_value`     | The maximum norm of the gradients used for clipping.                                                 |
+| `save_max_score`           | Whether to find the best model by the maximum score.                                                 |
+| `save_checkpoint_interval` | The interval of saving checkpoints.                                                                  |
+| `patience`                 | The number of epochs with no improvement after which the training will be stopped.                   |
+| `validation_interval`      | The interval of validation.                                                                          |
+| `max_num_checkpoints`      | The maximum number of checkpoints to keep. Saving too many checkpoints causes disk space to run out. |
 
-### Finding modules by the `path`
+### Finding modules by `path` argument
 
-We support multiple ways to find modules by the `path` in the configuration file. For example:
-
-We have the following directory structure:
+We support multiple ways to find modules by the `path` in the configuration file. For example, we have the following directory structure:
 
 ```text
 📁 recipes
@@ -70,9 +70,7 @@ In `recipes/dns_1/baseline.toml`, the `path` of the `trainer` is set to:
 path = "trainer.Trainer"
 ```
 
-We will try to find the `Trainer` class in `recipes/dns_1/trainer`.
-
-If we set the `path` to:
+In this case, we will try to find the `Trainer` class in `recipes/dns_1/trainer`. If we set the `path` to:
 
 ```toml
 [trainer]

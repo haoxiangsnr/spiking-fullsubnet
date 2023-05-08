@@ -1,6 +1,6 @@
 # Running an experiment
 
-First, we need to enter a dataset directory, such as `recipes/dns_icassp_2020` directory:
+First, we need to enter a dataset directory, such as `recipes/dns_icassp_2020/`:
 
 ```shell title="/path/to/audiozen"
 cd recipes/dns_icassp_2020
@@ -9,9 +9,6 @@ cd recipes/dns_icassp_2020
 Then call the `run.py` script to run the experiment. For example, we can use the following command to train the `cirm_lstm` model:
 
 ```shell title="/path/to/audiozen/recipes/dns_icassp_2020"
-# Setup the environment variables
-export CUDA_VISIABLE_DEVICES=0,1
-
 # Use baseline.toml to train cirm_lstm with 2 GPUs on a single machine
 torchrun --standalone --nnodes=1 --nproc_per_node=2 run.py -C cirm_lstm/baseline.toml -M train
 
@@ -32,7 +29,15 @@ torchrun --standalone --nnodes=1 --nproc_per_node=2 run.py -C cirm_lstm/baseline
 torchrun --standalone --nnodes=1 --nproc_per_node=2 run.py -C cirm_lstm/baseline.toml -M train test --ckpt_path best
 ```
 
+You can use the environment variable `CUDA_VISIBLE_DEVICES` to control the GPU usage. For example, the following command will use the first and second GPUs:
+
+```shell
+export CUDA_VISIABLE_DEVICES=0,1
+```
+
 Note that `torchrun` isn't a magic wrapper, its just a python console_entrypoint added for convenience (check [torchrun versus python -m torch.distributed.run](https://pytorch.org/docs/stable/elastic/run.html)).
+
+## `run.py`
 
 `run.py` supports the following parameters:
 

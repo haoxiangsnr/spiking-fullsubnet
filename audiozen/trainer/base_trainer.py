@@ -486,10 +486,13 @@ class BaseTrainer:
                 return False
 
     def training_step(self, batch, batch_idx):
-        """Training step.
+        """Custom training step.
+
+        Implement your own training step here. The input batch is from a training dataloader.
+        The output of this function should be a loss tensor.
 
         Args:
-            batch: a batch of data.
+            batch: a batch of data, which passed from a training dataloader.
             batch_idx: the index of the batch.
 
         Returns:
@@ -501,6 +504,7 @@ class BaseTrainer:
         """Training epoch end.
 
         When the training epoch ends, this function will be called.
+        The input is a list of the loss value of each batch in the training epoch.
         You may want to log the epoch-level training loss here.
 
         Args:
@@ -510,6 +514,8 @@ class BaseTrainer:
 
     def validation_step(self, batch, batch_idx, dataloader_idx):
         """Validation step.
+
+        This function defines the validation step. The input batch is from a validation dataloader.
 
         Args:
             batch: a batch of data.
@@ -524,19 +530,30 @@ class BaseTrainer:
     def validation_epoch_end(self, validation_epoch_output):
         """Validation epoch end.
 
-        The validation_epoch_output will be a list of list. For example, if you have two dataloaders, the validation_epoch_output will be
+        The input `validation_epoch_output` will be a list of list. For example, if you have two dataloaders, the validation_epoch_output will be
 
         ```python
-        [[batch1_output, batch2_output, ...], [batch1_output, batch2_output, ...]]
+        [
+            [dataloader_1_batch_1_output, dataloader_1_batch_2_output, ...],
+            [dataloader_2_batch_1_output, dataloader_2_batch_2_output, ...],
+            ...
+        ]
         ```
+
+        The output of this function should be a metric score, which will be used to determine whether the current model is the best model.
 
         Args:
             validation_epoch_output: the output of the validation epoch. It is a list of list.
+
+        Returns:
+            score: the metric score of the validation epoch.
         """
         raise NotImplementedError
 
     def test_step(self, batch, batch_idx, dataloader_idx):
+        """Similar to validation_step, but for testing."""
         raise NotImplementedError
 
     def test_epoch_end(self, test_epoch_output):
+        """Similar to validation_epoch_end, but for testing."""
         raise NotImplementedError

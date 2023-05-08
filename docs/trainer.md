@@ -13,29 +13,24 @@ For each experiment, we need to define a trainer to train the model. The custom 
 
 Here is the persuade code for training a model.
 
-```python hl_lines="9 16"
+```python hl_lines="7 12"
 for epoch in range(start_epoch, end_epoch):
     self.model.train()
 
     training_epoch_output = []
-
     for batch, batch_index in dataloader:
         zero_grad()
-
         loss = training_step(batch, batch_idx)
-
         loss.backward()
         optimizer.step()
 
     training_epoch_output.append(loss)
-
     training_epoch_end(training_epoch_output)
 
     save_checkpoint()
 
     if some_condition:
         score = validate()
-
         if score > best_score:
             save_checkpoint(best=True)
 ```
@@ -45,13 +40,13 @@ for epoch in range(start_epoch, end_epoch):
 Here is the persuade code for validating a model.
 
 ```python
-for batch, batch_index in dataloader:
-    loss = validation_step(batch, batch_idx)
+validation_output = []
+for dataloader_idx, dataloader in dataloaders:
+    for batch_index, batch in dataloader:
+        loss_or_data = validation_step(batch, batch_idx)
+        validation_epoch_output.append(loss_or_data)
 
-    validation_epoch_output.append(loss)
-
-validation_epoch_end(validation_epoch_output)
-
+score = validation_epoch_end(validation_epoch_output)
 return score
 ```
 
@@ -72,3 +67,11 @@ return score
 ```
 
 ::: audiozen.trainer.base_trainer.BaseTrainer
+    options:
+        members:
+        - training_step
+        - training_epoch_end
+        - validation_step
+        - validation_epoch_end
+        - test_step
+        - test_epoch_end
