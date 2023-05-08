@@ -371,7 +371,9 @@ class BaseTrainer:
                 training_epoch_output.append(loss.item())
 
                 if self.rank == 0:
-                    dataloader_bar.set_description(f"Loss: {loss.item():.4f}")
+                    dataloader_bar.set_description(
+                        f"Loss: {loss.item():.4f}, lr: {self.lr_scheduler.get_last_lr()[-1]:.6f}"
+                    )
                     self.writer.add_scalar(
                         f"Loss/Train_Step",
                         loss.item(),
