@@ -1,5 +1,6 @@
 einops
 flit
+h5py
 joblib
 joblib
 jupyterlab
