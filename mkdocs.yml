@@ -16,6 +16,9 @@ nav:
       - Concepts:
           - experiment_arguments.md
           - trainer.md
+  - API:
+      - api/acoustics.md
+      - api/loss.md
   - About:
       - FAQ.md
       - CONTRIBUTING.md
@@ -44,9 +47,11 @@ plugins:
             members_order: source
             show_root_heading: True
             show_root_full_path: False
-            show_category_heading: True
-            group_by_category: True
             merge_init_into_class: True
+            show_bases: false
+            show_source: false
+            show_docstring_attributes: False
+            show_submodules: true
 
 markdown_extensions:
   - pymdownx.superfences

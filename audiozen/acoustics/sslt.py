@@ -1,4 +1,4 @@
-"""Sound source localization and tracking (SSLT)"""
+"""This module contains functions about Sound source localization and tracking (SSLT)"""
 import torch
 
 

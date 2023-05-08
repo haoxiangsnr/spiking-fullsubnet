@@ -1,3 +1,4 @@
+"""Loss module includes loss functions related to speech signal processing."""
 from typing import Iterable
 
 import torch
