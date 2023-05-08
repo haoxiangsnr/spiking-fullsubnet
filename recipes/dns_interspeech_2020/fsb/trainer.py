@@ -78,7 +78,7 @@ class Trainer(BaseTrainer):
 
             logger.info(f"\n{df_metrics_mean_df.to_markdown()}")
 
-            score += df_metrics_mean["OVRL"]
+            score += df_metrics_mean["pesq_wb"]
 
             for metric, value in df_metrics_mean.items():
                 self.writer.add_scalar(
