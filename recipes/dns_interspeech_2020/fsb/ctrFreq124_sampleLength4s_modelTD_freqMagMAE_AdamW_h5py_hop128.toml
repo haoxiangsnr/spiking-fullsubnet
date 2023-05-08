@@ -1,0 +1,132 @@
+[meta]
+save_dir = "fsb/exp"
+description = "This is a description of audiozen experiment."
+seed = 3407
+use_amp = false
+use_deterministic_algorithms = false
+
+[acoustics]
+n_fft = 512
+win_length = 512
+sr = 16000
+hop_length = 256
+
+
+[loss_function]
+path = "torch.nn.MSELoss"
+[loss_function.args]
+
+[lr_scheduler]
+path = "torch.optim.lr_scheduler.ExponentialLR"
+[lr_scheduler.args]
+gamma = 0.99
+
+
+[optimizer]
+path = "torch.optim.AdamW"
+[optimizer.args]
+lr = 0.001
+
+# -------------------- Trainer -------------------- #
+[trainer]
+path = "trainer.Trainer"
+[trainer.train]
+max_epoch = 9999
+clip_grad_norm_value = 5
+save_max_score = true
+save_checkpoint_interval = 1
+patience = 100
+[trainer.validate]
+validation_interval = 1
+max_num_checkpoints = 10
+
+# -------------------- Training data -------------------- #
+[train_dataset]
+path = "dataloader_noise_h5py.DNS_OTF"
+[train_dataset.args]
+speech_path = "/apdcephfs/share_1149801/speech_user/tomasyu/experiment/frontend/Enhancement-Paas/egs2/denoise/data/16k/dnsdatalist/readspeech_hdf5.scp"
+noise_path = "/apdcephfs/share_1149801/speech_user/tomasyu/experiment/frontend/Enhancement-Paas/egs2/denoise/data/16k/dnsdatalist/noise_hdf5.scp"
+rir_path = "/apdcephfs/share_1149801/speech_user/tomasyu/experiment/frontend/Enhancement-Paas/egs2/denoise/data/16k/dnsdatalist/rir_hdf5.scp"
+# num_iter_per_epoch = 200000
+num_iter_per_epoch = 640000
+session_length = 4
+input_sr = 16000
+target_sr = 16000
+snr_range = [-5, 20]
+reverb_proportion = 0.75
+target_dB_FS = -25
+target_dB_FS_floating_value = 10
+
+[train_dataset.dataloader]
+batch_size = 16
+num_workers = 16
+drop_last = true
+pin_memory = false
+
+# -------------------- Validation DNS 1 -------------------- #
+[validation_dataset_dns_1_with_reverb]
+path = "dataset_validation_dns_1.Dataset"
+[validation_dataset_dns_1_with_reverb.args]
+dataset_dir_list = [
+    "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/with_reverb",
+]
+sr = 16000
+offset = 0
+limit = false
+
+# -------------------- Validation DNS 4 small set -------------------- #
+[validation_dataset_dns_1_no_reverb]
+path = "dataset_validation_dns_1.Dataset"
+[validation_dataset_dns_1_no_reverb.args]
+dataset_dir_list = [
+    "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/no_reverb",
+]
+sr = 16000
+offset = 0
+limit = false
+
+# -------------------- Test DNS 1 -------------------- #
+[test_dataset_dns_1_with_reverb]
+path = "dataset_validation_dns_1.Dataset"
+[test_dataset_dns_1_with_reverb.args]
+dataset_dir_list = [
+    "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/with_reverb",
+]
+sr = 16000
+offset = 0
+limit = false
+
+# -------------------- Test DNS 4  -------------------- #
+[test_dataset_dns_1_no_reverb]
+path = "dataset_validation_dns_1.Dataset"
+[test_dataset_dns_1_no_reverb.args]
+dataset_dir_list = [
+    "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/no_reverb",
+]
+sr = 16000
+offset = 0
+limit = false
+
+
+# -------------------- Model -------------------- #
+[model]
+path = "model_td.Separator"
+
+[model.args]
+sr = 16000
+fdrc = 0.5
+n_fft = 512
+hop_length = 256
+win_length = 512
+num_freqs = 256
+sequence_model = "LSTM"
+fb_hidden_size = 512
+fb_output_activate_function = false
+freq_cutoffs = [20, 80]
+sb_num_center_freqs = [1, 2, 4]
+sb_num_neighbor_freqs = [15, 15, 15]
+fb_num_center_freqs = [1, 2, 4]
+fb_num_neighbor_freqs = [0, 0, 0]
+sb_hidden_size = 384
+sb_output_activate_function = false
+norm_type = "offline_laplace_norm"

@@ -1,0 +1,29 @@
+[trainer]
+path = "trainer.Trainer"
+[trainer.args]
+max_epoch = 9999
+clip_grad_norm_value = 5
+
+[acoustics]
+n_fft = 512
+win_length = 256
+sr = 16000
+hop_length = 256
+
+[loss]
+path = "audiozen.loss.SoftDTWLoss"
+
+[optimizer]
+path = "torch.optim.RAdam"
+[optimizer.args]
+lr = 0.01
+weight_decay = 1e-5
+
+[model]
+path = "model.Model"
+[model.args]
+threshold = 0.1
+tau_grad = 0.1
+scale_grad = 0.8
+max_delay = 64
+out_delay = 0

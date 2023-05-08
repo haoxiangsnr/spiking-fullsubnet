@@ -4,10 +4,42 @@ from typing import Iterable
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from numpy import ndarray
 from torch import Tensor
 from torch.autograd import Function
 
 from audiozen.constant import EPSILON
+
+
+class SISNRLoss:
+    def __init__(self, EPS=1e-8) -> None:
+        self.EPS = EPS
+
+    def forward(self, input: Tensor | ndarray, target: Tensor | ndarray):
+        if isinstance(input, ndarray):
+            input = torch.from_numpy(input)
+        if isinstance(target, ndarray):
+            target = torch.from_numpy(target)
+
+        if input.shape != target.shape:
+            raise RuntimeError(
+                f"Dimension mismatch when calculate si_snr, {input.shape} vs {target.shape}"
+            )
+
+        s_input = input - torch.mean(input, dim=-1, keepdim=True)
+        s_target = target - torch.mean(target, dim=-1, keepdim=True)
+
+        # <s, s'> / ||s||**2 * s
+        pair_wise_dot = torch.sum(s_target * s_input, dim=-1, keepdim=True)
+        s_target_norm = torch.sum(s_target**2, dim=-1, keepdim=True)
+        pair_wise_proj = pair_wise_dot * s_target / s_target_norm
+
+        e_noise = s_input - pair_wise_proj
+
+        pair_wise_sdr = torch.sum(pair_wise_proj**2, dim=-1) / (
+            torch.sum(e_noise**2, dim=-1) + self.EPS
+        )
+        return 10 * torch.log10(pair_wise_sdr + self.EPS)
 
 
 def si_snr_loss():
