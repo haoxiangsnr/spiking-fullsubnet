@@ -6,6 +6,7 @@ data/
 generated/ # generated sphinx files
 _build/
 *.csv
+core.*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
