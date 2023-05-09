@@ -89,6 +89,7 @@ class BaseTrainer:
         # Other
         self.start_epoch = 1
         self.current_epoch = 1
+
         self.wait_count = 0
         self.best_score = -np.inf if self.save_max_score else np.inf
         pd.set_option("display.float_format", lambda x: "%.3f" % x)
@@ -342,6 +343,10 @@ class BaseTrainer:
                 logger.info(f"{'=' * 15} {epoch} epoch {'=' * 15}")
                 logger.info("Begin training...")
 
+            # Calling the set_epoch() method at the beginning of each epoch before
+            # creating the DataLoader iterator is necessary to make shuffling work
+            # properly across multiple epochs.
+            train_dataloader.sampler.set_epoch(epoch)
             self.model.train()
 
             training_epoch_output = []

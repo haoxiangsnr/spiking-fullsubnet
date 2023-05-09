@@ -44,9 +44,8 @@ def init_logging_logger(config):
 
     # Create logger
     logger = logging.getLogger()
-    logger.setLevel(
-        logging.DEBUG
-    )  # Set a lower level of root logger and controls logging via handlers' level
+    # Set a lower level of root logger and controls logging via handlers' level
+    logger.setLevel(logging.DEBUG)
 
     # Create a console handler and set level to info
     console_handler = logging.StreamHandler()
