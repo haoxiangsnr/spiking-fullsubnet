@@ -87,9 +87,8 @@ class BaseTrainer:
         ), "`validation_interval` should be large than one."
 
         # Other
-        self.start_epoch = 1
-        self.current_epoch = 1
-
+        self.start_epoch = 1  # used when resuming
+        self.current_epoch = 1  # used in custom training loop
         self.wait_count = 0
         self.best_score = -np.inf if self.save_max_score else np.inf
         pd.set_option("display.float_format", lambda x: "%.3f" % x)

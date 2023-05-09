@@ -1,3 +1,9 @@
+[meta]
+save_dir = "sdnn_delays/exp"
+seed = 0
+use_amp = false
+use_deterministic_algorithms = false
+
 [trainer]
 path = "trainer.Trainer"
 [trainer.args]
@@ -12,6 +18,8 @@ hop_length = 256
 
 [loss]
 path = "audiozen.loss.SoftDTWLoss"
+[loss.args]
+gamma = 0.1
 
 [optimizer]
 path = "torch.optim.RAdam"

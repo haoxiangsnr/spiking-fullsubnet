@@ -518,9 +518,11 @@ if __name__ == "__main__":
         return_embedding=False,
     )
 
-    for i, data in enumerate(dataset):
-        if i > 10:
-            break
-        noisy, clean = data
-        sf.write(f"noisy_{i}.wav", noisy, 16000)
-        sf.write(f"clean_{i}.wav", clean, 16000)
+    print(len(dataset))
+
+    # for i, data in enumerate(dataset):
+    #     if i > 10:
+    #         break
+    #     noisy, clean = data
+    #     sf.write(f"noisy_{i}.wav", noisy, 16000)
+    #     sf.write(f"clean_{i}.wav", clean, 16000)

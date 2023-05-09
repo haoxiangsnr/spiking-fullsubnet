@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
-import torchaudio as ta
+import torch.nn.functional as functional
 from einops import rearrange
+from torch import Tensor
 
 from audiozen.acoustics.audio_feature import stft
 from audiozen.model.base_model import BaseModel
