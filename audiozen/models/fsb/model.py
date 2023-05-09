@@ -2,10 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as functional
 from einops import rearrange
-from sympy import Q
 from torch import Tensor
 
-from audiozen.acoustics.audio_feature import stft
 from audiozen.models.base_model import BaseModel
 from audiozen.models.module.sequence_model import SequenceModel
 
