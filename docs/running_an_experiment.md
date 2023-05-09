@@ -6,22 +6,53 @@ First, we need to enter a dataset directory, such as `recipes/dns_icassp_2020/`:
 cd recipes/dns_icassp_2020
 ```
 
+## `run.py`
+
 Then call the `run.py` script to run the experiment. For example, we can use the following command to train the `cirm_lstm` model:
 
 ```shell title="/path/to/audiozen/recipes/dns_icassp_2020"
-# Use baseline.toml to train cirm_lstm with 2 GPUs on a single machine
-torchrun --standalone --nnodes=1 --nproc_per_node=2 run.py -C cirm_lstm/baseline.toml -M train
+torchrun run.py -C cirm_lstm/baseline.toml -M train
+```
 
-# Use baseline.toml to train cirm_lstm with 1 GPU on a single machine
-torchrun --standalone --nnodes=1 --nproc_per_node=1 run.py -C cirm_lstm/baseline.toml -M train
+## Single-machine multi-GPU training
 
-# Use baseline.toml to train cirm_lstm with 2 GPUs on a single machine, and resume training from the last checkpoint
+Then call the `run.py` script to run the experiment. For example, we can use the following command to train the `cirm_lstm` model, Use baseline.toml to train cirm_lstm with 2 GPUs on a single machine
+
+```shell title="/path/to/audiozen/recipes/dns_icassp_2020"
+torchrun
+    --standalone
+    --nnodes=1
+    --nproc_per_node=2
+    run.py
+    --configuration cirm_lstm/baseline.toml
+    --mode train
+```
+
+Use baseline.toml to train cirm_lstm with 1 GPU on a single machine
+
+```shell
+torchrun
+    --standalone
+    --nnodes=1
+    --nproc_per_node=1
+    run.py
+    --configuration cirm_lstm/baseline.toml
+    --mode train
+```
+
+Use baseline.toml to train cirm_lstm with 2 GPUs on a single machine, and resume training from the last checkpoint
+
 torchrun --standalone --nnodes=1 --nproc_per_node=2 run.py -C cirm_lstm/baseline.toml -M train -R
 
-# In the case of running multiple experiments on a single machine, since the first experiment has occupied the default DistributedDataParallel (DDP) listening port 29500, we can use need to make sure that each instance (job) is setup on different ports to avoid port conflicts
-# rdzv-endpoint=localhost:0 means to select a random unused port
-torchrun --rdzv-backend=c10d --rdzv-endpoint=localhost:0 --nnodes=1 --nproc_per_node=2 run.py -C cirm_lstm/baseline.toml -M train
+## Single-machine multi-GPU multiple-experiment training with DDP
 
+In the case of running multiple experiments on a single machine, since the first experiment has occupied the default DistributedDataParallel (DDP) listening port 29500, we can use need to make sure that each instance (job) is setup on different ports to avoid port conflicts. rdzv-endpoint=localhost:0 means to select a random unused port
+
+```shell
+torchrun --rdzv-backend=c10d --rdzv-endpoint=localhost:0 --nnodes=1 --nproc_per_node=2 run.py -C cirm_lstm/baseline.toml -M train
+```
+
+```shell
 # Test the model performance on the test dataset
 torchrun --standalone --nnodes=1 --nproc_per_node=2 run.py -C cirm_lstm/baseline.toml -M test --ckpt_path best
 

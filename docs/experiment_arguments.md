@@ -1,10 +1,61 @@
 # Experiment arguments
 
-AudioZEN uses TOML configuration files to configure the experiment. Check any experiment configuration file in the `recipes` directory for more details.
+AudioZEN uses TOML configuration files (`*.toml`) to configure and manage experiments.
+Each experiment is configured by a `*.toml` file, which contains the experiment meta information, trainer, loss function, learning rate scheduler, optimizer, model, dataset, and acoustic features. the basename of the `*.toml` file is used as the experiment ID or identifier.
+You can track configuration changes using version control and reproduce experiments by using the same configuration file. For more information on TOML syntax, visit the [TOML website](https://toml.io/en/).
+
+## Sample `*.toml` file
+
+This sample file demonstrates many settings available for configuration in AudioZEN.
+
+```toml
+[meta]
+save_dir = "sdnn_delays/exp"
+seed = 0
+use_amp = false
+use_deterministic_algorithms = false
+
+[trainer]
+path = "trainer.Trainer"
+[trainer.args]
+max_epoch = 9999
+clip_grad_norm_value = 5
+
+[acoustics]
+n_fft = 512
+win_length = 256
+sr = 16000
+hop_length = 256
+
+[loss]
+path = "audiozen.loss.SoftDTWLoss"
+[loss.args]
+gamma = 0.1
+
+[optimizer]
+path = "torch.optim.RAdam"
+[optimizer.args]
+lr = 0.01
+weight_decay = 1e-5
+
+[model]
+path = "model.Model"
+[model.args]
+threshold = 0.1
+tau_grad = 0.1
+scale_grad = 0.8
+max_delay = 64
+out_delay = 0
+```
+
+
+Check any experiment configuration file in the `recipes` directory for more details.
+
+## Configuration details
 
 In the audiozen configuration file, we must contain the following sections:
 
-- `meta`: Configure the experiment meta information, such as `name`, `save_dir`, `seed`, etc.
+- `meta`: Configure the experiment meta information, such as `save_dir`, `seed`, etc.
 - `trainer`: Configure the trainer.
 - `loss_function`: Configure the loss function.
 - `lr_scheduler`: Configure the learning rate scheduler.
@@ -13,9 +64,9 @@ In the audiozen configuration file, we must contain the following sections:
 - `dataset`: Configure the dataset.
 - `acoustics`: Configure the acoustic features.
 
-## `meta`
+### `meta`
 
-The `meta` section is used to configure the experiment meta information, such as `name`, `save_dir`, `seed`, etc.
+The `meta` section is used to configure the experiment meta information.
 
 | Item                           | Description                                                                                                                                     |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -24,9 +75,9 @@ The `meta` section is used to configure the experiment meta information, such as
 | `use_amp`                      | Whether to use automatic mixed precision (AMP) to accelerate the training.                                                                      |
 | `use_deterministic_algorithms` | Whether to use nondeterministic algorithms to accelerate the training. If it is True, the training will be slower but more reproducible.        |
 
-## `trainer`
+### `trainer`
 
-The `trainer` section is used to configure the trainer. The following configurations are used to configure the `Trainer`:
+The `trainer` section is used to configure the trainer. It contains two parts: `path` and `args`. `path` is a string that specifies the path to the trainer class. `args` is a dictionary that specifies the arguments of the trainer class. It looks like:
 
 ```toml
 [trainer]
@@ -37,8 +88,7 @@ clip_grad_norm_value = 5
 ...
 ```
 
-Using this configuration, AudioZEN will load the `Trainer` class from the current model directory and initialize it with the arguments in the `[trainer.args]` section.
-`Trainer` class must be a subclass of `audiozen.trainer.base_trainer.BaseTrainer`. It supports the following arguments:
+In this case, AudioZEN will load the `Trainer` class from `trainer.py` and initialize it with the arguments in the `[trainer.args]` section. `Trainer` class must be a subclass of `audiozen.trainer.base_trainer.BaseTrainer`. It supports the following arguments at least:
 
 | Item                       | Description                                                                                          |
 | -------------------------- | ---------------------------------------------------------------------------------------------------- |
@@ -50,9 +100,9 @@ Using this configuration, AudioZEN will load the `Trainer` class from the curren
 | `validation_interval`      | The interval of validation.                                                                          |
 | `max_num_checkpoints`      | The maximum number of checkpoints to keep. Saving too many checkpoints causes disk space to run out. |
 
-### Finding modules by `path` argument
+#### Finding modules by `path` argument
 
-We support multiple ways to find modules by the `path` in the configuration file. For example, we have the following directory structure:
+We support multiple ways to find modules by the `path` argument in the `*.toml`. For example, we have the following directory structure:
 
 ```text
 recipes/intel_ndns_challenge
@@ -95,7 +145,7 @@ We will try to find the `CustomTrainer` class in `audiozen/trainer/custom_traine
 
     If you want to call `Trainer` in `audiozen` package, you must install it in editable way by `pip install -e .` first.
 
-## `loss_function`, `lr_scheduler`, `optimizer`, `model`, and `dataset`
+### `loss_function`, `lr_scheduler`, `optimizer`, `model`, and `dataset`
 
 `loss_function`, `lr_scheduler`, `optimizer`, `model`, `dataset` sections are used to configure the loss function, learning rate scheduler, optimizer, model, and dataset, respectively.
 They have the same logic as the `trainer` section.
@@ -139,7 +189,7 @@ step_size = 100
 gamma = 0.5
 ```
 
-## `acoustics`
+### `acoustics`
 
 The `acoustics` section is used to configure the acoustic features.
 These configurations are used for the whole project, like visualization, except for the `dataloader` and `model` sections.

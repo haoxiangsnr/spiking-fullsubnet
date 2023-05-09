@@ -27,6 +27,8 @@ nav:
 
 theme:
   name: material
+  font:
+    code: Roboto Mono
   palette:
     primary: white
   features:
