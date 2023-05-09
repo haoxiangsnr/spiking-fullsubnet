@@ -42,13 +42,14 @@ class Timer:
 
 
 def initialize_ddp(rank: int):
+    """Initialize the process group"""
     torch.cuda.set_device(rank)
 
-    # Initialize the process group
-    # The environment variables necessary to initialize a Torch process group are provided to you by this module,
-    # and no need for you to pass ``RANK`` manually.
+    # torchrun and multi-process distributed (single-node or multi-node) GPU training currently only achieves the best performance using the NCCL distributed backend.
+    # The environment variables necessary to initialize a Torch process group are provided to you by this module, and no need for you to pass ``RANK`` manually.
     dist.init_process_group(backend="nccl")
-    logger.info(f"Initialized process group with rank {rank}.")
+
+    print(f"Initialized DistributedDataParallel process group on GPU {rank}.")
 
 
 def instantiate(path: str, args: Optional[dict] = None, initialize: bool = True):
