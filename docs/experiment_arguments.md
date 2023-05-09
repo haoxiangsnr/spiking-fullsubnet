@@ -55,12 +55,24 @@ Using this configuration, AudioZEN will load the `Trainer` class from the curren
 We support multiple ways to find modules by the `path` in the configuration file. For example, we have the following directory structure:
 
 ```text
-📁 recipes
-├── 📁 dns_1
-│   ├── 📄 baseline.toml
-│   ├── 📄 model.py
-│   ├── 📄 trainer.py
-│   └── 📄 ...
+recipes/intel_ndns_challenge
+├── README.md
+├── run.py
+└── sdnn_intel_ndns_challengedelays
+    ├── baseline.toml
+    ├── exp
+    │   └── baseline
+    │       └── baseline.log
+    ├── model.py
+    └── trainer.py
+```
+
+```py
+sys.path = [
+    '/path/to/audiozen/recipes/intel_ndns_challenge/sdnn_delays',
+    '/path/to/audiozen/recipes/intel_ndns_challenge',
+    ...
+]
 ```
 
 In `recipes/dns_1/baseline.toml`, the `path` of the `trainer` is set to:
