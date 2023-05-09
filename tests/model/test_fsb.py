@@ -1,6 +1,6 @@
 import torch
 
-from audiozen.models.fsb.model import FrequencyCommunication, FSFBlock
+from audiozen.models.fsb.model import FrequencyCommunication, Model
 
 
 def test_freqency_communication():
@@ -34,5 +34,5 @@ def test_fsb_block():
     )
     input = torch.rand(batch_size, num_channels, num_freqs, num_frames)
 
-    model = FSFBlock()
+    model = Model()
     output = model(input)
