@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 
-from audiozen.model.module.custom_lstm import script_lnlstm
-from audiozen.model.module.groupGRU import SharedGroupGRU
-from audiozen.model.module.mogrifier_lstm import MogrifierLSTMWrapper
+from audiozen.models.module.custom_lstm import script_lnlstm
+from audiozen.models.module.groupGRU import SharedGroupGRU
+from audiozen.models.module.mogrifier_lstm import MogrifierLSTMWrapper
 
 
 class SequenceModel(nn.Module):
@@ -121,7 +121,7 @@ class SequenceModel(nn.Module):
 
         if n_dim == 4:
             batch_size, num_channels, _, num_frames = x.shape
-            x = x.view(batch_size, -1, num_frames)
+            x = x.reshape(batch_size, -1, num_frames)
 
         batch_size, _, _ = x.shape
 

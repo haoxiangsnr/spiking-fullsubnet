@@ -2,8 +2,8 @@ import torch
 from torch.nn import functional
 
 from audiozen.acoustics.audio_feature import drop_band
-from audiozen.model.base_model import BaseModel
-from audiozen.model.module.sequence_model import SequenceModel
+from audiozen.models.base_model import BaseModel
+from audiozen.models.module.sequence_model import SequenceModel
 
 
 class Model(BaseModel):

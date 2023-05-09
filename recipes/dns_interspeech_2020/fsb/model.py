@@ -7,8 +7,8 @@ from torch import Tensor
 from torch.nn import functional
 
 from audiozen.acoustics.audio_feature import istft, stft
-from audiozen.model.base_model import BaseModel
-from audiozen.model.module.sequence_model import SequenceModel
+from audiozen.models.base_model import BaseModel
+from audiozen.models.module.sequence_model import SequenceModel
 
 
 class SubBandSequenceWrapper(SequenceModel):

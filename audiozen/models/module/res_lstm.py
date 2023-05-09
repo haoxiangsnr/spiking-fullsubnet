@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 
-from audiozen.model.base_model import BaseModel
+from audiozen.models.base_model import BaseModel
 
 
 class ResidualLSTM(BaseModel):

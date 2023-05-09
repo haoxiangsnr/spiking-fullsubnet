@@ -5,16 +5,16 @@ from einops import rearrange
 from torch import Tensor
 
 from audiozen.acoustics.audio_feature import stft
-from audiozen.model.base_model import BaseModel
-from audiozen.model.module.sequence_model import SequenceModel
+from audiozen.models.base_model import BaseModel
+from audiozen.models.module.sequence_model import SequenceModel
 
 
 class FSFBlock(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.fb = SequenceModel(
-            input_size=32,
-            output_size=32,
+            input_size=64 * 2,
+            output_size=64 * 2,
             hidden_size=256,
             num_layers=1,
             bidirectional=False,
@@ -23,13 +23,17 @@ class FSFBlock(nn.Module):
         )
 
         self.sb = SubbandModel(
-            freq_cutoffs=[20, 80],
-            sb_num_center_freqs=[1, 4, 8],
-            sb_num_subband_freqs=[15, 15, 15],
-            fb_num_center_freqs=[1, 4, 8],
+            freq_cutoffs=[32, 128, 192],
+            sb_num_center_freqs=[2, 8, 16, 32],
+            sb_num_neighbor_freqs=[15, 15, 15],
+            fb_num_center_freqs=[2, 8, 16, 32],
+            fb_num_neighbor_freqs=[0, 0, 0, 0],
+            output_size=32,
             sequence_model="GRU",
             hidden_size=256,
             num_layers=1,
+            activate_function=False,
+            norm_type="offline_laplace_norm",
         )
 
         self.freq = SequenceModel(
@@ -37,7 +41,7 @@ class FSFBlock(nn.Module):
             output_size=32,
             hidden_size=256,
             num_layers=1,
-            bidirectional=False,
+            bidirectional=True,
             sequence_model="GRU",
             output_activate_function=None,
         )
@@ -47,104 +51,15 @@ class FSFBlock(nn.Module):
         Args:
             noisy_spec: [B, 2, F, T]
         """
-        noisy_spec = noisy_spec[:, :, :32, :]
+        noisy_spec = noisy_spec[:, :, :64, :]
         fb_out = self.fb(noisy_spec)  # [B, 1, 32, T]
-        fb_out = fb_out.repeat(1, 1, 8, 1)  # [B, 1, 256, T]
+        fb_out = fb_out.repeat(1, 1, 4, 1)  # [B, 1, 256, T]
 
-        sb_out = self.sb(noisy_spec, fb_out)  # [B, 2, 32, T]
+        sb_out = self.sb(noisy_spec, fb_out)  # [B, 2, 32, T, N]
 
-        pass
+        freq_out = self.freq(sb_out)  # [B, 2, F, N]
 
-
-class UltimateFullSubNet(BaseModel):
-    def __init__(self):
-        super().__init__()
-        self.fb_1 = SequenceModel(
-            input_size=32,
-            output_size=32,
-            hidden_size=256,
-            num_layers=1,
-            bidirectional=False,
-            sequence_model="GRU",
-            output_activate_function=None,
-        )
-
-        self.fb_2 = SequenceModel(
-            input_size=32,
-            output_size=32,
-            hidden_size=256,
-            num_layers=1,
-            bidirectional=False,
-            sequence_model="GRU",
-            output_activate_function=None,
-        )
-
-        self.sb_1 = SubbandModel(
-            freq_cutoffs=[20, 80],
-            sb_num_center_freqs=[1, 4, 8],
-            sb_num_subband_freqs=[15, 15, 15],
-            fb_num_center_freqs=[1, 4, 8],
-            sequence_model="GRU",
-            hidden_size=256,
-            num_layers=1,
-        )
-
-        self.sb_2 = SubbandModel(
-            freq_cutoffs=[20, 80],
-            sb_num_center_freqs=[1, 4, 8],
-            sb_num_subband_freqs=[15, 15, 15],
-            fb_num_center_freqs=[1, 4, 8],
-            sequence_model="GRU",
-            hidden_size=256,
-            num_layers=1,
-        )
-
-        self.freq_1 = SequenceModel(
-            input_size=32,
-            output_size=32,
-            hidden_size=64,
-            num_layers=1,
-            bidirectional=False,
-            sequence_model="GRU",
-            output_activate_function=None,
-        )
-
-        self.freq_2 = SequenceModel(
-            input_size=32,
-            output_size=32,
-            hidden_size=64,
-            num_layers=1,
-            bidirectional=False,
-            sequence_model="GRU",
-            output_activate_function=None,
-        )
-
-    def forward(self, noisy_y):
-        noisy_mag, noisy_phase, noisy_real, noisy_imag = stft(noisy_y, 512, 256, 512)
-        noisy_mag = noisy_mag**0.5
-
-        noisy_mag_low = noisy_mag[:, :32, :]  # [B, 32, T]
-
-        # fullband model 1
-        fb_1_out = self.fb_1(noisy_mag_low)  # [B, 32, T]
-        fb_1_out = rearrange(fb_1_out, "B F T -> B 1 F T")  # [B, 1, 32, T]
-
-        # subband model 1
-        sb_1_out = self.sb_1(noisy_mag, fb_1_out)  # [B, 2, 32, T]
-
-        # frequency model 1
-        freq_1_out = self.freq_1(sb_1_out)  # [B, 2, 32, T]
-
-        # fullband model 2
-        fb_2_out = self.fb_2(sb_1_out)  # [B, 2, 32, T]
-
-        # subband model 2
-        sb_2_out = self.sb_2(noisy_mag, fb_2_out)  # [B, 2, 32, T]
-
-        # frequency model 2
-        freq_2_out = self.freq_2(sb_2_out)  # [B, 2, 32, T]
-
-        pass
+        return freq_out
 
 
 class SubBandSequenceWrapper(SequenceModel):
@@ -186,7 +101,9 @@ class SubbandModel(BaseModel):
         sb_num_neighbor_freqs,
         fb_num_center_freqs,
         fb_num_neighbor_freqs,
+        output_size,
         sequence_model,
+        num_layers,
         hidden_size,
         activate_function=False,
         norm_type="offline_laplace_norm",
@@ -209,9 +126,9 @@ class SubbandModel(BaseModel):
                 SubBandSequenceWrapper(
                     input_size=(sb_num_center_freq + sb_num_neighbor_freq * 2)
                     + (fb_num_center_freq + fb_num_neighbor_freq * 2),
-                    output_size=sb_num_center_freq * 2,
                     hidden_size=hidden_size,
-                    num_layers=2,
+                    output_size=output_size,
+                    num_layers=num_layers,
                     sequence_model=sequence_model,
                     bidirectional=False,
                     output_activate_function=activate_function,
@@ -355,9 +272,98 @@ class SubbandModel(BaseModel):
 
             sb_model_input = torch.cat([noisy_subband, fb_subband], dim=-2)
             sb_model_input = self.norm(sb_model_input)
-            subband_output.append(sb_model(sb_model_input))
+            sb_model_output = sb_model(sb_model_input)
+            subband_output.append(sb_model_output)
 
-        # [B, C, F, T]
-        output = torch.cat(subband_output, dim=-2)
+        # [B, C, 32, T, N]
+        output = torch.stack(subband_output, dim=-1)
 
+        return output
+
+
+class FrequencyCommunication(nn.Module):
+    def __init__(
+        self,
+        sb_num_center_freqs,
+        freq_cutoffs,
+        freq_communication_hidden_size,
+        embed_size,
+    ) -> None:
+        super().__init__()
+        self.sb_num_center_freqs = sb_num_center_freqs
+        self.freq_cutoffs = freq_cutoffs
+        self.embed_size = embed_size
+        self.freq_communication_hidden_size = freq_communication_hidden_size
+        self.band_decoders = []
+
+        self.freq_communication = SequenceModel(
+            input_size=embed_size * 2,
+            output_size=embed_size,
+            hidden_size=freq_communication_hidden_size,
+            num_layers=1,
+            bidirectional=True,
+            sequence_model="GRU",
+            output_activate_function=None,
+        )
+
+        for sb_num_center_freq in sb_num_center_freqs:
+            self.band_decoders.append(
+                SequenceModel(
+                    input_size=embed_size,
+                    output_size=sb_num_center_freq * 2,
+                    hidden_size=64,
+                    num_layers=1,
+                    bidirectional=False,
+                    sequence_model="GRU",
+                    output_activate_function=None,
+                )
+            )
+
+        self.band_decoders = nn.ModuleList(self.band_decoders)
+
+        # [0, 20] frequencies with one center frequency. Input is [B, 2, 32, T, 34]
+        # We need to convert the input with shape of [B, C, 32, T, N] to [B, C, ctr_freq, T, N]
+
+        # Find the boundary of each subband unit
+
+    def forward(self, input):
+        """Forward pass.
+
+        Args:
+            input: shape of [B, C, F_subband_unit, T, N]
+        """
+        *_, num_frames, _ = input.shape
+        freq_input = rearrange(input, "B C F T N -> (B T) (C F) N")
+        freq_output = self.freq_communication(freq_input)  # [B * T, C * 32, N]
+        freq_output = rearrange(
+            freq_output,
+            "(B T) (C F) N -> B C F T N",
+            F=self.embed_size,
+            T=num_frames,
+        )
+
+        output = []
+        last_freq_end = 0
+        for section_idx, band_decoder in enumerate(self.band_decoders):
+            lower = self.freq_cutoffs[section_idx]
+            upper = self.freq_cutoffs[section_idx + 1]
+            num_subband_units = (upper - lower) // self.sb_num_center_freqs[section_idx]
+            decoder_input = freq_output[
+                ..., last_freq_end : last_freq_end + num_subband_units
+            ]
+
+            # [B, C, 32, T, N] => [B * N, C * 32, T]
+            decoder_input = rearrange(decoder_input, "B C E T N -> (B N) (C E) T")
+            sb_output = band_decoder(decoder_input)  # [B * N, C * ctr_freq, T]
+            sb_output = rearrange(
+                sb_output,
+                "(B N) (C F) T -> B C (N F) T",
+                C=2,
+                N=num_subband_units,
+            )
+
+            output.append(sb_output)
+            last_freq_end += num_subband_units
+
+        output = torch.cat(output, dim=-2)  # [B, C, N * F_subband, T]
         return output
