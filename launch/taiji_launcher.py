@@ -68,7 +68,7 @@ def main(args):
         # Create "start.sh" in this tmp dir
         with open(start_sh_path, "w") as f:
             if args.ghost_run:
-                content = f"#!/bin/bash \n" f"sleep 2d"
+                content = f"#!/bin/bash \n" f"sleep 7d"
             else:
                 content = (
                     f"#!/bin/bash \n"
