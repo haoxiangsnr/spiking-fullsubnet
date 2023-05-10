@@ -141,9 +141,9 @@ path = "audiozen.trainer.custom_trainer.CustomTrainer"
 
 We will try to find the `CustomTrainer` class in `audiozen/trainer/custom_trainer.py`.
 
-!!! note
-
-    If you want to call `Trainer` in `audiozen` package, you must install it in editable way by `pip install -e .` first.
+:::{important}
+If you want to call `Trainer` in `audiozen` package, you must install it in editable way by `pip install -e .` first.
+:::
 
 ### `loss_function`, `lr_scheduler`, `optimizer`, `model`, and `dataset`
 

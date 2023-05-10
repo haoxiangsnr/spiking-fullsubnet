@@ -13,7 +13,7 @@ For each experiment, we need to define a trainer to train the model. The custom 
 
 Here is the persuade code for training a model.
 
-```python hl_lines="7 12"
+```python
 for epoch in range(start_epoch, end_epoch):
     self.model.train()
 
@@ -65,13 +65,3 @@ test_epoch_end(test_epoch_output)
 
 return score
 ```
-
-::: audiozen.trainer.base_trainer.BaseTrainer
-    options:
-        members:
-        - training_step
-        - training_epoch_end
-        - validation_step
-        - validation_epoch_end
-        - test_step
-        - test_epoch_end

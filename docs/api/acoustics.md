@@ -1,3 +1,0 @@
-# Acoustics
-
-::: audiozen.acoustics

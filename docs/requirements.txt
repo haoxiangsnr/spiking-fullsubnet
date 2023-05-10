@@ -1,1 +1,2 @@
-mkdocstrings[python]
+myst-nb
+sphinx-rtd-theme
