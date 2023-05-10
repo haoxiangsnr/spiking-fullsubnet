@@ -70,12 +70,17 @@ def main(args):
             if args.ghost_run:
                 content = f"#!/bin/bash \n" f"sleep 7d"
             else:
+                if args.resume:
+                    resume_flag = "-R"
+                else:
+                    resume_flag = ""
+
                 content = (
                     f"#!/bin/bash \n"
                     f"cd /mnt/private_xianghao/proj/audiozen \n"
                     f"pip install -e . -i https://mirrors.tencent.com/pypi/simple/ \n"
                     f"cd /mnt/private_xianghao/proj/audiozen/recipes/{data_name} \n"
-                    f"torchrun --nnodes=1 --nproc_per_node={args.gpu_num} run.py -C {model_name}/{config_name}.toml -M train"
+                    f"torchrun --nnodes=1 --nproc_per_node={args.gpu_num} run.py -C {model_name}/{config_name}.toml -M train {resume_flag}"
                 )
 
             f.write(content)
@@ -119,7 +124,8 @@ if __name__ == "__main__":
         "-G",
         "--ghost_run",
         action="store_true",
-        help="ghost run, just apply for gpu resource and sleep 2 days",
+        help="ghost run, just apply for gpu resource and sleep 7 days",
     )
+    parser.add_argument("-R", "--resume", action="store_true", help="Resume flag.")
     args = parser.parse_args()
     main(args)
