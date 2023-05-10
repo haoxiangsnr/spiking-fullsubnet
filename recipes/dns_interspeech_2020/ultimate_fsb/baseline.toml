@@ -44,9 +44,9 @@ max_num_checkpoints = 10
 [train_dataset]
 path = "dataloader_noise_h5py.DNS_OTF"
 [train_dataset.args]
-speech_path = "/apdcephfs/share_1149801/speech_user/tomasyu/experiment/frontend/Enhancement-Paas/egs2/denoise/data/16k/dnsdatalist/readspeech_hdf5.scp"
-noise_path = "/apdcephfs/share_1149801/speech_user/tomasyu/experiment/frontend/Enhancement-Paas/egs2/denoise/data/16k/dnsdatalist/noise_hdf5.scp"
-rir_path = "/apdcephfs/share_1149801/speech_user/tomasyu/experiment/frontend/Enhancement-Paas/egs2/denoise/data/16k/dnsdatalist/rir_hdf5.scp"
+speech_path = "/mnt/private_xianghao/dnsdatalist/readspeech_hdf5.scp"
+noise_path = "/mnt/private_xianghao/dnsdatalist/noise_hdf5.scp"
+rir_path = "/mnt/private_xianghao/dnsdatalist/rir_hdf5.scp"
 # num_iter_per_epoch = 200000
 num_iter_per_epoch = 640000
 session_length = 4
