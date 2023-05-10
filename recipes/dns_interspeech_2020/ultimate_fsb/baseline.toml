@@ -6,9 +6,9 @@ use_amp = false
 use_deterministic_algorithms = false
 
 [acoustics]
+sr = 16000
 n_fft = 512
 win_length = 512
-sr = 16000
 hop_length = 256
 
 
@@ -110,5 +110,5 @@ limit = false
 
 # -------------------- Model -------------------- #
 [model]
-path = "audiozen.models.fsb.model.Model"
+path = "model.Model"
 [model.args]

@@ -392,7 +392,9 @@ class Model(nn.Module):
         cRM = functional.pad(cRM, (0, 0, 0, 1), mode="constant", value=0.0)
 
         # ================== Masking ==================
-        enhanced_spec = cRM * noisy_spec  # [B, 2, F, T]
+        enhanced_spec = cRM * rearrange(
+            complex_stft_view_real, "B F T C -> B C F T"
+        )  # [B, 2, F, T]
         enhanced_complex = torch.complex(
             enhanced_spec[:, 0, ...], enhanced_spec[:, 1, ...]
         )

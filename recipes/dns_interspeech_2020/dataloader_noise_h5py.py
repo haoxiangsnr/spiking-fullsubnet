@@ -43,8 +43,11 @@ class DNS_OTF(Dataset):
     ):
         super(DNS_OTF, self).__init__()
 
+        print("Loading Speech data...")
         self.speech_path = open(speech_path).readlines()
+        print("Loading Noise data...")
         self.noise_path = open(noise_path).readlines()
+        print("Loading rir_path data...")
         self.rir_path = open(rir_path).readlines()
 
         self.speech_dataset = []
