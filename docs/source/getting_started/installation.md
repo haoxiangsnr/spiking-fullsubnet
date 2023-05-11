@@ -9,19 +9,19 @@ To install the PyTorch binaries, you will need to use at least one of two suppor
 
 ### Create virtual environment
 
-First, create a Conda virtual environment. `python=3.10` is tested, but you may also use other versions.
+First, create a Conda virtual environment with Python. Here, `python=3.10` is tested, but you may also use other versions.
 
 ```shell
 conda create --name audiozen python=3.10
 conda activate audiozen
 ```
 
-The following steps assume you have activated the `audiozen` environment.
+The following steps will assume you have activated the `audiozen` environment.
 
 ### Install Conda dependencies
 
 Some dependencies of AudioZEN, like PyTorch and Tensorboard, are recommended to be installed using Conda instead of PyPI.
-To install PyTorch via Conda, you must have a CUDA-capable system. Although `pytorch=1.12.1` has been tested, you may also use other versions. We use CUDA 10.2 as an example.
+Frist, we install a CUDA-capable PyTorch. Although `pytorch=1.12.1` has been tested, you may also use other versions. We use CUDA 10.2 as an example:
 
 ```shell
 conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=10.2 -c pytorch
@@ -51,9 +51,7 @@ pip install -r requirements.txt
 
 ## Install AudioZEN package in editable mode
 
-After installing the dependencies, we can install the AudioZEN package in editable mode.
-
-In this way, we can call `audiozen` package in everywhere of code, e.g, in `recipes` and `tools` folders.
+Finally, we will install the AudioZEN package in editable mode. By installing in editable mode, we can call `audiozen` package in everywhere of code, e.g, in `recipes` and `tools` folders.
 In addition, we can modify the source code of `audiozen` package directly. Any changes to the original package would reflect directly in your environment.
 
 ```shell title="/path/to/audiozen"
@@ -61,7 +59,7 @@ In addition, we can modify the source code of `audiozen` package directly. Any c
 pip install -e .
 ```
 
-
+Ok, all installations have ended.
 
 
 ## References
