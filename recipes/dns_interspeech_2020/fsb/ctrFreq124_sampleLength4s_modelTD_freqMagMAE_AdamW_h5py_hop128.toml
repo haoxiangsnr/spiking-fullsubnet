@@ -66,7 +66,7 @@ pin_memory = false
 # -------------------- Validate sets -------------------- #
 [[validate_dataset]]
 path = "dataset_validation_dns_1.Dataset"
-[[validate_dataset.args]]
+[validate_dataset.args]
 dataset_dir_list = [
     "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/with_reverb",
 ]
@@ -76,7 +76,7 @@ limit = false
 
 [[validate_dataset]]
 path = "dataset_validation_dns_1.Dataset"
-[[validate_dataset.args]]
+[validate_dataset.args]
 dataset_dir_list = [
     "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/no_reverb",
 ]
