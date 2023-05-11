@@ -153,7 +153,6 @@ if __name__ == "__main__":
             config["meta"]["ckpt_path"] = args.ckpt_path
 
     # e.g., add sys.path to "model.Model"
-    sys.path.append(config_path.parent.as_posix())
-    sys.path.append(config_path.parent.parent.as_posix())
+    sys.path.insert(0, config_path.parent.as_posix())
 
     run(config, args.resume)
