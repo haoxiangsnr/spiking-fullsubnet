@@ -29,7 +29,7 @@ lr = 0.001
 
 # -------------------- Trainer -------------------- #
 [trainer]
-path = "trainer_set_epoch.Trainer"
+path = "trainer.Trainer"
 [trainer.train]
 max_epoch = 9999
 clip_grad_norm_value = 5

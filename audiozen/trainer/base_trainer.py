@@ -87,8 +87,8 @@ class BaseTrainer:
         ), "`validation_interval` should be large than one."
 
         # Other
-        self.start_epoch = 1
-        self.current_epoch = 1
+        self.start_epoch = 1  # used when resuming
+        self.current_epoch = 1  # used in custom training loop
         self.wait_count = 0
         self.best_score = -np.inf if self.save_max_score else np.inf
         pd.set_option("display.float_format", lambda x: "%.3f" % x)
@@ -180,18 +180,26 @@ class BaseTrainer:
         self.source_code_backup_dir = self.exp_dir / f"source_code__{time_now}"
         self.config_path = self.exp_dir / f"config__{time_now}.toml"
 
-    def _load_state_dict(self, checkpoint_dict):
-        self.start_epoch = checkpoint_dict["epoch"] + 1
-        self.best_score = checkpoint_dict["best_score"]
-        self.wait_count = checkpoint_dict["wait_count"]
-        self.optimizer.load_state_dict(checkpoint_dict["optimizer"])
-        self.scaler.load_state_dict(checkpoint_dict["scaler"])
-        self.lr_scheduler.load_state_dict(checkpoint_dict["lr_scheduler"])
+    def _load_state_dict(self, checkpoint):
+        if isinstance(checkpoint, dict):
+            print("Loading checkpoint in dictionary...")
+            self.start_epoch = checkpoint["epoch"] + 1
+            self.best_score = checkpoint["best_score"]
+            self.wait_count = checkpoint["wait_count"]
+            self.optimizer.load_state_dict(checkpoint["optimizer"])
+            self.scaler.load_state_dict(checkpoint["scaler"])
+            self.lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
 
-        if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
-            self.model.module.load_state_dict(checkpoint_dict["model"])
+            if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
+                self.model.module.load_state_dict(checkpoint["model"])
+            else:
+                self.model.load_state_dict(checkpoint["model"])
         else:
-            self.model.load_state_dict(checkpoint_dict["model"])
+            print("Loading checkpoint in pth...")
+            if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
+                self.model.module.load_state_dict(checkpoint)
+            else:
+                self.model.load_state_dict(checkpoint)
 
     def _load_checkpoint(self, ckpt_path="latest"):
         """load a checkpoint from the checkpints directory.
@@ -204,17 +212,16 @@ class BaseTrainer:
         elif ckpt_path == "latest":
             ckpt_path = self.checkpoints_dir / "latest.tar"
         else:
-            if not Path(ckpt_path).expanduser().absolute().exists():
-                raise FileNotFoundError(f"Checkpoint {ckpt_path} does not exist.")
-            else:
-                ckpt_path = Path(ckpt_path)
+            ckpt_path = Path(ckpt_path).expanduser().absolute()
+            if not ckpt_path.exists():
+                raise FileNotFoundError(f"checkpoint {ckpt_path} does not exist.")
 
         # Load it on the CPU and later use .to(device) on the model
         # May slightly slow than using map_location="cuda:<...>"
         # https://stackoverflow.com/questions/61642619/pytorch-distributed-data-parallel-confusion
-        checkpoint_dict = torch.load(ckpt_path.as_posix(), map_location="cpu")
+        checkpoint = torch.load(ckpt_path, map_location="cpu")
 
-        self._load_state_dict(checkpoint_dict)
+        self._load_state_dict(checkpoint)
 
         if self.rank == 0:
             logger.info(f"Model checkpoint on epoch {self.start_epoch - 1} loaded.")
@@ -342,6 +349,10 @@ class BaseTrainer:
                 logger.info(f"{'=' * 15} {epoch} epoch {'=' * 15}")
                 logger.info("Begin training...")
 
+            # Calling the set_epoch() method at the beginning of each epoch before
+            # creating the DataLoader iterator is necessary to make shuffling work
+            # properly across multiple epochs.
+            train_dataloader.sampler.set_epoch(epoch)
             self.model.train()
 
             training_epoch_output = []

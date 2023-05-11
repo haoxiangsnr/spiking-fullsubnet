@@ -9,7 +9,7 @@ from tqdm import tqdm
 from audiozen.acoustics.audio_feature import save_wav
 from audiozen.loss import freq_MAE, mag_MAE
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
-from audiozen.trainer.base_trainer_set_epoch import BaseTrainer
+from audiozen.trainer.base_trainer import BaseTrainer
 
 logger = logging.getLogger(__name__)
 
