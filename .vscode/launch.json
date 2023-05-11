@@ -1,0 +1,27 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Torchrun Debug",
+            "type": "python",
+            "request": "launch",
+            "program": "/root/mambaforge/envs/torch1.12/bin/torchrun",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/recipes/dns_interspeech_2020",
+            "args": [
+                "--standalone",
+                "--nproc_per_node=1",
+                "--nnodes=1",
+                "run.py",
+                "-C",
+                "fsb/ctrFreq124_sampleLength4s_modelTD_freqMagMAE_AdamW_h5py_setEpoch.toml",
+                "-M",
+                "train"
+            ],
+        }
+    ]
+}

@@ -2,7 +2,8 @@
 exp/
 data/
 .idea/
-.vscode/
+.vscode/*
+!.vscode/launch.json
 generated/ # generated sphinx files
 _build/
 *.csv
