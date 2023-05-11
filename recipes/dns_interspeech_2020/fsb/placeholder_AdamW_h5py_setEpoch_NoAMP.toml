@@ -29,13 +29,12 @@ lr = 0.001
 # -------------------- Trainer -------------------- #
 [trainer]
 path = "trainer_no_amp.Trainer"
-[trainer.train]
+[trainer.args]
 max_epoch = 9999
 clip_grad_norm_value = 5
 save_max_score = true
-save_checkpoint_interval = 1
+save_ckpt_interval = 1
 patience = 100
-[trainer.validate]
 validation_interval = 1
 max_num_checkpoints = 10
 

@@ -90,15 +90,15 @@ clip_grad_norm_value = 5
 
 In this case, AudioZEN will load the `Trainer` class from `trainer.py` and initialize it with the arguments in the `[trainer.args]` section. `Trainer` class must be a subclass of `audiozen.trainer.base_trainer.BaseTrainer`. It supports the following arguments at least:
 
-| Item                       | Description                                                                                          |
-| -------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `max_epochs`               | The maximum number of epochs to train.                                                               |
-| `clip_grad_norm_value`     | The maximum norm of the gradients used for clipping.                                                 |
-| `save_max_score`           | Whether to find the best model by the maximum score.                                                 |
-| `save_checkpoint_interval` | The interval of saving checkpoints.                                                                  |
-| `patience`                 | The number of epochs with no improvement after which the training will be stopped.                   |
-| `validation_interval`      | The interval of validation.                                                                          |
-| `max_num_checkpoints`      | The maximum number of checkpoints to keep. Saving too many checkpoints causes disk space to run out. |
+| Item                   | Description                                                                                          |
+| ---------------------- | ---------------------------------------------------------------------------------------------------- |
+| `max_epochs`           | The maximum number of epochs to train.                                                               |
+| `clip_grad_norm_value` | The maximum norm of the gradients used for clipping.                                                 |
+| `save_max_score`       | Whether to find the best model by the maximum score.                                                 |
+| `save_ckpt_interval`   | The interval of saving checkpoints.                                                                  |
+| `patience`             | The number of epochs with no improvement after which the training will be stopped.                   |
+| `validation_interval`  | The interval of validation.                                                                          |
+| `max_num_checkpoints`  | The maximum number of checkpoints to keep. Saving too many checkpoints causes disk space to run out. |
 
 #### Finding modules by `path` argument
 

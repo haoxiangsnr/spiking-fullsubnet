@@ -29,12 +29,11 @@ beta2 = 0.999
 # -------------------- Trainer -------------------- #
 [trainer]
 path = "trainer.Trainer"
-[trainer.train]
+[trainer.args]
 max_epoch = 9999
 clip_grad_norm_value = 10
 save_max_score = true
-save_checkpoint_interval = 5
-[trainer.validate]
+save_ckpt_interval = 5
 validation_interval = 5
 max_num_checkpoints = 10
 

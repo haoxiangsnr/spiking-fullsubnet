@@ -65,26 +65,27 @@ class BaseTrainer:
         self._setup_acoustic_args(config["acoustics"])
 
         # Trainer.train args
-        self.train_config = config["trainer"]["train"]
-        self.max_epoch = self.train_config["max_epoch"]
-        self.clip_grad_norm_value = self.train_config["clip_grad_norm_value"]
-        self.save_max_score = self.train_config["save_max_score"]
-        self.save_checkpoint_interval = self.train_config["save_checkpoint_interval"]
-        self.patience = self.train_config["patience"]
-
-        # Trainer.validation args
-        self.validate_config = config["trainer"]["validate"]
-        self.validation_interval = self.validate_config["validation_interval"]
-        self.max_num_checkpoints = self.validate_config["max_num_checkpoints"]
+        self.trainer_config = config["trainer"]["args"]
+        self.max_epoch = self.trainer_config.get("max_epoch", 9999)
+        self.clip_grad_norm_value = self.trainer_config.get("clip_grad_norm_value", -1)
+        self.save_max_score = self.trainer_config.get("save_max_score", True)
+        self.save_ckpt_interval = self.trainer_config.get("save_ckpt_interval", 1)
+        self.patience = self.trainer_config.get("patience", 10)
+        self.plot_norm = self.trainer_config.get("plot_norm", True)
+        self.validation_interval = self.trainer_config.get("validation_interval", 1)
+        self.max_num_checkpoints = self.trainer_config.get("max_num_checkpoints", 10)
         assert (
             self.validation_interval >= 1
-        ), "`validation_interval` should be large than one."
+        ), "'validation_interval' should be large than one."
 
-        # Other
+        # Count Variables
+        self.total_norm = -1
         self.start_epoch = 1  # used when resuming
         self.current_epoch = 1  # used in custom training loop
         self.wait_count = 0
         self.best_score = -np.inf if self.save_max_score else np.inf
+
+        # Others
         pd.set_option("display.float_format", lambda x: "%.3f" % x)
 
         # Resume
@@ -244,8 +245,18 @@ class BaseTrainer:
             hop_length=self.hop_length,
             win_length=self.win_length,
         )
-        self.librosa_stft = partial(librosa.stft, n_fft=self.n_fft, hop_length=self.hop_length, win_length=self.win_length)  # fmt: skip
-        self.librosa_istft = partial(librosa.istft, n_fft=self.n_fft, hop_length=self.hop_length, win_length=self.win_length)  # fmt: skip
+        self.librosa_stft = partial(
+            librosa.stft,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
+            win_length=self.win_length,
+        )
+        self.librosa_istft = partial(
+            librosa.istft,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
+            win_length=self.win_length,
+        )
 
     @staticmethod
     def _use_deterministic_algorithms():
@@ -365,7 +376,12 @@ class BaseTrainer:
 
                 # backward
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_grad_norm_value)  # type: ignore
+
+                if self.clip_grad_norm_value != -1:
+                    self.total_norm = torch.nn.utils.clip_grad_norm_(
+                        self.model.parameters(), self.clip_grad_norm_value
+                    )
+
                 self.optimizer.step()
 
                 training_epoch_output.append(loss.item())
@@ -380,11 +396,21 @@ class BaseTrainer:
                         epoch * len(train_dataloader) + batch_idx,
                     )
 
+                    if self.plot_norm:
+                        self.writer.add_scalars(
+                            f"Norm",
+                            {
+                                "total_norm": self.total_norm,
+                                "max_norm": self.clip_grad_norm_value,
+                            },
+                            epoch * len(train_dataloader) + batch_idx,
+                        )
+
             self.training_epoch_end(training_epoch_output)
 
             if self.rank == 0:
                 with torch.no_grad():
-                    if epoch % self.save_checkpoint_interval == 0:
+                    if epoch % self.save_ckpt_interval == 0:
                         self._save_checkpoint(epoch, is_best_epoch=False)
 
                     if epoch % self.validation_interval == 0:
