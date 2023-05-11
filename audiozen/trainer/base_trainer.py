@@ -181,7 +181,7 @@ class BaseTrainer:
         self.config_path = self.exp_dir / f"config__{time_now}.toml"
 
     def _load_state_dict(self, checkpoint):
-        if isinstance(checkpoint, dict):
+        if type(checkpoint) == dict:
             print("Loading checkpoint in dictionary...")
             self.start_epoch = checkpoint["epoch"] + 1
             self.best_score = checkpoint["best_score"]
@@ -197,7 +197,7 @@ class BaseTrainer:
         else:
             print("Loading checkpoint in pth...")
             if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
-                self.model.module.load_state_dict(checkpoint)
+                self.model.load_state_dict(checkpoint)
             else:
                 self.model.load_state_dict(checkpoint)
 
