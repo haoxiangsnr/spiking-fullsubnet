@@ -14,7 +14,8 @@ from tqdm import tqdm
 def main(fpath):
     fpath = Path(fpath).expanduser().resolve()
     with open(fpath, "r") as f:
-        for line in tqdm(f):
+        lines = f.readlines()
+        for line in tqdm(lines, bar_format="{l_bar}{r_bar}", desc="Checking"):
             line = line.strip()
             if not line:
                 continue

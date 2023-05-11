@@ -369,7 +369,10 @@ class BaseTrainer:
 
             if self.rank == 0:
                 dataloader_bar = tqdm(
-                    train_dataloader, desc="Train", dynamic_ncols=True
+                    train_dataloader,
+                    desc="",
+                    dynamic_ncols=True,
+                    bar_format="{l_bar}{r_bar}",
                 )
             for batch_idx, batch in (
                 enumerate(dataloader_bar)
@@ -461,6 +464,7 @@ class BaseTrainer:
                     tqdm(
                         dataloader,
                         desc=f"Inferring on dataloader {dataloader_idx}",
+                        bar_format="{l_bar}{r_bar}",
                         dynamic_ncols=True,
                     )
                 ):
@@ -497,6 +501,7 @@ class BaseTrainer:
                     tqdm(
                         dataloader,
                         desc=f"Inference on dataloader {dataloader_idx}",
+                        bar_format="{l_bar}{r_bar}",
                         dynamic_ncols=True,
                     )
                 ):
