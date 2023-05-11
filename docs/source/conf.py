@@ -6,14 +6,21 @@ copyright = "2023, HAO Xiang"
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-extensions = ["myst_parser", "sphinx.ext.viewcode"]
-
-# -- Extension configuration -------------------------------------------------
-myst_enable_extensions = [
-    "colon_fence",
+extensions = [
+    "myst_parser",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.autodoc",
+    # "autoapi.extension",
+    "sphinx.ext.napoleon",
 ]
 
+# -- Extension configuration -------------------------------------------------
+myst_enable_extensions = ["colon_fence"]
 myst_number_code_blocks = ["python"]
+# autoapi_dirs = ["../../audiozen"]
+autodoc_default_options = {
+    "member-order": "bysource",
+}
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

@@ -19,3 +19,4 @@ tabulate
 toml
 torchinfo
 tqdm
+pyyaml

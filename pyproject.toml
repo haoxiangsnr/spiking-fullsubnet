@@ -29,11 +29,11 @@ keywords = [
 [project.optional-dependencies]
 test = ["pytest", "pytest-cov"]
 docs = ["importlib_metadata", "sphinx-autoapi", "sphinx-rtd-theme", "myst-parser", "myst-nb"]
-build = ["flit", "python-semantic-release"]
+build = ["flit", "python-semantic-release", "sphinx-autobuild"]
 [project.urls]
 Source = "https://github.com/haoxiangsnr/audiozen"
 # [project.scripts]
-# todo mixsim = "mixsim.main:main" # call the function main() imported from mixsim
+# todo audiozen = "audiozen.main:main" # call the function main() imported from audiozen
 
 # ----------------- Tools Configuration -----------------
 [tool.semantic_release]

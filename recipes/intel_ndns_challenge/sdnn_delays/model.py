@@ -2,12 +2,17 @@ import h5py
 import matplotlib.pyplot as plt
 import torch
 import torch.nn.functional as F
-from lava.lib.dl import slayer  # type: ignore
+from lava.lib.dl import slayer
 
 
 class Model(torch.nn.Module):
     def __init__(
-        self, threshold=0.1, tau_grad=0.1, scale_grad=0.8, max_delay=64, out_delay=0
+        self,
+        threshold,
+        tau_grad,
+        scale_grad,
+        max_delay,
+        out_delay,
     ):
         super().__init__()
         self.stft_mean = 0.2
