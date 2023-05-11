@@ -9,7 +9,7 @@ cd recipes/dns_icassp_2020
 
 ## Entry file `run.py`
 
-In the `dataset` directory, we have the entry file `run.py`, dataloaders, and model direcotries.
+In the `<dataset>` directory, we have the entry file `run.py`, dataloaders, and model direcotries.
 Then, we call this `run.py` script to run the experiment. For example, we can use the following command to train the `cirm_lstm` model using configurations in `baseline.toml`:
 
 ```shell
@@ -21,19 +21,6 @@ Here, We use `torchrun` to help us to start multi-GPU training conveniently. `to
 `run.py` supports the following parameters:
 
 ```shell
-usage: run.py [-h] -C CONFIGURATION [-M {train,validate,test,predict,finetune} [{train,validate,test,predict,finetune} ...]] [-R] [--ckpt_path CKPT_PATH]
-
-Audio-ZEN
-
-options:
-  -h, --help            show this help message and exit
-  -C CONFIGURATION, --configuration CONFIGURATION
-                        Configuration (*.toml).
-  -M {train,validate,test,predict,finetune} [{train,validate,test,predict,finetune} ...], --mode {train,validate,test,predict,finetune} [{train,validate,test,predict,finetune} ...]
-                        Mode of the experiment.
-  -R, --resume          Resume the experiment from latest checkpoint.
-  --ckpt_path CKPT_PATH
-                        Checkpoint path for test. It can be 'best', 'latest', or a path to a checkpoint.
 usage: run.py [-h] -C CONFIGURATION [-M {train,validate,test,predict,finetune} [{train,validate,test,predict,finetune} ...]] [-R] [--ckpt_path CKPT_PATH]
 
 Audio-ZEN
