@@ -9,7 +9,7 @@ def format_output(lines, logfile, index):
     CRED = "\x1b[6;30;42m"
     CEND = "\x1b[0m"
 
-    print(f"{CRED}{index} - {logfile}{CEND}")
+    print(f"{CRED}{index + 1} - {logfile}{CEND}")
     print(*lines)
 
 
