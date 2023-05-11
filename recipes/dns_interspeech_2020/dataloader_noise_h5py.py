@@ -52,7 +52,6 @@ class DNS_OTF(Dataset):
 
         self.speech_dataset = []
         for i in range(len(self.speech_path)):
-            print(i)
             self.speech_dataset.append(h5py.File(self.speech_path[i].strip(), "r"))
 
         self.noise_dataset = []

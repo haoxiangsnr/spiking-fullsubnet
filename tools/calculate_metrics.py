@@ -18,7 +18,7 @@ Steps:
 
 class MetricComputer:
     def __init__(self, sr=16000) -> None:
-        self.dns_mos = DNSMOS(input_sr=sr)
+        # self.dns_mos = DNSMOS(input_sr=sr)
         self.stoi = STOI(sr=sr)
         self.pesq_wb = PESQ(sr=sr, mode="wb")
         self.pesq_nb = PESQ(sr=sr, mode="nb")
@@ -40,9 +40,9 @@ class MetricComputer:
         pesq_nb = self.pesq_nb(est, ref)
         stoi = self.stoi(est, ref)
         si_sdr = self.si_sdr(est, ref)
-        dns_mos = self.dns_mos(est)
+        # dns_mos = self.dns_mos(est)
 
-        return {"name": basename} | pesq_wb | pesq_nb | stoi | si_sdr | dns_mos
+        return {"name": basename} | pesq_wb | pesq_nb | stoi | si_sdr  # | dns_mos
 
     def compute(self, reference_wav_paths, estimated_wav_paths, n_jobs=20):
         rows = Parallel(n_jobs=n_jobs, prefer="threads")(

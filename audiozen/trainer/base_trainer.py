@@ -460,7 +460,7 @@ class BaseTrainer:
                 for batch_idx, batch in enumerate(
                     tqdm(
                         dataloader,
-                        desc=f"Inferring on dataloader {dataloader_idx}",
+                        desc=f"Inference on dataloader {dataloader_idx}",
                         dynamic_ncols=True,
                     )
                 ):

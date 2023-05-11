@@ -1,11 +1,12 @@
 import logging
+from pathlib import Path
 
 import pandas as pd
 import torch
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-from audiozen.acoustics.audio_feature import tune_dB_FS
+from audiozen.acoustics.audio_feature import save_wav
 from audiozen.loss import freq_MAE, mag_MAE
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
 from audiozen.trainer.base_trainer_set_epoch import BaseTrainer
@@ -97,8 +98,16 @@ class Trainer(BaseTrainer):
         noisy, clean, fpath = batch
         clean = clean.to(self.device)
         noisy = noisy.to(self.device)
+
         enhanced = self.model(noisy)
-        enhanced, *_ = tune_dB_FS(enhanced, target_dB_FS=-26)
+
+        # save enhanced audio
+        stem = Path(fpath[0]).stem
+        enhanced_dir = self.enhanced_dir / f"dataloader_{dataloader_idx}"
+        enhanced_dir.mkdir(exist_ok=True, parents=True)
+        enhanced_fpath = enhanced_dir / f"{stem}.wav"
+        save_wav(enhanced, enhanced_fpath.as_posix(), self.sr)
+
         return noisy, clean, enhanced, fpath
 
     def test_epoch_end(self, outputs):
@@ -114,5 +123,7 @@ class Trainer(BaseTrainer):
 
             df_metrics = pd.DataFrame(rows)
 
-            logger.info(f"\n {df_metrics.describe()}")
-            logger.info(f"\n {df_metrics.describe()}")
+            df_metrics_mean = df_metrics.mean(numeric_only=True)
+            df_metrics_mean_df = df_metrics_mean.to_frame().T
+
+            logger.info(f"\n{df_metrics_mean_df.to_markdown()}")

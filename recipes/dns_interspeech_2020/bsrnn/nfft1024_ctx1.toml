@@ -65,10 +65,10 @@ num_workers = 32
 drop_last = true
 pin_memory = false
 
-# -------------------- Validation DNS 1 -------------------- #
-[validation_dataset_dns_1_with_reverb]
+# -------------------- Validate sets -------------------- #
+[[validate_dataset]]
 path = "dataset_validation_dns_1.Dataset"
-[validation_dataset_dns_1_with_reverb.args]
+[[validate_dataset.args]]
 dataset_dir_list = [
     "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/with_reverb",
 ]
@@ -76,10 +76,9 @@ sr = 16000
 offset = 0
 limit = false
 
-# -------------------- Validation DNS 4 small set -------------------- #
-[validation_dataset_dns_1_no_reverb]
+[[validate_dataset]]
 path = "dataset_validation_dns_1.Dataset"
-[validation_dataset_dns_1_no_reverb.args]
+[[validate_dataset.args]]
 dataset_dir_list = [
     "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/no_reverb",
 ]
@@ -87,10 +86,11 @@ sr = 16000
 offset = 0
 limit = false
 
-# -------------------- Test DNS 1 -------------------- #
-[test_dataset_dns_1_with_reverb]
+
+# -------------------- Test sets -------------------- #
+[[test_dataset]]
 path = "dataset_validation_dns_1.Dataset"
-[test_dataset_dns_1_with_reverb.args]
+[test_dataset.args]
 dataset_dir_list = [
     "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/with_reverb",
 ]
@@ -98,10 +98,9 @@ sr = 16000
 offset = 0
 limit = false
 
-# -------------------- Test DNS 4  -------------------- #
-[test_dataset_dns_1_no_reverb]
+[[test_dataset]]
 path = "dataset_validation_dns_1.Dataset"
-[test_dataset_dns_1_no_reverb.args]
+[test_dataset.args]
 dataset_dir_list = [
     "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/no_reverb",
 ]
