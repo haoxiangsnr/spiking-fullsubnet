@@ -197,7 +197,7 @@ class BaseTrainer:
         else:
             print("Loading checkpoint in pth...")
             if isinstance(self.model, torch.nn.parallel.DistributedDataParallel):
-                self.model.load_state_dict(checkpoint)
+                self.model.module.load_state_dict(checkpoint)
             else:
                 self.model.load_state_dict(checkpoint)
 
