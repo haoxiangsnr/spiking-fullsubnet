@@ -63,7 +63,7 @@ def run(config, resume):
         )
 
     if "train" in args.mode or "validate" in args.mode:
-        if not isinstance(["validate_dataset"], list):
+        if not isinstance(config["validate_dataset"], list):
             config["validate_dataset"] = [config["validate_dataset"]]
 
         validate_dataloaders = []
