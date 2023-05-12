@@ -11,9 +11,14 @@ For each experiment, we need to define a custom trainer to train the model. The 
 
 ```{eval-rst}
 .. autofunction:: audiozen.trainer.base_trainer.BaseTrainer.training_step
+
 .. autofunction:: audiozen.trainer.base_trainer.BaseTrainer.training_epoch_end
+
 .. autofunction:: audiozen.trainer.base_trainer.BaseTrainer.validation_step
+
 .. autofunction:: audiozen.trainer.base_trainer.BaseTrainer.validation_epoch_end
+
 .. autofunction:: audiozen.trainer.base_trainer.BaseTrainer.test_step
+
 .. autofunction:: audiozen.trainer.base_trainer.BaseTrainer.test_epoch_end
 ```
