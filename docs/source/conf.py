@@ -21,6 +21,7 @@ myst_number_code_blocks = ["python"]
 autodoc_default_options = {
     "member-order": "bysource",
 }
+autodoc_mock_imports = ["torch"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
