@@ -1,7 +1,7 @@
 [meta]
 save_dir = "fsb/exp"
 description = "This is a description of audiozen experiment."
-seed = 3407
+seed = 20220815
 use_amp = false
 use_deterministic_algorithms = false
 
@@ -13,68 +13,82 @@ hop_length = 256
 
 
 [loss_function]
-name = "torch.nn.MSELoss"
+path = "torch.nn.MSELoss"
 [loss_function.args]
+
+[lr_scheduler]
+path = "torch.optim.lr_scheduler.ExponentialLR"
+[lr_scheduler.args]
+gamma = 0.99
 
 
 [optimizer]
+path = "torch.optim.AdamW"
+[optimizer.args]
 lr = 0.001
-beta1 = 0.9
-beta2 = 0.999
-
-[lr_scheduler]
-name = "constant_lr_scheduler"
-[lr_scheduler.args]
-factor = 1
-total_iters = 1
 
 # -------------------- Trainer -------------------- #
 [trainer]
-path = "trainer.Trainer"
+path = "fsb.trainer.Trainer"
 [trainer.args]
 max_epoch = 9999
-clip_grad_norm_value = 10
+clip_grad_norm_value = -1
 save_max_score = true
-save_ckpt_interval = 5
-validation_interval = 5
+save_ckpt_interval = 1
+plot_norm = false
+patience = 5
+validation_interval = 1
 max_num_checkpoints = 10
 
 # -------------------- Training data -------------------- #
 [train_dataset]
-path = "dataset_train.Dataset"
+path = "dataset_train_universal.Dataset"
 [train_dataset.args]
-clean_dataset = "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/clean.txt"
-clean_dataset_limit = false
-clean_dataset_offset = 0
-noise_dataset = "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/noise.txt"
-noise_dataset_limit = false
-noise_dataset_offset = 0
-num_workers = 36
-pre_load_clean_dataset = false
-pre_load_noise = false
-pre_load_rir = false
-reverb_proportion = 0.75
-rir_dataset = "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/rir.txt"
-rir_dataset_limit = false
-rir_dataset_offset = 0
-silence_length = 0.2
-snr_range = [-5, 20]
 sr = 16000
-sub_sample_length = 3.0
-target_dB_FS = -25
-target_dB_FS_floating_value = 10
-
+clean_dataset = "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/clean.txt"
+point_noise_dataset = ""
+iso_noise_dataset = "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/noise.txt"
+simulated_rir_dataset = ""
+real_rir_dataset = "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/rir.txt"
+# MIXTUR
+prob_add_itf_spks = 0
+max_num_itf_spks = 1
+sir_range = [-5, 20]
+prob_add_point_noise = 0.0
+max_num_pt_noises = 1
+pt_noise_snr_range = [-5, 20]
+prob_add_iso_noise = 1.0
+iso_noise_snr_range = [-5, 20]
+prob_add_rir = 1.0
+prob_use_real_rir = 1.0
+target_reverb_type = "full"
+early_rir_duration = 0.1
+# ENROLLMEN
+enroll_prob_add_point_noises = 0.0
+enroll_max_num_pt_noises = 0.1
+enroll_pt_noise_snr_range = [0, 20]
+enroll_prob_add_iso_noise = 0.1
+enroll_iso_noise_snr_range = [0, 20]
+enroll_sample_length = 20
+enroll_prob_add_rir = 0.5
+enroll_prob_use_real_rir = 0.5
+# Other
+return_enroll = false
+return_embedding = false
+sample_length = 4
+loudness_lvl = -26
+loudness_floating_value = 10
 [train_dataset.dataloader]
 batch_size = 32
 num_workers = 32
 drop_last = true
-pin_memory = false
+pin_memory = true
 
 
 # -------------------- Validate sets -------------------- #
 [[validate_dataset]]
 path = "dataset_validation_dns_1.Dataset"
-[[validate_dataset.args]]
+[validate_dataset.args]
 dataset_dir_list = [
     "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/with_reverb",
 ]
@@ -84,7 +98,7 @@ limit = false
 
 [[validate_dataset]]
 path = "dataset_validation_dns_1.Dataset"
-[[validate_dataset.args]]
+[validate_dataset.args]
 dataset_dir_list = [
     "/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns1/datasets/test_set/synthetic/no_reverb",
 ]
@@ -117,9 +131,10 @@ limit = false
 
 # -------------------- Model -------------------- #
 [model]
-path = "model.Model"
+path = "fsb.model_td.Separator"
 
 [model.args]
+sr = 16000
 fdrc = 0.5
 n_fft = 512
 hop_length = 256
@@ -129,9 +144,9 @@ sequence_model = "LSTM"
 fb_hidden_size = 512
 fb_output_activate_function = false
 freq_cutoffs = [20, 80]
-sb_num_center_freqs = [1, 4, 8]
+sb_num_center_freqs = [1, 2, 4]
 sb_num_neighbor_freqs = [15, 15, 15]
-fb_num_center_freqs = [1, 4, 8]
+fb_num_center_freqs = [1, 2, 4]
 fb_num_neighbor_freqs = [0, 0, 0]
 sb_hidden_size = 384
 sb_output_activate_function = false
