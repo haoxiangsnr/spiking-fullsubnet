@@ -19,58 +19,6 @@ def run(config, resume):
     if rank == 0:
         init_logging_logger(config)
 
-    train_dataset = instantiate(
-        config["train_dataset"]["path"],
-        args=config["train_dataset"]["args"],
-    )
-    train_dataloader = DataLoader(
-        dataset=train_dataset,
-        sampler=DistributedSampler(dataset=train_dataset, rank=rank, shuffle=True),
-        collate_fn=None,
-        shuffle=False,
-        **config["train_dataset"]["dataloader"],
-    )
-
-    validation_dataset_dns_1_with_reverb = instantiate(
-        config["validation_dataset_dns_1_with_reverb"]["path"],
-        args=config["validation_dataset_dns_1_with_reverb"]["args"],
-    )
-    validation_dataset_dns_1_with_reverb = DataLoader(
-        dataset=validation_dataset_dns_1_with_reverb,
-        num_workers=0,
-        batch_size=1,
-    )
-
-    validation_dataset_dns_1_no_reverb = instantiate(
-        config["validation_dataset_dns_1_no_reverb"]["path"],
-        args=config["validation_dataset_dns_1_no_reverb"]["args"],
-    )
-    validation_dataset_dns_1_no_reverb = DataLoader(
-        dataset=validation_dataset_dns_1_no_reverb,
-        num_workers=0,
-        batch_size=1,
-    )
-
-    test_dataset_dns_1_with_reverb = instantiate(
-        config["test_dataset_dns_1_with_reverb"]["path"],
-        args=config["test_dataset_dns_1_with_reverb"]["args"],
-    )
-    test_dataset_dns_1_with_reverb = DataLoader(
-        dataset=test_dataset_dns_1_with_reverb,
-        num_workers=0,
-        batch_size=1,
-    )
-
-    test_dataset_dns_1_no_reverb = instantiate(
-        config["test_dataset_dns_1_no_reverb"]["path"],
-        args=config["test_dataset_dns_1_no_reverb"]["args"],
-    )
-    test_dataset_dns_1_no_reverb = DataLoader(
-        dataset=test_dataset_dns_1_no_reverb,
-        num_workers=0,
-        batch_size=1,
-    )
-
     model = instantiate(
         config["model"]["path"],
         args=config["model"]["args"],
@@ -101,30 +49,56 @@ def run(config, resume):
         lr_scheduler=lr_scheduler,
     )
 
+    if "train" in args.mode:
+        train_dataset = instantiate(
+            config["train_dataset"]["path"],
+            args=config["train_dataset"]["args"],
+        )
+        train_dataloader = DataLoader(
+            dataset=train_dataset,
+            sampler=DistributedSampler(dataset=train_dataset, rank=rank, shuffle=True),
+            collate_fn=None,
+            shuffle=False,
+            **config["train_dataset"]["dataloader"],
+        )
+
+    if "train" in args.mode or "validate" in args.mode:
+        if not isinstance(config["validate_dataset"], list):
+            config["validate_dataset"] = [config["validate_dataset"]]
+
+        validate_dataloaders = []
+        for validate_config in config["validate_dataset"]:
+            validate_dataloaders.append(
+                DataLoader(
+                    dataset=instantiate(
+                        validate_config["path"], args=validate_config["args"]
+                    ),
+                    num_workers=0,
+                    batch_size=1,
+                )
+            )
+
+    if "test" in args.mode:
+        if not isinstance(["test_dataset"], list):
+            config["test_dataset"] = [config["test_dataset"]]
+
+        test_dataloaders = []
+        for test_config in config["test_dataset"]:
+            test_dataloaders.append(
+                DataLoader(
+                    dataset=instantiate(test_config["path"], args=test_config["args"]),
+                    num_workers=0,
+                    batch_size=1,
+                )
+            )
+
     for flag in args.mode:
         if flag == "train":
-            trainer.train(
-                train_dataloader,
-                [
-                    validation_dataset_dns_1_with_reverb,
-                    validation_dataset_dns_1_no_reverb,
-                ],
-            )
+            trainer.train(train_dataloader, validate_dataloaders)
         elif flag == "validate":
-            trainer.validate(
-                [
-                    validation_dataset_dns_1_with_reverb,
-                    validation_dataset_dns_1_no_reverb,
-                ]
-            )
+            trainer.validate(validate_dataloaders)
         elif flag == "test":
-            trainer.test(
-                [
-                    validation_dataset_dns_1_with_reverb,
-                    validation_dataset_dns_1_no_reverb,
-                ],
-                config["meta"]["ckpt_path"],
-            )
+            trainer.test(test_dataloaders, config["meta"]["ckpt_path"])
         elif flag == "predict":
             raise NotImplementedError("Predict is not implemented yet.")
         elif flag == "finetune":
@@ -174,14 +148,11 @@ if __name__ == "__main__":
 
     if "test" in args.mode:
         if args.ckpt_path is None:
-            raise ValueError(
-                "Checkpoint path is required for test. Check '--ckpt_path'."
-            )
+            raise ValueError("checkpoint path is required for test. Use '--ckpt_path'.")
         else:
             config["meta"]["ckpt_path"] = args.ckpt_path
 
     # e.g., add sys.path to "model.Model"
     sys.path.insert(0, config_path.parent.as_posix())
-    print(sys.path)
 
     run(config, args.resume)
