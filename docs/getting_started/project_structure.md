@@ -1,9 +1,10 @@
 # Project Structure
 
 Before going to details, let's take a look at the overall structure of the project.
-You may familiar with the project structure if you have used [ESPNet](https://github.com/espnet/espnet) and [SpeechBrain](https://github.com/speechbrain/speechbrain). AudioZEN is inspired by them, but it is more flexible and simpler.
+You may familiar with this project structure (`recipes/<dataset>/<model>`) if you have used [ESPNet](https://github.com/espnet/espnet) and [SpeechBrain](https://github.com/speechbrain/speechbrain).
+AudioZEN is inspired by them, but it is more flexible and simpler.
 
-AudioZEN includes a core package and a series of recipes. The core package named `audiozen` provides common audio signal processing tools and deep learning trainers. As we have installed `audiozen` in editable mode, we can call `audiozen` package in everywhere of code. In addition, we can modify the source code of `audiozen` package directly. Any changes to the original package would reflect directly in your environment. For example, we can call `audiozen` package in `recipes` folder to train models on specific datasets and call `audiozen` package in `tools` folder to preprocess data. The recipes in the `recipes` folder are used to conduct the research on the audio/speech signal processing. Recipe introduced by [Kaldi](https://kaldi-asr.org/doc/about.html) firstly. It provides a convenient and reproducible way to organize and save the deep learning training pipelines.
+AudioZEN includes a core package and a series of recipes. The core package named `audiozen`, which provides common audio signal processing tools and deep learning trainers. As we have installed `audiozen` in editable mode, we can call `audiozen` package in everywhere of code. In addition, we can modify the source code of `audiozen` package directly. Any changes to the original package would reflect directly in your environment. For example, we can call `audiozen` package in `recipes` folder to train models on specific datasets and call `audiozen` package in `tools` folder to preprocess data. The recipes in the `recipes` folder are used to conduct the research on the audio/speech signal processing. Recipe introduced by [Kaldi](https://kaldi-asr.org/doc/about.html) firstly. It provides a convenient and reproducible way to organize and save the deep learning training pipelines.
 
 The directory structure is as follows:
 

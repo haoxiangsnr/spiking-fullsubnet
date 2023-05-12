@@ -537,29 +537,28 @@ class BaseTrainer:
         The input batch is from a training dataloader and the output of this function should be a loss tensor.
         Here is the persuade code for training a model:
 
-        .. code-block:: python
-            :emphasize-lines: 7
+        ```python hl_lines="7"
 
-            for epoch in range(start_epoch, end_epoch):
-                self.model.train()
+        for epoch in range(start_epoch, end_epoch):
+            self.model.train()
 
-                training_epoch_output = []
-                for batch, batch_index in dataloader:
-                    zero_grad()
-                    loss = training_step(batch, batch_idx)
-                    loss.backward()
-                    optimizer.step()
+            training_epoch_output = []
+            for batch, batch_index in dataloader:
+                zero_grad()
+                loss = training_step(batch, batch_idx)
+                loss.backward()
+                optimizer.step()
 
-                training_epoch_output.append(loss)
-                training_epoch_end(training_epoch_output)
+            training_epoch_output.append(loss)
+            training_epoch_end(training_epoch_output)
 
-                save_checkpoint()
+            save_checkpoint()
 
-                if some_condition:
-                    score = validate()
-                    if score > best_score:
-                        save_checkpoint(best=True)
-
+            if some_condition:
+                score = validate()
+                if score > best_score:
+                    save_checkpoint(best=True)
+        ```
 
         Args:
             batch: a batch of data, which passed from a custom training dataloader.
@@ -577,28 +576,27 @@ class BaseTrainer:
         The input is a list of the loss value of each batch in the training epoch.
         You may want to log the epoch-level training loss here.
 
-        .. code-block:: python
-            :emphasize-lines: 12
+        ```python hl_lines="12"
+        for epoch in range(start_epoch, end_epoch):
+            self.model.train()
 
-            for epoch in range(start_epoch, end_epoch):
-                self.model.train()
+            training_epoch_output = []
+            for batch, batch_index in dataloader:
+                zero_grad()
+                loss = training_step(batch, batch_idx)
+                loss.backward()
+                optimizer.step()
 
-                training_epoch_output = []
-                for batch, batch_index in dataloader:
-                    zero_grad()
-                    loss = training_step(batch, batch_idx)
-                    loss.backward()
-                    optimizer.step()
+            training_epoch_output.append(loss)
+            training_epoch_end(training_epoch_output)
 
-                training_epoch_output.append(loss)
-                training_epoch_end(training_epoch_output)
+            save_checkpoint()
 
-                save_checkpoint()
-
-                if some_condition:
-                    score = validate()
-                    if score > best_score:
-                        save_checkpoint(best=True)
+            if some_condition:
+                score = validate()
+                if score > best_score:
+                    save_checkpoint(best=True)
+        ```
 
         Args:
             training_epoch_output: the output of the training epoch. It may a list of the output of each batch.
@@ -611,17 +609,16 @@ class BaseTrainer:
         This function defines the validation step. The input batch is from a validation dataloader.
         Here is the persuade code for validating a model:
 
-        .. code-block:: python
-            :emphasize-lines: 4
+        ```python hl_lines="4"
+        validation_output = []
+        for dataloader_idx, dataloader in dataloaders:
+            for batch_index, batch in dataloader:
+                loss_or_data = validation_step(batch, batch_idx)
+                validation_epoch_output.append(loss_or_data)
 
-            validation_output = []
-            for dataloader_idx, dataloader in dataloaders:
-                for batch_index, batch in dataloader:
-                    loss_or_data = validation_step(batch, batch_idx)
-                    validation_epoch_output.append(loss_or_data)
-
-            score = validation_epoch_end(validation_epoch_output)
-            return score
+        score = validation_epoch_end(validation_epoch_output)
+        return score
+        ```
 
         Args:
             batch: a batch of data.
@@ -638,28 +635,26 @@ class BaseTrainer:
 
         The input `validation_epoch_output` will be a list of list. For example, if you have two dataloaders, the `validation_epoch_output` will be:
 
-        .. code-block:: python
-
-            validation_epoch_output = [
-                [dataloader_1_batch_1_output, dataloader_1_batch_2_output, ...],
-                [dataloader_2_batch_1_output, dataloader_2_batch_2_output, ...],
-                ...
-            ]
-
+        ```python
+        validation_epoch_output = [
+            [dataloader_1_batch_1_output, dataloader_1_batch_2_output, ...],
+            [dataloader_2_batch_1_output, dataloader_2_batch_2_output, ...],
+            ...
+        ]
+        ```
 
         The output of this function should be a metric score, which will be used to determine whether the current model is the best model.
 
-        .. code-block:: python
-            :emphasize-lines: 7
+        ```python hl_lines="7"
+        validation_output = []
+        for dataloader_idx, dataloader in dataloaders:
+            for batch_index, batch in dataloader:
+                loss_or_data = validation_step(batch, batch_idx)
+                validation_epoch_output.append(loss_or_data)
 
-            validation_output = []
-            for dataloader_idx, dataloader in dataloaders:
-                for batch_index, batch in dataloader:
-                    loss_or_data = validation_step(batch, batch_idx)
-                    validation_epoch_output.append(loss_or_data)
-
-            score = validation_epoch_end(validation_epoch_output)
-            return score
+        score = validation_epoch_end(validation_epoch_output)
+        return score
+        ```
 
         Args:
             validation_epoch_output: the output of the validation epoch. It is a list of list.
@@ -672,39 +667,35 @@ class BaseTrainer:
     def test_step(self, batch, batch_idx, dataloader_idx):
         """Similar to validation_step, but for testing.
 
-        .. code-block:: python
-            :linenos:
-            :emphasize-lines: 4
+        ```python hl_lines="4"
+        load_checkpoint(ckpt_path)
 
-            load_checkpoint(ckpt_path)
+        for batch, batch_index in dataloader:
+            loss = test_step(batch, batch_idx)
 
-            for batch, batch_index in dataloader:
-                loss = test_step(batch, batch_idx)
+            test_epoch_output.append(loss)
 
-                test_epoch_output.append(loss)
+        test_epoch_end(test_epoch_output)
 
-            test_epoch_end(test_epoch_output)
-
-            return score
+        return score
+        ```
         """
         raise NotImplementedError
 
     def test_epoch_end(self, test_epoch_output):
         """Similar to validation_epoch_end, but for testing.
 
-        .. code-block:: python
-            :linenos:
-            :emphasize-lines: 8
+        ```python hl_lines="8"
+        load_checkpoint(ckpt_path)
 
-            load_checkpoint(ckpt_path)
+        for batch, batch_index in dataloader:
+            loss = test_step(batch, batch_idx)
 
-            for batch, batch_index in dataloader:
-                loss = test_step(batch, batch_idx)
+            test_epoch_output.append(loss)
 
-                test_epoch_output.append(loss)
+        test_epoch_end(test_epoch_output)
 
-            test_epoch_end(test_epoch_output)
-
-            return score
+        return score
+        ```
         """
         raise NotImplementedError

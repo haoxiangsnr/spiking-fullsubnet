@@ -1,7 +1,7 @@
 # Running an experiment
 
-AudioZEN adopt a `recipes/<dataset>/<model>` direcotry structure. To run an experiment of a model,
-we first need to enter a dataset direcotry, which will include a entry file `run.py` and some dataloaders dedicated to this dataset. For example, let us entry to the directory `recipes/dns_icassp_2020/`. The correspoding dataset is the ICASSP 2020 DNS Challenge dataset:
+AudioZEN adopts a `recipes/<dataset>/<model>` direcotry structure.
+To run an experiment of a model, we first need to enter a dataset direcotry, which will include a entry file `run.py` and some dataloaders dedicated to this dataset. For example, let us entry to the directory `recipes/dns_icassp_2020/`. The correspoding dataset is the ICASSP 2020 DNS Challenge dataset:
 
 ```shell
 cd recipes/dns_icassp_2020
@@ -9,14 +9,14 @@ cd recipes/dns_icassp_2020
 
 ## Entry file `run.py`
 
-In the `<dataset>` directory, we have the entry file `run.py`, dataloaders, and model direcotries.
+In each `<dataset>` directory, we have a entry file `run.py`, dataloaders, and some model direcotries.
 Then, we call this `run.py` script to run the experiment. For example, we can use the following command to train the `cirm_lstm` model using configurations in `baseline.toml`:
 
 ```shell
 torchrun run.py -C cirm_lstm/baseline.toml -M train
 ```
 
-Here, We use `torchrun` to help us to start multi-GPU training conveniently. `torchrun` isn't a magic, its just a python console_entrypoint added for convenience (check [torchrun versus python -m torch.distributed.run](https://pytorch.org/docs/stable/elastic/run.html)).
+Here, `torchrun` helps us to start multi-GPU training conveniently. `torchrun` isn't a magic, its just a python `console_entrypoint` added for convenience (check [torchrun versus python -m torch.distributed.run](https://pytorch.org/docs/stable/elastic/run.html)).
 
 `run.py` supports the following parameters:
 
@@ -40,7 +40,7 @@ See more details in `recipes/dns_icassp_2020/run.py` and the configuration file 
 
 ## Single-machine multi-GPU training
 
-To control the usage of GPU devices, we should dive `torchrun` into deep. Let us use `baseline.toml` to train cirm_lstm with 2 GPUs on a single machine
+In most cases, we want to start an experiment on a single machine with multiple GPUs. Here, we show some examples for how to. First, let us use `baseline.toml` to train `cirm_lstm` with 2 GPUs on a single machine
 
 ```shell
 torchrun
@@ -116,8 +116,9 @@ torchrun
     --ckpt_path best
 ```
 
-Before use `torchrun`, don't forget to use the environment variable `CUDA_VISIBLE_DEVICES` to control the GPU usage. For example, the following command will use the first and second GPUs:
+!!! important
+    Before use `torchrun`, don't forget to use the environment variable `CUDA_VISIBLE_DEVICES` to control the GPU usage. For example, the following command will use the first and second GPUs:
 
-```shell
-export CUDA_VISIABLE_DEVICES=0,1
-```
+    ```shell
+    export CUDA_VISIABLE_DEVICES=0,1
+    ```

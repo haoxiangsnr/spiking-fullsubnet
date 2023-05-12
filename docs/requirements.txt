@@ -1,3 +1,1 @@
-myst-nb
-sphinx-rtd-theme
-sphinxcontrib-napoleon
+mkdocstrings[python]
