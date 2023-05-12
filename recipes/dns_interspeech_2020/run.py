@@ -11,9 +11,10 @@ from audiozen.utils import initialize_ddp, instantiate, set_random_seed
 
 
 def run(config, resume):
-    set_random_seed(config["meta"]["seed"])
-
     rank = int(os.environ["LOCAL_RANK"])
+
+    set_random_seed(config["meta"]["seed"] + rank)
+
     initialize_ddp(rank)
 
     if rank == 0:

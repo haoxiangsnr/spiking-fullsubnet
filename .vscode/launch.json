@@ -18,7 +18,7 @@
                 "--nnodes=1",
                 "run.py",
                 "-C",
-                "fsb/ctrFreq124_sampleLength4s_modelTD_freqMagMAE_AdamW_h5py_setEpoch.toml",
+                "fsb/placeholder_AdamW_h5py_setEpoch_NoAMP_clipNorm-1.toml",
                 "-M",
                 "train"
             ],

@@ -30,7 +30,7 @@ lr = 0.001
 [trainer]
 path = "trainer_no_amp.Trainer"
 [trainer.args]
-max_epoch = 9999
+max_epoch = 2
 clip_grad_norm_value = -1
 save_max_score = true
 save_ckpt_interval = 1
@@ -45,8 +45,8 @@ path = "dataloader_noise_h5py.DNS_OTF"
 speech_path = "/apdcephfs/share_1149801/speech_user/tomasyu/experiment/frontend/Enhancement-Paas/egs2/denoise/data/16k/dnsdatalist/readspeech_hdf5.scp"
 noise_path = "/apdcephfs/share_1149801/speech_user/tomasyu/experiment/frontend/Enhancement-Paas/egs2/denoise/data/16k/dnsdatalist/noise_hdf5.scp"
 rir_path = "/apdcephfs/share_1149801/speech_user/tomasyu/experiment/frontend/Enhancement-Paas/egs2/denoise/data/16k/dnsdatalist/rir_hdf5.scp"
-# num_iter_per_epoch = 200000
-num_iter_per_epoch = 640000
+num_iter_per_epoch = 200000
+# num_iter_per_epoch = 1280
 session_length = 4
 input_sr = 16000
 target_sr = 16000
@@ -56,7 +56,7 @@ target_dB_FS = -25
 target_dB_FS_floating_value = 10
 
 [train_dataset.dataloader]
-batch_size = 1
+batch_size = 16
 num_workers = 16
 drop_last = true
 pin_memory = false

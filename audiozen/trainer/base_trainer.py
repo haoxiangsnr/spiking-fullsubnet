@@ -350,7 +350,7 @@ class BaseTrainer:
     def train(self, train_dataloader, validation_dataloaders):
         early_stop_mark = torch.zeros(1, device=self.rank)
 
-        for epoch in range(self.start_epoch, self.max_epoch):
+        for epoch in range(self.start_epoch, self.max_epoch + 1):
             self.current_epoch = epoch
 
             if self.rank == 0:
@@ -372,6 +372,7 @@ class BaseTrainer:
                     dynamic_ncols=True,
                     bar_format="{l_bar}{r_bar}",
                 )
+
             for batch_idx, batch in (
                 enumerate(dataloader_bar)
                 if self.rank == 0
@@ -402,10 +403,11 @@ class BaseTrainer:
                     dataloader_bar.set_description(
                         f"Loss: {loss.item():.4f}, lr: {self.lr_scheduler.get_last_lr()[-1]:.6f}"
                     )
+
                     self.writer.add_scalar(
                         f"Loss/Train_Step",
                         loss.item(),
-                        epoch * len(train_dataloader) + batch_idx,
+                        (epoch - 1) * len(train_dataloader) + batch_idx,
                     )
 
                     if self.plot_norm:
@@ -437,13 +439,16 @@ class BaseTrainer:
 
                         logger.info(f"Validation finished.")
 
-            dist.barrier()
             self.lr_scheduler.step()
 
+            # Waiting rank zero process to finish validation
+            dist.barrier()
+
+            # Reduces the `early_stop_mark` data across all processes in such a way that all get the final result.
             dist.all_reduce(early_stop_mark, op=dist.ReduceOp.SUM)
 
+            # If any process triggers early stopping, stop training
             if early_stop_mark != 0:
-                # Call it out of DDP training loop to avoid hanging
                 break
 
     @torch.no_grad()
