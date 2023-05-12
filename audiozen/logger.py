@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 
 import toml
@@ -44,18 +45,22 @@ def init_logging_logger(config):
 
     # Create logger
     logger = logging.getLogger()
-    # Set a lower level of root logger and controls logging via handlers' level
+
+    # Set the lowest level of root logger and controls logging via handlers' level
     logger.setLevel(logging.DEBUG)
+
+    # Get log level from environment variable
+    log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
 
     # Create a console handler and set level to info
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(level=log_level)
 
     # Create a file handler and set the logger level to debug
     file_handler = logging.FileHandler(
         (log_dir / f"{config['meta']['exp_id']}.log").as_posix()
     )
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(level=log_level)
 
     # Create formatters (file logger have more info)
     console_formatter = logging.Formatter(
