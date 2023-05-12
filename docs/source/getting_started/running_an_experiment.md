@@ -20,21 +20,12 @@ Here, `torchrun` helps us to start multi-GPU training conveniently. `torchrun` i
 
 `run.py` supports the following parameters:
 
-```shell
-usage: run.py [-h] -C CONFIGURATION [-M {train,validate,test,predict,finetune} [{train,validate,test,predict,finetune} ...]] [-R] [--ckpt_path CKPT_PATH]
-
-Audio-ZEN
-
-options:
-  -h, --help            show this help message and exit
-  -C CONFIGURATION, --configuration CONFIGURATION
-                        Configuration (*.toml).
-  -M {train,validate,test,predict,finetune} [{train,validate,test,predict,finetune} ...], --mode {train,validate,test,predict,finetune} [{train,validate,test,predict,finetune} ...]
-                        Mode of the experiment.
-  -R, --resume          Resume the experiment from latest checkpoint.
-  --ckpt_path CKPT_PATH
-                        Checkpoint path for test. It can be 'best', 'latest', or a path to a checkpoint.
-```
+| Parameter                 | Description                                                                                                           | Default  |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------- |
+| `-C` or `--configuration` | The configuration file (*.toml) for the experiment.                                                                   | `None`   |
+| `-M` or `--mode`          | The mode of the experiment. It can be `train`, `validate`, `test`, `predict`, or `finetune` or a combination of them. | `train`  |
+| `-R` or `--resume`        | Resume the experiment from the latest checkpoint.                                                                     | `False`  |
+| `--ckpt_path`             | The checkpoint path for test. It can be `best`, `latest`, or a path to a checkpoint.                                  | `latest` |
 
 See more details in `recipes/dns_icassp_2020/run.py` and the configuration file `recipes/dns_icassp_2020/cirm_lstm/baseline.toml`.
 
