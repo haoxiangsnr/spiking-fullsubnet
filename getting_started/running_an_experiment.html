@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Running an experiment &mdash; audiozen  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Logging and Visualization" href="logging_and_visualization.html" />
+    <link rel="prev" title="Project Structure" href="project_structure.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            audiozen
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project_structure.html">Project Structure</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Running an experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging_and_visualization.html">Logging and Visualization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../concepts/experiment_arguments.html">Experiment arguments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts/trainer.html">Trainer</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/conduct.html">Code of Conduct</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">audiozen</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Running an experiment</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/haoxiangsnr/audiozen/blob/maingetting_started/running_an_experiment.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="running-an-experiment">
+<h1>Running an experiment<a class="headerlink" href="#running-an-experiment" title="Permalink to this heading"></a></h1>
+<p>AudioZEN adopts a <code class="docutils literal notranslate"><span class="pre">recipes/&lt;dataset&gt;/&lt;model&gt;</span></code> direcotry structure.
+To run an experiment of a model, we first need to enter a dataset direcotry, which will include a entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code> and some dataloaders dedicated to this dataset. For example, let us entry to the directory <code class="docutils literal notranslate"><span class="pre">recipes/dns_icassp_2020/</span></code>. The correspoding dataset is the ICASSP 2020 DNS Challenge dataset:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>recipes/dns_icassp_2020
+</pre></div>
+</div>
+<section id="entry-file-run-py">
+<h2>Entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code><a class="headerlink" href="#entry-file-run-py" title="Permalink to this heading"></a></h2>
+<p>In each <code class="docutils literal notranslate"><span class="pre">&lt;dataset&gt;</span></code> directory, we have a entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code>, dataloaders, and some model direcotries.
+Then, we call this <code class="docutils literal notranslate"><span class="pre">run.py</span></code> script to run the experiment. For example, we can use the following command to train the <code class="docutils literal notranslate"><span class="pre">cirm_lstm</span></code> model using configurations in <code class="docutils literal notranslate"><span class="pre">baseline.toml</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun<span class="w"> </span>run.py<span class="w"> </span>-C<span class="w"> </span>cirm_lstm/baseline.toml<span class="w"> </span>-M<span class="w"> </span>train
+</pre></div>
+</div>
+<p>Here, <code class="docutils literal notranslate"><span class="pre">torchrun</span></code> helps us to start multi-GPU training conveniently. <code class="docutils literal notranslate"><span class="pre">torchrun</span></code> isn’t a magic, its just a python <code class="docutils literal notranslate"><span class="pre">console_entrypoint</span></code> added for convenience (check <a class="reference external" href="https://pytorch.org/docs/stable/elastic/run.html">torchrun versus python -m torch.distributed.run</a>).</p>
+<p><code class="docutils literal notranslate"><span class="pre">run.py</span></code> supports the following parameters:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>usage:<span class="w"> </span>run.py<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span>-C<span class="w"> </span>CONFIGURATION<span class="w"> </span><span class="o">[</span>-M<span class="w"> </span><span class="o">{</span>train,validate,test,predict,finetune<span class="o">}</span><span class="w"> </span><span class="o">[{</span>train,validate,test,predict,finetune<span class="o">}</span><span class="w"> </span>...<span class="o">]]</span><span class="w"> </span><span class="o">[</span>-R<span class="o">]</span><span class="w"> </span><span class="o">[</span>--ckpt_path<span class="w"> </span>CKPT_PATH<span class="o">]</span>
+
+Audio-ZEN
+
+options:
+<span class="w">  </span>-h,<span class="w"> </span>--help<span class="w">            </span>show<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>message<span class="w"> </span>and<span class="w"> </span><span class="nb">exit</span>
+<span class="w">  </span>-C<span class="w"> </span>CONFIGURATION,<span class="w"> </span>--configuration<span class="w"> </span>CONFIGURATION
+<span class="w">                        </span>Configuration<span class="w"> </span><span class="o">(</span>*.toml<span class="o">)</span>.
+<span class="w">  </span>-M<span class="w"> </span><span class="o">{</span>train,validate,test,predict,finetune<span class="o">}</span><span class="w"> </span><span class="o">[{</span>train,validate,test,predict,finetune<span class="o">}</span><span class="w"> </span>...<span class="o">]</span>,<span class="w"> </span>--mode<span class="w"> </span><span class="o">{</span>train,validate,test,predict,finetune<span class="o">}</span><span class="w"> </span><span class="o">[{</span>train,validate,test,predict,finetune<span class="o">}</span><span class="w"> </span>...<span class="o">]</span>
+<span class="w">                        </span>Mode<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>experiment.
+<span class="w">  </span>-R,<span class="w"> </span>--resume<span class="w">          </span>Resume<span class="w"> </span>the<span class="w"> </span>experiment<span class="w"> </span>from<span class="w"> </span>latest<span class="w"> </span>checkpoint.
+<span class="w">  </span>--ckpt_path<span class="w"> </span>CKPT_PATH
+<span class="w">                        </span>Checkpoint<span class="w"> </span>path<span class="w"> </span><span class="k">for</span><span class="w"> </span>test.<span class="w"> </span>It<span class="w"> </span>can<span class="w"> </span>be<span class="w"> </span><span class="s1">&#39;best&#39;</span>,<span class="w"> </span><span class="s1">&#39;latest&#39;</span>,<span class="w"> </span>or<span class="w"> </span>a<span class="w"> </span>path<span class="w"> </span>to<span class="w"> </span>a<span class="w"> </span>checkpoint.
+</pre></div>
+</div>
+<p>See more details in <code class="docutils literal notranslate"><span class="pre">recipes/dns_icassp_2020/run.py</span></code> and the configuration file <code class="docutils literal notranslate"><span class="pre">recipes/dns_icassp_2020/cirm_lstm/baseline.toml</span></code>.</p>
+</section>
+<section id="single-machine-multi-gpu-training">
+<h2>Single-machine multi-GPU training<a class="headerlink" href="#single-machine-multi-gpu-training" title="Permalink to this heading"></a></h2>
+<p>In most cases, we want to start an experiment on a single machine with multiple GPUs. Here, we show some examples for how to. First, let us use <code class="docutils literal notranslate"><span class="pre">baseline.toml</span></code> to train <code class="docutils literal notranslate"><span class="pre">cirm_lstm</span></code> with 2 GPUs on a single machine</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
+<span class="w">    </span>--standalone
+<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>run.py
+<span class="w">    </span>--configuration<span class="w"> </span>cirm_lstm/baseline.toml
+<span class="w">    </span>--mode<span class="w"> </span>train
+</pre></div>
+</div>
+<p>Use baseline.toml to train cirm_lstm with 1 GPU on a single machine</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
+<span class="w">    </span>--standalone
+<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>run.py
+<span class="w">    </span>--configuration<span class="w"> </span>cirm_lstm/baseline.toml
+<span class="w">    </span>--mode<span class="w"> </span>train
+</pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">baseline.toml</span></code> to train cirm_lstm with 2 GPUs on a single machine, and resume training (using <code class="docutils literal notranslate"><span class="pre">-R</span></code> or <code class="docutils literal notranslate"><span class="pre">--resume</span></code>) from the last checkpoint:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
+<span class="w">    </span>--standalone
+<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>run.py
+<span class="w">    </span>-C<span class="w"> </span>cirm_lstm/baseline.toml
+<span class="w">    </span>-M<span class="w"> </span>train
+<span class="w">    </span>-R
+</pre></div>
+</div>
+<p>In the case of running multiple experiments on a single machine, since the first experiment has occupied the default DistributedDataParallel (DDP) listening port 29500, we need to make sure that each instance (job) is setup on different ports to avoid port conflicts. Use <code class="docutils literal notranslate"><span class="pre">rdzv-endpoint=localhost:0</span></code> means to select a random unused port:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
+<span class="w">    </span>--rdzv-backend<span class="o">=</span>c10d
+<span class="w">    </span>--rdzv-endpoint<span class="o">=</span>localhost:0
+<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>run.py
+<span class="w">    </span>-C<span class="w"> </span>cirm_lstm/baseline.toml
+<span class="w">    </span>-M<span class="w"> </span>train
+</pre></div>
+</div>
+<p>Using “best” epoch to test the model performance on the test dataset:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
+<span class="w">    </span>--standalone
+<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>run.py
+<span class="w">    </span>-C<span class="w"> </span>cirm_lstm/baseline.toml
+<span class="w">    </span>-M<span class="w"> </span><span class="nb">test</span>
+<span class="w">    </span>--ckpt_path<span class="w"> </span>best
+</pre></div>
+</div>
+<p>Sequential train the model on the training dataset and test the model performance on the test dataset:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
+<span class="w">    </span>--standalone
+<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>run.py
+<span class="w">    </span>-C<span class="w"> </span>cirm_lstm/baseline.toml
+<span class="w">    </span>-M<span class="w"> </span>train<span class="w"> </span><span class="nb">test</span>
+<span class="w">    </span>--ckpt_path<span class="w"> </span>best
+</pre></div>
+</div>
+<p>!!! important
+Before use <code class="docutils literal notranslate"><span class="pre">torchrun</span></code>, don’t forget to use the environment variable <code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES</span></code> to control the GPU usage. For example, the following command will use the first and second GPUs:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>```shell
+export CUDA_VISIABLE_DEVICES=0,1
+```
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="project_structure.html" class="btn btn-neutral float-left" title="Project Structure" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="logging_and_visualization.html" class="btn btn-neutral float-right" title="Logging and Visualization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, HAO Xiang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Experiment arguments &mdash; audiozen  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Trainer" href="trainer.html" />
+    <link rel="prev" title="Logging and Visualization" href="../getting_started/logging_and_visualization.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            audiozen
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/project_structure.html">Project Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/running_an_experiment.html">Running an experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/logging_and_visualization.html">Logging and Visualization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Experiment arguments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="trainer.html">Trainer</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/conduct.html">Code of Conduct</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">audiozen</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Experiment arguments</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/haoxiangsnr/audiozen/blob/mainconcepts/experiment_arguments.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="experiment-arguments">
+<h1>Experiment arguments<a class="headerlink" href="#experiment-arguments" title="Permalink to this heading"></a></h1>
+<p>AudioZEN uses TOML configuration files (<code class="docutils literal notranslate"><span class="pre">*.toml</span></code>) to configure and manage experiments.
+Each experiment is configured by a <code class="docutils literal notranslate"><span class="pre">*.toml</span></code> file, which contains the experiment meta information, trainer, loss function, learning rate scheduler, optimizer, model, dataset, and acoustic features. the basename of the <code class="docutils literal notranslate"><span class="pre">*.toml</span></code> file is used as the experiment ID or identifier.
+You can track configuration changes using version control and reproduce experiments by using the same configuration file. For more information on TOML syntax, visit the <a class="reference external" href="https://toml.io/en/">TOML website</a>.</p>
+<section id="sample-toml-file">
+<h2>Sample <code class="docutils literal notranslate"><span class="pre">*.toml</span></code> file<a class="headerlink" href="#sample-toml-file" title="Permalink to this heading"></a></h2>
+<p>This sample file demonstrates many settings available for configuration in AudioZEN.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[meta]</span>
+<span class="n">save_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;sdnn_delays/exp&quot;</span>
+<span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="n">use_amp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="n">use_deterministic_algorithms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+
+<span class="k">[trainer]</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;trainer.Trainer&quot;</span>
+<span class="k">[trainer.args]</span>
+<span class="n">max_epoch</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">9999</span>
+<span class="n">clip_grad_norm_value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+
+<span class="k">[acoustics]</span>
+<span class="n">n_fft</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">512</span>
+<span class="n">win_length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">256</span>
+<span class="n">sr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">16000</span>
+<span class="n">hop_length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">256</span>
+
+<span class="k">[loss]</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;audiozen.loss.SoftDTWLoss&quot;</span>
+<span class="k">[loss.args]</span>
+<span class="n">gamma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.1</span>
+
+<span class="k">[optimizer]</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;torch.optim.RAdam&quot;</span>
+<span class="k">[optimizer.args]</span>
+<span class="n">lr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.01</span>
+<span class="n">weight_decay</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1e-5</span>
+
+<span class="k">[model]</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;model.Model&quot;</span>
+<span class="k">[model.args]</span>
+<span class="n">threshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.1</span>
+<span class="n">tau_grad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.1</span>
+<span class="n">scale_grad</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.8</span>
+<span class="n">max_delay</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">64</span>
+<span class="n">out_delay</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
+</pre></div>
+</div>
+<p>Check any experiment configuration file in the <code class="docutils literal notranslate"><span class="pre">recipes</span></code> directory for more details.</p>
+</section>
+<section id="configuration-details">
+<h2>Configuration details<a class="headerlink" href="#configuration-details" title="Permalink to this heading"></a></h2>
+<p>In the audiozen configuration file, we must contain the following sections:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">meta</span></code>: Configure the experiment meta information, such as <code class="docutils literal notranslate"><span class="pre">save_dir</span></code>, <code class="docutils literal notranslate"><span class="pre">seed</span></code>, etc.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trainer</span></code>: Configure the trainer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">loss_function</span></code>: Configure the loss function.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lr_scheduler</span></code>: Configure the learning rate scheduler.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimizer</span></code>: Configure the optimizer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model</span></code>: Configure the model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code>: Configure the dataset.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">acoustics</span></code>: Configure the acoustic features.</p></li>
+</ul>
+<section id="meta">
+<h3><code class="docutils literal notranslate"><span class="pre">meta</span></code><a class="headerlink" href="#meta" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">meta</span></code> section is used to configure the experiment meta information.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Item</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">save_dir</span></code></p></td>
+<td><p>The directory where the experiment is saved. The log information, model checkpoints, and enhanced audio files will be stored in this directory.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">seed</span></code></p></td>
+<td><p>The random seed used to initialize the random number generator.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">use_amp</span></code></p></td>
+<td><p>Whether to use automatic mixed precision (AMP) to accelerate the training.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">use_deterministic_algorithms</span></code></p></td>
+<td><p>Whether to use nondeterministic algorithms to accelerate the training. If it is True, the training will be slower but more reproducible.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="trainer">
+<h3><code class="docutils literal notranslate"><span class="pre">trainer</span></code><a class="headerlink" href="#trainer" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">trainer</span></code> section is used to configure the trainer. It contains two parts: <code class="docutils literal notranslate"><span class="pre">path</span></code> and <code class="docutils literal notranslate"><span class="pre">args</span></code>. <code class="docutils literal notranslate"><span class="pre">path</span></code> is a string that specifies the path to the trainer class. <code class="docutils literal notranslate"><span class="pre">args</span></code> is a dictionary that specifies the arguments of the trainer class. It looks like:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[trainer]</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;trainer.Trainer&quot;</span>
+<span class="k">[trainer.args]</span>
+<span class="n">max_epochs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span>
+<span class="n">clip_grad_norm_value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+<span class="p">...</span>
+</pre></div>
+</div>
+<p>In this case, AudioZEN will load the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class from <code class="docutils literal notranslate"><span class="pre">trainer.py</span></code> and initialize it with the arguments in the <code class="docutils literal notranslate"><span class="pre">[trainer.args]</span></code> section. <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class must be a subclass of <code class="docutils literal notranslate"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer</span></code>. It supports the following arguments at least:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Item</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_epochs</span></code></p></td>
+<td><p>The maximum number of epochs to train.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">clip_grad_norm_value</span></code></p></td>
+<td><p>The maximum norm of the gradients used for clipping.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">save_max_score</span></code></p></td>
+<td><p>Whether to find the best model by the maximum score.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">save_ckpt_interval</span></code></p></td>
+<td><p>The interval of saving checkpoints.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">patience</span></code></p></td>
+<td><p>The number of epochs with no improvement after which the training will be stopped.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">validation_interval</span></code></p></td>
+<td><p>The interval of validation.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_num_checkpoints</span></code></p></td>
+<td><p>The maximum number of checkpoints to keep. Saving too many checkpoints causes disk space to run out.</p></td>
+</tr>
+</tbody>
+</table>
+<section id="finding-modules-by-path-argument">
+<h4>Finding modules by <code class="docutils literal notranslate"><span class="pre">path</span></code> argument<a class="headerlink" href="#finding-modules-by-path-argument" title="Permalink to this heading"></a></h4>
+<p>We support multiple ways to find modules by the <code class="docutils literal notranslate"><span class="pre">path</span></code> argument in the <code class="docutils literal notranslate"><span class="pre">*.toml</span></code>. For example, we have the following directory structure:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>recipes/intel_ndns_challenge
+├── README.md
+├── run.py
+└── sdnn_intel_ndns_challengedelays
+    ├── baseline.toml
+    ├── exp
+    │   └── baseline
+    │       └── baseline.log
+    ├── model.py
+    └── trainer.py
+</pre></div>
+</div>
+<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">sys</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;/path/to/audiozen/recipes/intel_ndns_challenge/sdnn_delays&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;/path/to/audiozen/recipes/intel_ndns_challenge&#39;</span><span class="p">,</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>In <code class="docutils literal notranslate"><span class="pre">recipes/dns_1/baseline.toml</span></code>, the <code class="docutils literal notranslate"><span class="pre">path</span></code> of the <code class="docutils literal notranslate"><span class="pre">trainer</span></code> is set to:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[trainer]</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;trainer.Trainer&quot;</span>
+</pre></div>
+</div>
+<p>In this case, we will try to find the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class in <code class="docutils literal notranslate"><span class="pre">recipes/dns_1/trainer</span></code>. If we set the <code class="docutils literal notranslate"><span class="pre">path</span></code> to:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[trainer]</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;audiozen.trainer.custom_trainer.CustomTrainer&quot;</span>
+</pre></div>
+</div>
+<p>We will try to find the <code class="docutils literal notranslate"><span class="pre">CustomTrainer</span></code> class in <code class="docutils literal notranslate"><span class="pre">audiozen/trainer/custom_trainer.py</span></code>.</p>
+<p>!!! note
+If you want to call <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> in <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package, you must install it in editable way by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code> first.</p>
+</section>
+</section>
+<section id="loss-function-lr-scheduler-optimizer-model-and-dataset">
+<h3><code class="docutils literal notranslate"><span class="pre">loss_function</span></code>, <code class="docutils literal notranslate"><span class="pre">lr_scheduler</span></code>, <code class="docutils literal notranslate"><span class="pre">optimizer</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, and <code class="docutils literal notranslate"><span class="pre">dataset</span></code><a class="headerlink" href="#loss-function-lr-scheduler-optimizer-model-and-dataset" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">loss_function</span></code>, <code class="docutils literal notranslate"><span class="pre">lr_scheduler</span></code>, <code class="docutils literal notranslate"><span class="pre">optimizer</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, <code class="docutils literal notranslate"><span class="pre">dataset</span></code> sections are used to configure the loss function, learning rate scheduler, optimizer, model, and dataset, respectively.
+They have the same logic as the <code class="docutils literal notranslate"><span class="pre">trainer</span></code> section.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[loss_function|lr_scheduler|optimizer|model|dataset]</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;...&quot;</span>
+<span class="k">[loss_function|lr_scheduler|optimizer|model|dataset.args]</span>
+<span class="p">...</span>
+</pre></div>
+</div>
+<p>For example, you may use the loss function provided by PyTorch or implement your own loss function. For example, the following configuration is used to configure the <code class="docutils literal notranslate"><span class="pre">MSELoss</span></code>:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[loss_function]</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;torch.nn.MSELoss&quot;</span>
+<span class="k">[loss_function.args]</span>
+</pre></div>
+</div>
+<p>Configuration of a custom loss function:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[loss_function]</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;audiozen.loss.MyLoss&quot;</span>
+<span class="k">[loss_function.args]</span>
+<span class="n">weights</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">]</span>
+<span class="p">...</span>
+</pre></div>
+</div>
+<p>!!! note</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>You must keep the `[loss_function.args]` section even this loss function does not need any arguments.
+</pre></div>
+</div>
+<p>You may use the learning rate scheduler provided by PyTorch or implement your own learning rate scheduler. For example, the following configuration is used to configure the <code class="docutils literal notranslate"><span class="pre">StepLR</span></code>:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[lr_scheduler]</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;torch.optim.lr_scheduler.StepLR&quot;</span>
+<span class="k">[lr_scheduler.args]</span>
+<span class="n">step_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span>
+<span class="n">gamma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
+</pre></div>
+</div>
+</section>
+<section id="acoustics">
+<h3><code class="docutils literal notranslate"><span class="pre">acoustics</span></code><a class="headerlink" href="#acoustics" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">acoustics</span></code> section is used to configure the acoustic features.
+These configurations are used for the whole project, like visualization, except for the <code class="docutils literal notranslate"><span class="pre">dataloader</span></code> and <code class="docutils literal notranslate"><span class="pre">model</span></code> sections.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Item</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sr</span></code></p></td>
+<td><p>The sample rate of the audio.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">n_fft</span></code></p></td>
+<td><p>The number of FFT points.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">hop_length</span></code></p></td>
+<td><p>The number of samples between successive frames.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">win_length</span></code></p></td>
+<td><p>The length of the STFT window.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../getting_started/logging_and_visualization.html" class="btn btn-neutral float-left" title="Logging and Visualization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="trainer.html" class="btn btn-neutral float-right" title="Trainer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, HAO Xiang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

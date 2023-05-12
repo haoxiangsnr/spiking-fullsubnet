@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Structure &mdash; audiozen  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Running an experiment" href="running_an_experiment.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            audiozen
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Project Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running_an_experiment.html">Running an experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging_and_visualization.html">Logging and Visualization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../concepts/experiment_arguments.html">Experiment arguments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts/trainer.html">Trainer</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/conduct.html">Code of Conduct</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">audiozen</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Project Structure</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/haoxiangsnr/audiozen/blob/maingetting_started/project_structure.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="project-structure">
+<h1>Project Structure<a class="headerlink" href="#project-structure" title="Permalink to this heading"></a></h1>
+<p>Before going to details, let’s take a look at the overall structure of the project.
+You may familiar with this project structure (<code class="docutils literal notranslate"><span class="pre">recipes/&lt;dataset&gt;/&lt;model&gt;</span></code>) if you have used <a class="reference external" href="https://github.com/espnet/espnet">ESPNet</a> and <a class="reference external" href="https://github.com/speechbrain/speechbrain">SpeechBrain</a>.
+AudioZEN is inspired by them, but it is more flexible and simpler.</p>
+<p>AudioZEN includes a core package and a series of recipes. The core package named <code class="docutils literal notranslate"><span class="pre">audiozen</span></code>, which provides common audio signal processing tools and deep learning trainers. As we have installed <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> in editable mode, we can call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in everywhere of code. In addition, we can modify the source code of <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package directly. Any changes to the original package would reflect directly in your environment. For example, we can call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in <code class="docutils literal notranslate"><span class="pre">recipes</span></code> folder to train models on specific datasets and call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in <code class="docutils literal notranslate"><span class="pre">tools</span></code> folder to preprocess data. The recipes in the <code class="docutils literal notranslate"><span class="pre">recipes</span></code> folder are used to conduct the research on the audio/speech signal processing. Recipe introduced by <a class="reference external" href="https://kaldi-asr.org/doc/about.html">Kaldi</a> firstly. It provides a convenient and reproducible way to organize and save the deep learning training pipelines.</p>
+<p>The directory structure is as follows:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>├──<span class="w"> </span>📁<span class="w"> </span>audiozen
+│<span class="w">   </span>├──<span class="w"> </span>📁<span class="w"> </span>acoustics
+│<span class="w">   </span>├──<span class="w"> </span>📁<span class="w"> </span>dataset
+│<span class="w">   </span>├──<span class="w"> </span>📁<span class="w"> </span>model
+│<span class="w">   </span>│<span class="w">   </span>├──<span class="w"> </span>📁<span class="w"> </span>module
+│<span class="w">   </span>└──<span class="w"> </span>📁<span class="w"> </span>trainer
+├──<span class="w"> </span>📁<span class="w"> </span>docs
+│<span class="w">   </span>└──<span class="w"> </span>📁<span class="w"> </span>audiozen
+│<span class="w">       </span>├──<span class="w"> </span>📁<span class="w"> </span>acoustics
+│<span class="w">       </span>├──<span class="w"> </span>📁<span class="w"> </span>dataset
+│<span class="w">       </span>└──<span class="w"> </span>📁<span class="w"> </span>trainer
+├──<span class="w"> </span>📁<span class="w"> </span>notebooks
+├──<span class="w"> </span>📁<span class="w"> </span>recipes
+│<span class="w">   </span>└──<span class="w"> </span>📁<span class="w"> </span>dns_icassp_2020
+│<span class="w">       </span>├──<span class="w"> </span>📁<span class="w"> </span>cirm_lstm
+│<span class="w">       </span>│<span class="w">   </span>├──<span class="w"> </span>📄<span class="w"> </span>baseline.toml
+│<span class="w">       </span>│<span class="w">   </span>├──<span class="w"> </span>📄<span class="w"> </span>model.py
+│<span class="w">       </span>│<span class="w">   </span>└──<span class="w"> </span>📄<span class="w"> </span>trainer.py
+│<span class="w">       </span>├──<span class="w"> </span>📄<span class="w"> </span>dataset_train.py
+│<span class="w">       </span>├──<span class="w"> </span>📄<span class="w"> </span>dataset_validation_dns_1.py
+│<span class="w">       </span>├──<span class="w"> </span>📄<span class="w"> </span>dataset_validation_dns_4_non_personalized.py
+│<span class="w">       </span>└──<span class="w"> </span>📄<span class="w"> </span>run.py
+└──<span class="w"> </span>📁<span class="w"> </span>tools
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>📁<code class="docutils literal notranslate"><span class="pre">audiozen/</span></code>: The core of the project. It contains the following subdirectories:</p>
+<ul>
+<li><p>📁 <code class="docutils literal notranslate"><span class="pre">acoustics/</span></code>: Contain the code for audio signal processing.</p></li>
+<li><p>📁 <code class="docutils literal notranslate"><span class="pre">dataset/</span></code>: Contain the data loading and processing code.</p></li>
+<li><p>📁 <code class="docutils literal notranslate"><span class="pre">model/</span></code>: Contain the code for model definition and training.</p></li>
+<li><p>📁 <code class="docutils literal notranslate"><span class="pre">trainer/</span></code>: Contain the code for training and evaluation.</p></li>
+<li><p>…</p></li>
+</ul>
+</li>
+<li><p>📁 <code class="docutils literal notranslate"><span class="pre">docs/</span></code>: Contains the project’s documentation.</p></li>
+<li><p>📁 <code class="docutils literal notranslate"><span class="pre">recipes/</span></code>: Contains the recipes for specific experiments.</p></li>
+<li><p>📁 <code class="docutils literal notranslate"><span class="pre">tools/</span></code>: Contains the code for additional tools, such as data preprocessing, model conversion, etc.</p></li>
+</ul>
+<p>In <code class="docutils literal notranslate"><span class="pre">recipes</span></code> folder, we name the subdirectory after the dataset. create a subdirectory for the dataset named after the model.
+For example, <code class="docutils literal notranslate"><span class="pre">recipes/dns_icassp_2020/</span></code> represents the dataset <code class="docutils literal notranslate"><span class="pre">dns_icassp_2020</span></code>, and this directory contains data loading classes, training, and inference scripts for this dataset:</p>
+<ul class="simple">
+<li><p>📄 <code class="docutils literal notranslate"><span class="pre">run.py</span></code>: The entry of the entire project, which can be used to train all models in the <code class="docutils literal notranslate"><span class="pre">dns_icassp_2020</span></code> directory.</p></li>
+<li><p>📄 <code class="docutils literal notranslate"><span class="pre">dataset_train.py</span></code>: The construction class of the training dataset.</p></li>
+<li><p>📄 <code class="docutils literal notranslate"><span class="pre">dataset_validation_dns_1.py</span></code>: The construction class of the first validation dataset.</p></li>
+<li><p>📄 <code class="docutils literal notranslate"><span class="pre">dataset_validation_dns_4_non_personalized.py</span></code>: The construction class of the second validation dataset.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">cirm_lstm/</span></code> contains the cIRM LSTM model for this dataset, including the structure and trainers for each model.</p>
+<ul class="simple">
+<li><p>📄 <code class="docutils literal notranslate"><span class="pre">&lt;exp_id&gt;.toml</span></code>: The training parameters for this model.</p></li>
+<li><p>📄 <code class="docutils literal notranslate"><span class="pre">trainer.py</span></code>: The trainer for this model, which contains the operations and operations to be executed in each training, validation and test round.</p></li>
+<li><p>📄 <code class="docutils literal notranslate"><span class="pre">model.py</span></code>: The structure of the current model.</p></li>
+<li><p>📄 <code class="docutils literal notranslate"><span class="pre">run.py</span></code> (optional): The entry of the current model, which can be used to train the current model. If this file is not present, the <code class="docutils literal notranslate"><span class="pre">run.py</span></code> file in the <code class="docutils literal notranslate"><span class="pre">recipes/dns_icassp_2020</span></code> directory will be used.</p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="running_an_experiment.html" class="btn btn-neutral float-right" title="Running an experiment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, HAO Xiang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
