@@ -6,11 +6,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.10
       - uses: actions/checkout@v3
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: editable install
+        run: pip install -e .
       - name: Build HTML
         uses: ammaraskar/sphinx-action@master
-        with:
-          pre-build-command: "pip install -e ."
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
