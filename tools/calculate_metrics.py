@@ -42,9 +42,9 @@ class MetricComputer:
         si_sdr = self.si_sdr(est, ref)
         dns_mos = self.dns_mos(est)
 
-        return {"name": basename} | pesq_wb | pesq_nb | stoi | si_sdr  # | dns_mos
+        return {"name": basename} | dns_mos | si_sdr  # | pesq_wb | pesq_nb | stoi
 
-    def compute(self, reference_wav_paths, estimated_wav_paths, n_jobs=10):
+    def compute(self, reference_wav_paths, estimated_wav_paths, n_jobs=40):
         rows = Parallel(n_jobs=n_jobs, prefer="threads")(
             delayed(self.compute_per_item)(ref, est)
             for ref, est in tqdm(zip(reference_wav_paths, estimated_wav_paths))

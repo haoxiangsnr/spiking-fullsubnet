@@ -10,20 +10,14 @@ extensions = [
     "myst_parser",
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc",
-    # "autoapi.extension",
     "sphinx.ext.napoleon",
 ]
 
 # -- Extension configuration -------------------------------------------------
 myst_enable_extensions = ["colon_fence"]
 myst_number_code_blocks = ["python"]
-# autoapi_dirs = ["../../audiozen"]
-autodoc_default_options = {
-    "member-order": "bysource",
-}
+autodoc_default_options = {"member-order": "bysource"}
 autodoc_mock_imports = ["torch"]
-autodoc_typehints = "none"
-napoleon_preprocess_types = True
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
