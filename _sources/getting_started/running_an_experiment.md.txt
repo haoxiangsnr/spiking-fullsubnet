@@ -72,8 +72,8 @@ In the case of running multiple experiments on a single machine, since the first
 
 ```shell
 torchrun
-    --rdzv-backend=c10d
-    --rdzv-endpoint=localhost:0
+    --rdzv_backend=c10d
+    --rdzv_endpoint=localhost:0
     --nnodes=1
     --nproc_per_node=2
     run.py

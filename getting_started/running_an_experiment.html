@@ -167,8 +167,8 @@ Then, we call this <code class="docutils literal notranslate"><span class="pre">
 </div>
 <p>In the case of running multiple experiments on a single machine, since the first experiment has occupied the default DistributedDataParallel (DDP) listening port 29500, we need to make sure that each instance (job) is setup on different ports to avoid port conflicts. Use <code class="docutils literal notranslate"><span class="pre">rdzv-endpoint=localhost:0</span></code> means to select a random unused port:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
-<span class="w">    </span>--rdzv-backend<span class="o">=</span>c10d
-<span class="w">    </span>--rdzv-endpoint<span class="o">=</span>localhost:0
+<span class="w">    </span>--rdzv_backend<span class="o">=</span>c10d
+<span class="w">    </span>--rdzv_endpoint<span class="o">=</span>localhost:0
 <span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
 <span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
 <span class="w">    </span>run.py
