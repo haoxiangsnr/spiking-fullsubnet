@@ -419,7 +419,7 @@ class BaseTrainer:
                                 "total_norm": self.total_norm,
                                 "max_norm": self.clip_grad_norm_value,
                             },
-                            epoch * len(train_dataloader) + batch_idx,
+                            (epoch - 1) * len(train_dataloader) + batch_idx,
                         )
 
             self.training_epoch_end(training_epoch_output)
