@@ -27,22 +27,20 @@ class Trainer(BaseTrainer):
         noisy = noisy.to(self.device)
         clean = clean.to(self.device)
 
-        with torch.no_grad():
-            noisy_mag, noisy_phase, *_ = self.torch_stft(noisy)  # [B, F, T]
-            clean_mag, *_ = self.torch_stft(clean)
+        noisy_mag, noisy_phase, *_ = self.torch_stft(noisy)  # [B, F, T]
+        clean_mag, *_ = self.torch_stft(clean)
 
         enhanced_mag = self.model(noisy_mag)
 
-        # noisy_phase = slayer.axon.delay(noisy_phase, out_delay)
-        # clean_mag = slayer.axon.delay(clean_mag, out_delay)
-        # clean = slayer.axon.delay(clean, self.n_fft // 4 * out_delay)
+        noisy_phase = slayer.axon.delay(noisy_phase, out_delay)
+        clean_mag = slayer.axon.delay(clean_mag, out_delay)
+        clean = slayer.axon.delay(clean, self.n_fft // 4 * out_delay)
 
         clean_rec = self.torch_istft(
             [enhanced_mag, noisy_phase], length=noisy.shape[-1]
         )
 
-        loss = F.mse_loss(enhanced_mag, clean_mag)
-        # loss = self.loss_function(clean_rec, clean)
+        loss = self.loss_function(clean_rec, clean)
 
         return loss
 

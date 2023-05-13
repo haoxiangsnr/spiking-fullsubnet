@@ -25,9 +25,9 @@ class SDNNLoss(nn.Module):
     def forward(self, input, target):
         score = self.si_snr(input, target)
 
-        # input_mag, *_ = stft(input, self.n_fft, self.hop_length, self.win_length)
-        # target_mag, *_ = stft(target, self.n_fft, self.hop_length, self.win_length)
+        input_mag, *_ = stft(input, self.n_fft, self.hop_length, self.win_length)
+        target_mag, *_ = stft(target, self.n_fft, self.hop_length, self.win_length)
 
-        # loss = self.lam * F.mse_loss(input_mag, target_mag) + (100 - score)
+        loss = self.lam * F.mse_loss(input_mag, target_mag) + (100 - score)
 
-        return 100 - score
+        return loss

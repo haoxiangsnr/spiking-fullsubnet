@@ -18,7 +18,7 @@ Steps:
 
 class MetricComputer:
     def __init__(self, sr=16000) -> None:
-        # self.dns_mos = DNSMOS(input_sr=sr)
+        self.dns_mos = DNSMOS(input_sr=sr)
         self.stoi = STOI(sr=sr)
         self.pesq_wb = PESQ(sr=sr, mode="wb")
         self.pesq_nb = PESQ(sr=sr, mode="nb")
@@ -40,11 +40,11 @@ class MetricComputer:
         pesq_nb = self.pesq_nb(est, ref)
         stoi = self.stoi(est, ref)
         si_sdr = self.si_sdr(est, ref)
-        # dns_mos = self.dns_mos(est)
+        dns_mos = self.dns_mos(est)
 
         return {"name": basename} | pesq_wb | pesq_nb | stoi | si_sdr  # | dns_mos
 
-    def compute(self, reference_wav_paths, estimated_wav_paths, n_jobs=20):
+    def compute(self, reference_wav_paths, estimated_wav_paths, n_jobs=10):
         rows = Parallel(n_jobs=n_jobs, prefer="threads")(
             delayed(self.compute_per_item)(ref, est)
             for ref, est in tqdm(zip(reference_wav_paths, estimated_wav_paths))
@@ -151,6 +151,17 @@ def pre_processing(est_list, ref_list, align_mode=None):
                         est_basename.split("_")[-2:]
                     )
                     if expected_basename == get_basename(ref_path):
+                        reordered_estimated_wav_paths.append(est_path)
+        elif align_mode == "intel_ndns":
+            for ref_path in reference_wav_paths:
+                ref_basename = get_basename(ref_path)
+                ref_file_id = ref_basename.split("_")[-1]
+                for est_path in estimated_wav_paths:
+                    # zweiplaneten..._snr4_tl-33_fileid_49151.wav
+                    est_basename = get_basename(est_path)
+                    est_file_id = est_basename.split("_")[-1]
+
+                    if ref_file_id == est_file_id:
                         reordered_estimated_wav_paths.append(est_path)
         elif align_mode == "dns_2":
             for ref_path in reference_wav_paths:
