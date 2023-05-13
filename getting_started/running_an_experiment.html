@@ -99,7 +99,7 @@ To run an experiment of a model, we first need to enter a dataset direcotry, whi
 <h2>Entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code><a class="headerlink" href="#entry-file-run-py" title="Permalink to this heading"></a></h2>
 <p>In each <code class="docutils literal notranslate"><span class="pre">&lt;dataset&gt;</span></code> directory, we have a entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code>, dataloaders, and some model direcotries.
 Then, we call this <code class="docutils literal notranslate"><span class="pre">run.py</span></code> script to run the experiment. For example, we can use the following command to train the <code class="docutils literal notranslate"><span class="pre">cirm_lstm</span></code> model using configurations in <code class="docutils literal notranslate"><span class="pre">baseline.toml</span></code>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun<span class="w"> </span>run.py<span class="w"> </span>-C<span class="w"> </span>cirm_lstm/baseline.toml<span class="w"> </span>-M<span class="w"> </span>train
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun<span class="w"> </span>...<span class="w"> </span>run.py<span class="w"> </span>-C<span class="w"> </span>cirm_lstm/baseline.toml<span class="w"> </span>-M<span class="w"> </span>train
 </pre></div>
 </div>
 <p>Here, <code class="docutils literal notranslate"><span class="pre">torchrun</span></code> helps us to start multi-GPU training conveniently. <code class="docutils literal notranslate"><span class="pre">torchrun</span></code> isn’t a magic, its just a python <code class="docutils literal notranslate"><span class="pre">console_entrypoint</span></code> added for convenience (check <a class="reference external" href="https://pytorch.org/docs/stable/elastic/run.html">torchrun versus python -m torch.distributed.run</a>).</p>
@@ -165,7 +165,7 @@ Then, we call this <code class="docutils literal notranslate"><span class="pre">
 <span class="w">    </span>-R
 </pre></div>
 </div>
-<p>In the case of running multiple experiments on a single machine, since the first experiment has occupied the default DistributedDataParallel (DDP) listening port 29500, we need to make sure that each instance (job) is setup on different ports to avoid port conflicts. Use <code class="docutils literal notranslate"><span class="pre">rdzv_endpoint=localhost:0</span></code> means to select a random unused port:</p>
+<p>In the case of running multiple experiments on a single machine, since the first experiment has occupied the default DistributedDataParallel (DDP) listening port <code class="docutils literal notranslate"><span class="pre">29500</span></code>, we need to make sure that each instance (job) is setup on different ports to avoid port conflicts. Use <code class="docutils literal notranslate"><span class="pre">rdzv_endpoint=localhost:0</span></code> means to select a random unused port:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
 <span class="w">    </span>--rdzv_backend<span class="o">=</span>c10d
 <span class="w">    </span>--rdzv_endpoint<span class="o">=</span>localhost:0

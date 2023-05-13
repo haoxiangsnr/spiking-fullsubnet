@@ -13,7 +13,7 @@ In each `<dataset>` directory, we have a entry file `run.py`, dataloaders, and s
 Then, we call this `run.py` script to run the experiment. For example, we can use the following command to train the `cirm_lstm` model using configurations in `baseline.toml`:
 
 ```shell
-torchrun run.py -C cirm_lstm/baseline.toml -M train
+torchrun ... run.py -C cirm_lstm/baseline.toml -M train
 ```
 
 Here, `torchrun` helps us to start multi-GPU training conveniently. `torchrun` isn't a magic, its just a python `console_entrypoint` added for convenience (check [torchrun versus python -m torch.distributed.run](https://pytorch.org/docs/stable/elastic/run.html)).
@@ -68,7 +68,7 @@ torchrun
     -R
 ```
 
-In the case of running multiple experiments on a single machine, since the first experiment has occupied the default DistributedDataParallel (DDP) listening port 29500, we need to make sure that each instance (job) is setup on different ports to avoid port conflicts. Use `rdzv_endpoint=localhost:0` means to select a random unused port:
+In the case of running multiple experiments on a single machine, since the first experiment has occupied the default DistributedDataParallel (DDP) listening port `29500`, we need to make sure that each instance (job) is setup on different ports to avoid port conflicts. Use `rdzv_endpoint=localhost:0` means to select a random unused port:
 
 ```shell
 torchrun
