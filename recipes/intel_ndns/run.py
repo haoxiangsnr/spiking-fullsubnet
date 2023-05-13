@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 import toml
+import torch
 from torch.utils.data import DataLoader, DistributedSampler
 
 from audiozen.logger import init_logging_logger
@@ -23,6 +24,13 @@ def run(config, resume):
         config["model"]["path"],
         args=config["model"]["args"],
     )
+
+    # With multi GPU, the shape update happens on the spawned dataparallel copy
+    # but is not reflected back on the main model, so it needs to be done on the main copy
+    # once with a dummy load before the multiGPU run
+    # https://github.com/lava-nc/lava-dl/issues/26
+    model.to(rank)
+    model.forward(torch.rand(32, 257, 128).to(rank))
 
     optimizer = instantiate(
         config["optimizer"]["path"],

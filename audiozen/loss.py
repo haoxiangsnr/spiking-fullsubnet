@@ -11,11 +11,11 @@ from torch.autograd import Function
 from audiozen.constant import EPSILON
 
 
-class SISNRLoss:
-    def __init__(self, EPS=1e-8) -> None:
-        self.EPS = EPS
+class SISNRLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
 
-    def forward(self, input: Tensor | ndarray, target: Tensor | ndarray):
+    def forward(self, input, target):
         if isinstance(input, ndarray):
             input = torch.from_numpy(input)
         if isinstance(target, ndarray):
@@ -23,7 +23,7 @@ class SISNRLoss:
 
         if input.shape != target.shape:
             raise RuntimeError(
-                f"Dimension mismatch when calculate si_snr, {input.shape} vs {target.shape}"
+                f"Dimension mismatch when calculating SI-SNR, {input.shape=} vs {target.shape=}"
             )
 
         s_input = input - torch.mean(input, dim=-1, keepdim=True)
@@ -37,44 +37,10 @@ class SISNRLoss:
         e_noise = s_input - pair_wise_proj
 
         pair_wise_sdr = torch.sum(pair_wise_proj**2, dim=-1) / (
-            torch.sum(e_noise**2, dim=-1) + self.EPS
-        )
-        return 10 * torch.log10(pair_wise_sdr + self.EPS)
-
-
-def si_snr_loss():
-    def si_snr(x, s, eps=EPSILON):
-        """
-
-        Args:
-            x: Enhanced fo shape [B, T]
-            s: Reference of shape [B, T]
-            eps:
-
-        Returns:
-            si_snr: [B]
-        """
-
-        def l2norm(mat, keep_dim=False):
-            return torch.norm(mat, dim=-1, keepdim=keep_dim)
-
-        if x.shape != s.shape:
-            raise RuntimeError(
-                f"Dimension mismatch when calculate si_snr, {x.shape} vs {s.shape}"
-            )
-
-        x_zm = x - torch.mean(x, dim=-1, keepdim=True)
-        s_zm = s - torch.mean(s, dim=-1, keepdim=True)
-
-        t = (
-            torch.sum(x_zm * s_zm, dim=-1, keepdim=True)
-            * s_zm
-            / (l2norm(s_zm, keep_dim=True) ** 2 + eps)
+            torch.sum(e_noise**2, dim=-1) + EPSILON
         )
 
-        return -torch.mean(20 * torch.log10(eps + l2norm(t) / (l2norm(x_zm - t) + eps)))
-
-    return si_snr
+        return torch.mean(10 * torch.log10(pair_wise_sdr + EPSILON))
 
 
 class angle(Function):

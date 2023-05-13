@@ -4,7 +4,7 @@
 
 Hi there! This repository follows the [GitHub flow](https://docs.github.com/en/get-started/quickstart/github-flow). The GitHub flow contains the main branch and many feature branches. Generally speaking, the main branch always uses no direct commit and only can be integrated by rebase and merge. The feature branches, like new features, bug fixes, refactoring, experiments, etc., are used for development. The GitHub flow keeps the main branch working well with documents and tests.
 
-## Commit
+### Commit
 
 This repository uses the [Angular commit style](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commit-message-format), which looks like this:
 
@@ -29,8 +29,15 @@ Generally speaking, you need to at least specify a type and a short summary for 
 
 By using the standardized commit message in this Angular commit style, the continuous integration configuration will automatically bump version numbers based on keywords it finds in commit messages.
 
-## References
+### References
 
 - [Git for Professionals Tutorial - Tools & Concepts for Mastering Version Control with Git](https://www.youtube.com/watch?v=Uszj_k0DGsg)
 - [GitHub flow](https://docs.github.com/en/get-started/quickstart/github-flow)
 - [How to Write a Git Commit Message](https://cbea.ms/git-commit/)
+
+## Development Principles
+
+Things to avoid:
+
+- Circular dependencies
+- Global state/variables

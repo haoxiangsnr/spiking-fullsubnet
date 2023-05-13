@@ -68,7 +68,7 @@ class Model(torch.nn.Module):
         x = noisy - self.stft_mean
 
         for block in self.blocks:
-            x = block(x)
+            x = block(x).contiguous()
 
         mask = torch.relu(x + 1)
         return slayer.axon.delay(noisy, self.out_delay) * mask

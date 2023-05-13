@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 class BaseTrainer:
     def __init__(
         self,
-        rank,
         config,
         resume,
         model,
@@ -42,14 +41,12 @@ class BaseTrainer:
         if config["meta"]["use_deterministic_algorithms"]:
             self._use_deterministic_algorithms()
 
-        # GPU
-        self.rank = rank
-        self.device = rank  # alias of rank
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         # Distributed data parallel
-        self.model = DistributedDataParallel(
-            model.to(rank), device_ids=[rank], output_device=rank
-        )
+        self.model = torch.nn.DataParallel(model, device_ids=[0, 1])
+
+        model.to(self.device)
 
         # Optimizer
         self.optimizer = optimizer
@@ -95,35 +92,32 @@ class BaseTrainer:
         if resume:
             self._load_checkpoint("latest")
 
-        if rank == 0:
-            prepare_empty_dir(
-                [
-                    self.save_dir,
-                    self.exp_dir,
-                    self.checkpoints_dir,
-                    self.tb_log_dir,
-                    self.enhanced_dir,
-                ],
-                resume=resume,
-            )
+        prepare_empty_dir(
+            [
+                self.save_dir,
+                self.exp_dir,
+                self.checkpoints_dir,
+                self.tb_log_dir,
+                self.enhanced_dir,
+            ],
+            resume=resume,
+        )
 
-            self.writer = TensorboardLogger(self.tb_log_dir.as_posix())
-            self.writer.log_config(config)
+        self.writer = TensorboardLogger(self.tb_log_dir.as_posix())
+        self.writer.log_config(config)
 
-            with open(self.config_path.as_posix(), "w") as handle:
-                toml.dump(config, handle)
+        with open(self.config_path.as_posix(), "w") as handle:
+            toml.dump(config, handle)
 
-            logger.info(
-                f"Configuration file is saved to {self.config_path.as_posix()}."
-            )
+        logger.info(f"Configuration file is saved to {self.config_path.as_posix()}.")
 
-            # Backup of project code
-            # shutil.copytree(src=self.source_code_dir.as_posix(), dst=self.source_code_backup_dir.as_posix())
-            # logger.info(f"Project code is backed up to {self.source_code_backup_dir.as_posix()}.")
+        # Backup of project code
+        # shutil.copytree(src=self.source_code_dir.as_posix(), dst=self.source_code_backup_dir.as_posix())
+        # logger.info(f"Project code is backed up to {self.source_code_backup_dir.as_posix()}.")
 
-            # Model summary
-            model_summary = summary(self.model, verbose=0)  # no output
-            logger.info(f"\n {model_summary}")
+        # Model summary
+        model_summary = summary(self.model, verbose=0)  # no output
+        logger.info(f"\n {model_summary}")
 
     def _hf_search_setup(self, trial):
         """Setup hyperparameters for hyperparameter search.
@@ -348,110 +342,87 @@ class BaseTrainer:
         return should_stop
 
     def train(self, train_dataloader, validation_dataloaders):
-        early_stop_mark = torch.zeros(1, device=self.rank)
-
         for epoch in range(self.start_epoch, self.max_epoch + 1):
             self.current_epoch = epoch
 
-            if self.rank == 0:
-                logger.info(f"{'=' * 15} {epoch} epoch {'=' * 15}")
-                logger.info("Begin training...")
+            logger.info(f"{'=' * 15} {epoch} epoch {'=' * 15}")
+            logger.info("Begin training...")
 
-            # Calling the set_epoch() method at the beginning of each epoch before
-            # creating the DataLoader iterator is necessary to make shuffling work
-            # properly across multiple epochs.
-            train_dataloader.sampler.set_epoch(epoch)
             self.model.train()
 
             training_epoch_output = []
 
-            if self.rank == 0:
-                dataloader_bar = tqdm(
-                    train_dataloader,
-                    desc="",
-                    dynamic_ncols=True,
-                    bar_format="{l_bar}{r_bar}",
-                )
+            dataloader_bar = tqdm(
+                train_dataloader,
+                desc="",
+                dynamic_ncols=True,
+                bar_format="{l_bar}{r_bar}",
+            )
 
-            for batch_idx, batch in (
-                enumerate(dataloader_bar)
-                if self.rank == 0
-                else enumerate(train_dataloader)
-            ):
+            for batch_idx, batch in enumerate(dataloader_bar):
                 # clear gradients
                 self.optimizer.zero_grad()
 
                 # forward with AMP
-                with autocast(enabled=self.use_amp):
-                    loss = self.training_step(batch, batch_idx)
+                # with autocast(enabled=self.use_amp):
+                loss = self.training_step(batch, batch_idx)
 
                 # backward
-                self.scaler.scale(loss).backward()
-                self.scaler.unscale_(self.optimizer)
-
-                self.model.module.validate_gradients()
+                # self.scaler.scale(loss).backward()
+                loss.backward()
+                # self.scaler.unscale_(self.optimizer)
 
                 if self.clip_grad_norm_value != -1:
                     self.total_norm = torch.nn.utils.clip_grad_norm_(
                         self.model.parameters(), self.clip_grad_norm_value
                     )
 
-                self.scaler.step(self.optimizer)
-                self.scaler.update()
+                self.optimizer.step()
+
+                # self.scaler.step(self.optimizer)
+                # self.scaler.update()
 
                 training_epoch_output.append(loss.item())
 
-                if self.rank == 0:
-                    dataloader_bar.set_description(
-                        f"Loss: {loss.item():.4f}, lr: {self.lr_scheduler.get_last_lr()[-1]:.6f}"
-                    )
+                dataloader_bar.set_description(
+                    f"Loss: {loss.item():.4f}, lr: {self.lr_scheduler.get_last_lr()[-1]:.6f}"
+                )
 
-                    self.writer.add_scalar(
-                        f"Loss/Train_Step",
-                        loss.item(),
-                        (epoch - 1) * len(train_dataloader) + batch_idx,
-                    )
+                self.writer.add_scalar(
+                    f"Loss/Train_Step",
+                    loss.item(),
+                    (epoch - 1) * len(train_dataloader) + batch_idx,
+                )
 
-                    if self.plot_norm:
-                        self.writer.add_scalars(
-                            f"Norm",
-                            {
-                                "total_norm": self.total_norm,
-                                "max_norm": self.clip_grad_norm_value,
-                            },
-                            epoch * len(train_dataloader) + batch_idx,
-                        )
+                if self.plot_norm:
+                    self.writer.add_scalars(
+                        f"Norm",
+                        {
+                            "total_norm": self.total_norm,
+                            "max_norm": self.clip_grad_norm_value,
+                        },
+                        epoch * len(train_dataloader) + batch_idx,
+                    )
 
             self.training_epoch_end(training_epoch_output)
 
-            if self.rank == 0:
-                with torch.no_grad():
-                    if epoch % self.save_ckpt_interval == 0:
-                        self._save_checkpoint(epoch, is_best_epoch=False)
+            with torch.no_grad():
+                if epoch % self.save_ckpt_interval == 0:
+                    self._save_checkpoint(epoch, is_best_epoch=False)
 
-                    if epoch % self.validation_interval == 0:
-                        logger.info(f"Training finished, begin validation...")
+                if epoch % self.validation_interval == 0:
+                    logger.info(f"Training finished, begin validation...")
 
-                        score = self.validate(validation_dataloaders)
+                    score = self.validate(validation_dataloaders)
 
-                        should_stop = self._run_early_stop_check(score, epoch)
+                    should_stop = self._run_early_stop_check(score, epoch)
 
-                        if should_stop:
-                            early_stop_mark += 1
+                    if should_stop:
+                        early_stop_mark += 1
 
-                        logger.info(f"Validation finished.")
+                    logger.info(f"Validation finished.")
 
             self.lr_scheduler.step()
-
-            # Waiting rank zero process to finish validation
-            dist.barrier()
-
-            # Reduces the `early_stop_mark` data across all processes in such a way that all get the final result.
-            dist.all_reduce(early_stop_mark, op=dist.ReduceOp.SUM)
-
-            # If any process triggers early stopping, stop training
-            if early_stop_mark != 0:
-                break
 
     @torch.no_grad()
     def validate(self, dataloaders):

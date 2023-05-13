@@ -1,0 +1,74 @@
+[meta]
+save_dir = "sdnn_delays/exp"
+seed = 0
+use_amp = false
+use_deterministic_algorithms = false
+
+[trainer]
+path = "sdnn_delays.trainer.Trainer"
+[trainer.args]
+max_epoch = 9999
+clip_grad_norm_value = 10
+save_max_score = true
+save_ckpt_interval = 1
+patience = 10
+plot_norm = true
+validation_interval = 1
+max_num_checkpoints = 10
+
+[loss_function]
+path = "loss.SDNNLoss"
+[loss_function.args]
+lam = 0.001
+n_fft = 512
+hop_length = 128
+win_length = 512
+
+
+[optimizer]
+path = "torch.optim.RAdam"
+[optimizer.args]
+lr = 0.01
+weight_decay = 1e-5
+
+[lr_scheduler]
+path = "torch.optim.lr_scheduler.StepLR"
+[lr_scheduler.args]
+step_size = 9999
+gamma = 0.1
+
+
+[model]
+path = "sdnn_delays.model.Model"
+[model.args]
+threshold = 0.1
+tau_grad = 0.1
+scale_grad = 0.8
+max_delay = 64
+out_delay = 0
+
+[acoustics]
+n_fft = 512
+win_length = 512
+sr = 16000
+hop_length = 128
+
+[train_dataset]
+path = "dataloader.DNSAudio"
+[train_dataset.args]
+root = "/datasets/datasets_fullband/training_set/"
+limit = false
+offset = 0
+[train_dataset.dataloader]
+batch_size = 64 # 32
+num_workers = 64
+drop_last = true
+pin_memory = true
+
+
+[validate_dataset]
+path = "dataloader.DNSAudio"
+[validate_dataset.args]
+root = "/datasets/datasets_fullband/validation_set/"
+limit = false
+offset = 0

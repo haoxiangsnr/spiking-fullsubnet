@@ -1,23 +1,17 @@
 import argparse
-import os
-import sys
 from pathlib import Path
 
 import toml
-from torch.utils.data import DataLoader, DistributedSampler
+from torch.utils.data import DataLoader
 
 from audiozen.logger import init_logging_logger
-from audiozen.utils import initialize_ddp, instantiate, set_random_seed
+from audiozen.utils import instantiate, set_random_seed
 
 
 def run(config, resume):
     set_random_seed(config["meta"]["seed"])
 
-    rank = int(os.environ["LOCAL_RANK"])
-    initialize_ddp(rank)
-
-    if rank == 0:
-        init_logging_logger(config)
+    init_logging_logger(config)
 
     model = instantiate(
         config["model"]["path"],
@@ -40,7 +34,6 @@ def run(config, resume):
     )
 
     trainer = instantiate(config["trainer"]["path"], initialize=False)(
-        rank=rank,
         config=config,
         resume=resume,
         model=model,
@@ -56,9 +49,8 @@ def run(config, resume):
         )
         train_dataloader = DataLoader(
             dataset=train_dataset,
-            sampler=DistributedSampler(dataset=train_dataset, rank=rank, shuffle=True),
             collate_fn=None,
-            shuffle=False,
+            shuffle=True,
             **config["train_dataset"]["dataloader"],
         )
 
@@ -151,8 +143,5 @@ if __name__ == "__main__":
             raise ValueError("checkpoint path is required for test. Use '--ckpt_path'.")
         else:
             config["meta"]["ckpt_path"] = args.ckpt_path
-
-    # e.g., add sys.path to "model.Model"
-    sys.path.insert(0, config_path.parent.as_posix())
 
     run(config, args.resume)

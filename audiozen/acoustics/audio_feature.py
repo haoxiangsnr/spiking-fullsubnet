@@ -1,5 +1,5 @@
 import os
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
 import librosa
 import matplotlib.pyplot as plt
@@ -12,7 +12,7 @@ from torch import Tensor
 from audiozen.constant import EPSILON
 
 
-def is_audio(y_s: list[NDArray] | NDArray):
+def is_audio(y_s: Union[list[NDArray], NDArray]):
     if not isinstance(y_s, list):
         y_s = [y_s]
 
@@ -27,7 +27,7 @@ def compute_rms(y: NDArray) -> float:
 
 def loudness_max_norm(
     y: NDArray,
-    scalar: float | None = None,
+    scalar: Union[float, None] = None,
     ref_mic: int = 0,
     eps: float = EPSILON,
 ) -> tuple[NDArray, float]:
@@ -44,7 +44,7 @@ def loudness_max_norm(
 
 def loudness_rms_norm(
     y: NDArray,
-    scalar: float | None = None,
+    scalar: Union[float, None] = None,
     lvl: float = -25,
     ref_mic: int = 0,
     eps: float = EPSILON,
@@ -139,7 +139,7 @@ def stft(
     hop_length: int,
     win_length: int,
     output_type: Literal["mag_phase", "real_imag", "complex"] | None = None,
-) -> Tensor | tuple[Tensor, ...]:
+) -> Union[Tensor, tuple[Tensor, ...]]:
     """Wrapper of the official ``torch.stft`` for single-channel and multichannel signals.
 
     Args:
@@ -202,7 +202,7 @@ def stft(
 
 
 def istft(
-    feature: Tensor | tuple[Tensor, ...] | list[Tensor],
+    feature: Union[Tensor, tuple[Tensor, ...], list[Tensor]],
     n_fft: int,
     hop_length: int,
     win_length: int,
@@ -269,7 +269,7 @@ def subsample(
     sub_sample_length: int,
     start_position: int = -1,
     return_start_position: bool = False,
-) -> NDArray | tuple[NDArray, int]:
+) -> Union[NDArray, tuple[NDArray, int]]:
     """Sample a segment from the input data.
 
     Args:

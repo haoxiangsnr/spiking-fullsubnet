@@ -22,6 +22,8 @@ autodoc_default_options = {
     "member-order": "bysource",
 }
 autodoc_mock_imports = ["torch"]
+autodoc_typehints = "none"
+napoleon_preprocess_types = True
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -33,6 +35,4 @@ html_context = {
     "github_version": "main",
 }
 html_static_path = ["_static"]
-html_css_files = [
-    "custom.css",
-]
+html_css_files = ["custom.css"]

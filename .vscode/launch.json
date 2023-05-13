@@ -5,7 +5,26 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Torchrun Debug",
+            "name": "Torchrun Debug SDNN",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/xianghao/mambaforge/envs/ndns/bin/torchrun",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/recipes/intel_ndns",
+            "args": [
+                "--standalone",
+                "--nproc_per_node=1",
+                "--nnodes=1",
+                "run.py",
+                "-C",
+                "sdnn_delays/baseline.toml",
+                "-M",
+                "train"
+            ],
+        },
+        {
+            "name": "Torchrun Debug FSB",
             "type": "python",
             "request": "launch",
             "program": "/root/mambaforge/envs/torch1.12/bin/torchrun",

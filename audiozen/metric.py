@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import librosa
 import numpy as np
@@ -115,24 +116,117 @@ class SISDR:
         return {"si_sdr": val}
 
 
-class DNSMOS:
-    def __init__(
-        self,
-        p835_model_path="/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns_mos/DNSMOS/sig_bak_ovr.onnx",
-        p835_personal_model_path="/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns_mos/pDNSMOS/sig_bak_ovr.onnx",
-        p808_model_path="/apdcephfs/share_1149801/speech_user/tomasyu/xianghao/data/dns_mos/DNSMOS/model_v8.onnx",
-        input_sr=16000,
-    ) -> None:
+class pDNSMOS:
+    def __init__(self, input_sr=16000) -> None:
         super().__init__()
-        self.p835_sess = ort.InferenceSession(
-            p835_model_path, providers=["CPUExecutionProvider"]
-        )
+
+        root_dir = Path(__file__).parent.absolute()
+
         self.p835_personal_sess = ort.InferenceSession(
-            p835_personal_model_path, providers=["CPUExecutionProvider"]
+            root_dir / "external" / "pDNSMOS" / "sig_bak_ovr.onnx",
+            providers=["CPUExecutionProvider"],
+        )
+
+        self.input_sr = input_sr
+
+    def audio_melspec(
+        self, audio, n_mels=120, frame_size=320, hop_length=160, sr=16000, to_db=True
+    ):
+        mel_spec = librosa.feature.melspectrogram(
+            y=audio, sr=sr, n_fft=frame_size + 1, hop_length=hop_length, n_mels=n_mels
+        )
+        if to_db:
+            mel_spec = (librosa.power_to_db(mel_spec, ref=np.max) + 40) / 40  # type: ignore
+        return mel_spec.T
+
+    def get_polyfit_val(self, sig, bak, ovr, is_personalized_MOS=False):
+        if is_personalized_MOS:
+            p_ovr = np.poly1d([-0.00533021, 0.005101, 1.18058466, -0.11236046])
+            p_sig = np.poly1d([-0.01019296, 0.02751166, 1.19576786, -0.24348726])
+            p_bak = np.poly1d([-0.04976499, 0.44276479, -0.1644611, 0.96883132])
+        else:
+            p_ovr = np.poly1d([-0.06766283, 1.11546468, 0.04602535])
+            p_sig = np.poly1d([-0.08397278, 1.22083953, 0.0052439])
+            p_bak = np.poly1d([-0.13166888, 1.60915514, -0.39604546])
+
+        sig_poly = p_sig(sig)
+        bak_poly = p_bak(bak)
+        ovr_poly = p_ovr(ovr)
+
+        return sig_poly, bak_poly, ovr_poly
+
+    def __call__(self, audio):
+        if audio.ndim != 1:
+            audio = audio.reshape(-1)
+
+        if torch.is_tensor(audio):
+            audio = audio.detach().cpu().numpy()
+
+        SAMPLERATE = 16000
+        INPUT_LENGTH = 9.01
+
+        if self.input_sr != 16000:
+            audio = librosa.resample(audio, orig_sr=self.input_sr, target_sr=SAMPLERATE)
+
+        actual_audio_len = len(audio)
+        len_samples = int(INPUT_LENGTH * SAMPLERATE)
+
+        while len(audio) < len_samples:
+            audio = np.append(audio, audio)
+
+        num_hops = int(np.floor(len(audio) / SAMPLERATE) - INPUT_LENGTH) + 1
+
+        hop_len_samples = SAMPLERATE
+        predicted_p_mos_sig_seg_raw = []
+        predicted_p_mos_bak_seg_raw = []
+        predicted_p_mos_ovr_seg_raw = []
+
+        for idx in range(num_hops):
+            audio_seg = audio[
+                int(idx * hop_len_samples) : int((idx + INPUT_LENGTH) * hop_len_samples)
+            ]
+            if len(audio_seg) < len_samples:
+                continue
+
+            input_features = np.array(audio_seg).astype("float32")[np.newaxis, :]
+            p808_input_features = np.array(
+                self.audio_melspec(audio=audio_seg[:-160])
+            ).astype("float32")[np.newaxis, :, :]
+            oi = {"input_1": input_features}
+            p808_oi = {"input_1": p808_input_features}
+            p_mos_sig_raw, p_mos_bak_raw, p_mos_ovr_raw = self.p835_personal_sess.run(
+                None, oi
+            )[0][0]
+
+            predicted_p_mos_ovr_seg_raw.append(p_mos_ovr_raw)
+            predicted_p_mos_sig_seg_raw.append(p_mos_sig_raw)
+            predicted_p_mos_bak_seg_raw.append(p_mos_bak_raw)
+
+        clip_dict = {}
+        # clip_dict["sr"] = SAMPLERATE
+        # clip_dict["len"] = actual_audio_len / SAMPLERATE
+        clip_dict["pSIG"] = np.mean(predicted_p_mos_sig_seg_raw)
+        clip_dict["pBAK"] = np.mean(predicted_p_mos_bak_seg_raw)
+        clip_dict["pOVRL"] = np.mean(predicted_p_mos_ovr_seg_raw)
+
+        return clip_dict
+
+
+class DNSMOS:
+    def __init__(self, input_sr=16000) -> None:
+        super().__init__()
+
+        root_dir = Path(__file__).parent.absolute()
+
+        self.p835_sess = ort.InferenceSession(
+            (root_dir / "external" / "DNSMOS" / "sig_bak_ovr.onnx").as_posix(),
+            providers=["CPUExecutionProvider"],
         )
         self.p808_sess = ort.InferenceSession(
-            p808_model_path, providers=["CPUExecutionProvider"]
+            (root_dir / "external" / "DNSMOS" / "model_v8.onnx").as_posix(),
+            providers=["CPUExecutionProvider"],
         )
+
         self.input_sr = input_sr
 
     def audio_melspec(
@@ -186,9 +280,6 @@ class DNSMOS:
         predicted_mos_sig_seg_raw = []
         predicted_mos_bak_seg_raw = []
         predicted_mos_ovr_seg_raw = []
-        predicted_p_mos_sig_seg_raw = []
-        predicted_p_mos_bak_seg_raw = []
-        predicted_p_mos_ovr_seg_raw = []
         predicted_p808_mos = []
 
         for idx in range(num_hops):
@@ -206,27 +297,18 @@ class DNSMOS:
             p808_oi = {"input_1": p808_input_features}
             p808_mos = self.p808_sess.run(None, p808_oi)[0][0][0]
             mos_sig_raw, mos_bak_raw, mos_ovr_raw = self.p835_sess.run(None, oi)[0][0]
-            p_mos_sig_raw, p_mos_bak_raw, p_mos_ovr_raw = self.p835_personal_sess.run(
-                None, oi
-            )[0][0]
 
             predicted_p808_mos.append(p808_mos)
             predicted_mos_ovr_seg_raw.append(mos_ovr_raw)
             predicted_mos_sig_seg_raw.append(mos_sig_raw)
             predicted_mos_bak_seg_raw.append(mos_bak_raw)
-            predicted_p_mos_ovr_seg_raw.append(p_mos_ovr_raw)
-            predicted_p_mos_sig_seg_raw.append(p_mos_sig_raw)
-            predicted_p_mos_bak_seg_raw.append(p_mos_bak_raw)
 
         clip_dict = {}
         # clip_dict["sr"] = SAMPLERATE
         # clip_dict["len"] = actual_audio_len / SAMPLERATE
         clip_dict["P808"] = np.mean(predicted_p808_mos)
+        clip_dict["OVRL"] = np.mean(predicted_mos_ovr_seg_raw)
         clip_dict["SIG"] = np.mean(predicted_mos_sig_seg_raw)
         clip_dict["BAK"] = np.mean(predicted_mos_bak_seg_raw)
-        clip_dict["OVRL"] = np.mean(predicted_mos_ovr_seg_raw)
-        clip_dict["pSIG"] = np.mean(predicted_p_mos_sig_seg_raw)
-        clip_dict["pBAK"] = np.mean(predicted_p_mos_bak_seg_raw)
-        clip_dict["pOVRL"] = np.mean(predicted_p_mos_ovr_seg_raw)
 
         return clip_dict
