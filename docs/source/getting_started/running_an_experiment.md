@@ -107,9 +107,10 @@ torchrun
     --ckpt_path best
 ```
 
-!!! important
-    Before use `torchrun`, don't forget to use the environment variable `CUDA_VISIBLE_DEVICES` to control the GPU usage. For example, the following command will use the first and second GPUs:
+:::{attention}
+Before use `torchrun`, don't forget to use the environment variable `CUDA_VISIBLE_DEVICES` to control the GPU usage. For example, the following command will use the first and second GPUs:
 
-    ```shell
-    export CUDA_VISIABLE_DEVICES=0,1
-    ```
+```shell
+export CUDA_VISIABLE_DEVICES=0,1
+```
+:::

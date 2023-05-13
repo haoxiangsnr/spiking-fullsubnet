@@ -32,7 +32,7 @@ html_context = {
     "display_github": True,  # edit on Github, see https://github.com/readthedocs/sphinx_rtd_theme/issues/529
     "github_user": "haoxiangsnr",
     "github_repo": "audiozen",
-    "github_version": "main",
+    "github_version": "main/docs/source/",
 }
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
