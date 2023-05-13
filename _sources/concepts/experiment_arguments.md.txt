@@ -167,9 +167,9 @@ weights = [1.0, 1.0]
 ...
 ```
 
-!!! note
-
-    You must keep the `[loss_function.args]` section even this loss function does not need any arguments.
+:::{note}
+You must keep the `[loss_function.args]` section even this loss function does not need any arguments.
+:::
 
 You may use the learning rate scheduler provided by PyTorch or implement your own learning rate scheduler. For example, the following configuration is used to configure the `StepLR`:
 

@@ -284,9 +284,9 @@ They have the same logic as the <code class="docutils literal notranslate"><span
 <span class="p">...</span>
 </pre></div>
 </div>
-<p>!!! note</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>You must keep the `[loss_function.args]` section even this loss function does not need any arguments.
-</pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You must keep the <code class="docutils literal notranslate"><span class="pre">[loss_function.args]</span></code> section even this loss function does not need any arguments.</p>
 </div>
 <p>You may use the learning rate scheduler provided by PyTorch or implement your own learning rate scheduler. For example, the following configuration is used to configure the <code class="docutils literal notranslate"><span class="pre">StepLR</span></code>:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[lr_scheduler]</span>
