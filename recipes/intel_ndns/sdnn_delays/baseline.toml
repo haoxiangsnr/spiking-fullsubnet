@@ -1,6 +1,6 @@
 [meta]
 save_dir = "sdnn_delays/exp"
-seed = 0
+seed = 3047
 use_amp = false
 use_deterministic_algorithms = false
 
@@ -60,10 +60,10 @@ root = "/datasets/datasets_fullband/training_set/"
 limit = false
 offset = 0
 [train_dataset.dataloader]
-batch_size = 64 # 32
-num_workers = 64
+batch_size = 80 # 32
+num_workers = 80
 drop_last = true
-pin_memory = true
+pin_memory = false
 
 
 [validate_dataset]

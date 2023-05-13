@@ -17,8 +17,7 @@ def run(config, resume):
 
     initialize_ddp(rank)
 
-    if rank == 0:
-        init_logging_logger(config)
+    init_logging_logger(config)
 
     model = instantiate(config["model"]["path"], args=config["model"]["args"])
 

@@ -44,6 +44,7 @@ class Trainer(BaseTrainer):
 
         return loss
 
+    @torch.no_grad()
     def training_epoch_end(self, training_epoch_output):
         loss_mean = torch.mean(torch.tensor(training_epoch_output))
 
@@ -51,6 +52,7 @@ class Trainer(BaseTrainer):
             logger.info(f"Training loss on epoch {self.current_epoch}: {loss_mean}")
             self.writer.add_scalar(f"Loss/Train", loss_mean, self.current_epoch)
 
+    @torch.no_grad()
     def validation_step(self, batch, batch_idx, dataloader_idx):
         noisy, clean, noise = batch
 
