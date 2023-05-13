@@ -424,22 +424,22 @@ class BaseTrainer:
 
             self.training_epoch_end(training_epoch_output)
 
-            if self.rank == 0:
-                with torch.no_grad():
-                    if epoch % self.save_ckpt_interval == 0:
-                        self._save_checkpoint(epoch, is_best_epoch=False)
+            with torch.no_grad():
+                if epoch % self.save_ckpt_interval == 0 and self.rank == 0:
+                    self._save_checkpoint(epoch, is_best_epoch=False)
 
-                    if epoch % self.validation_interval == 0:
-                        logger.info(f"Training finished, begin validation...")
+                # TODO 等一下继续
+                if epoch % self.validation_interval == 0:
+                    logger.info(
+                        f"Training finished on rank {self.rank}, begin validation..."
+                    )
+                    score = self.validate(validation_dataloaders)
+                    should_stop = self._run_early_stop_check(score, epoch)
 
-                        score = self.validate(validation_dataloaders)
+                    if should_stop:
+                        early_stop_mark += 1
 
-                        should_stop = self._run_early_stop_check(score, epoch)
-
-                        if should_stop:
-                            early_stop_mark += 1
-
-                        logger.info(f"Validation finished.")
+                    logger.info(f"Validation finished.")
 
             self.lr_scheduler.step()
 
@@ -455,32 +455,32 @@ class BaseTrainer:
 
     @torch.no_grad()
     def validate(self, dataloaders):
-        if self.rank == 0:
-            logger.info(f"Begin validation...")
-            self.model.eval()
+        logger.info(f"Begin validation on rank {self.rank}...")
+        self.model.eval()
 
-            if not isinstance(dataloaders, list):
-                dataloaders = [dataloaders]
+        if not isinstance(dataloaders, list):
+            dataloaders = [dataloaders]
 
-            validation_output = []
-            for dataloader_idx, dataloader in enumerate(dataloaders):
-                dataloader_output = []
-                for batch_idx, batch in enumerate(
-                    tqdm(
-                        dataloader,
-                        desc=f"Inferring on dataloader {dataloader_idx}",
-                        bar_format="{l_bar}{r_bar}",
-                        dynamic_ncols=True,
-                    )
-                ):
-                    step_output = self.validation_step(batch, batch_idx, dataloader_idx)
-                    dataloader_output.append(step_output)
-                validation_output.append(dataloader_output)
+        validation_output = []
+        for dataloader_idx, dataloader in enumerate(dataloaders):
+            dataloader_output = []
+            for batch_idx, batch in enumerate(dataloader):
+                step_output = self.validation_step(batch, batch_idx, dataloader_idx)
+                dataloader_output.append(step_output)
+            validation_output.append(dataloader_output)
 
-            logger.info(f"Validation inference finished, begin validation epoch end...")
-            score = self.validation_epoch_end(validation_output)
+        logger.info(
+            f"Validation inference finished on rank {self.rank}, begin validation epoch end..."
+        )
 
-            return score
+        score = self.validation_epoch_end(validation_output)
+
+        # Sychronize the best score across all processes
+        dist.reduce(score, dst=0)
+        num_processes = dist.get_world_size()
+        score /= num_processes
+
+        return score
 
     @torch.no_grad()
     def test(self, dataloaders, ckpt_path="best"):

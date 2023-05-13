@@ -64,7 +64,7 @@ class Trainer(BaseTrainer):
         noisy_mag, noisy_phase, *_ = self.torch_stft(noisy)  # [B, F, T]
         clean_mag, *_ = self.torch_stft(clean)
 
-        enhanced_mag = self.model(noisy_mag)
+        enhanced_mag = self.model.module(noisy_mag)
 
         noisy_phase = slayer.axon.delay(noisy_phase, out_delay)
         clean_mag = slayer.axon.delay(clean_mag, out_delay)

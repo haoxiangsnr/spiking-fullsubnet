@@ -76,11 +76,13 @@ def run(config, resume):
 
         validate_dataloaders = []
         for validate_config in config["validate_dataset"]:
+            valid_dataset = instantiate(
+                validate_config["path"], args=validate_config["args"]
+            )
             validate_dataloaders.append(
                 DataLoader(
-                    dataset=instantiate(
-                        validate_config["path"], args=validate_config["args"]
-                    ),
+                    dataset=valid_dataset,
+                    sampler=DistributedSampler(valid_dataset, rank=rank, shuffle=False),
                     num_workers=0,
                     batch_size=1,
                 )
