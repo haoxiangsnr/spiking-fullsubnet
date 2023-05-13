@@ -68,7 +68,7 @@ torchrun
     -R
 ```
 
-In the case of running multiple experiments on a single machine, since the first experiment has occupied the default DistributedDataParallel (DDP) listening port 29500, we need to make sure that each instance (job) is setup on different ports to avoid port conflicts. Use `rdzv-endpoint=localhost:0` means to select a random unused port:
+In the case of running multiple experiments on a single machine, since the first experiment has occupied the default DistributedDataParallel (DDP) listening port 29500, we need to make sure that each instance (job) is setup on different ports to avoid port conflicts. Use `rdzv_endpoint=localhost:0` means to select a random unused port:
 
 ```shell
 torchrun
