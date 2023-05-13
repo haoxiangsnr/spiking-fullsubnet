@@ -150,9 +150,9 @@ You can track configuration changes using version control and reproduce experime
 <li><p><code class="docutils literal notranslate"><span class="pre">dataset</span></code>: Configure the dataset.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">acoustics</span></code>: Configure the acoustic features.</p></li>
 </ul>
-<section id="meta">
-<h3><code class="docutils literal notranslate"><span class="pre">meta</span></code><a class="headerlink" href="#meta" title="Permalink to this heading"></a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">meta</span></code> section is used to configure the experiment meta information.</p>
+<section id="meta-section">
+<h3><code class="docutils literal notranslate"><span class="pre">meta</span></code> section<a class="headerlink" href="#meta-section" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">meta</span></code> section is used to configure the meta information.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Item</p></th>
@@ -175,9 +175,10 @@ You can track configuration changes using version control and reproduce experime
 </tbody>
 </table>
 </section>
-<section id="trainer">
-<h3><code class="docutils literal notranslate"><span class="pre">trainer</span></code><a class="headerlink" href="#trainer" title="Permalink to this heading"></a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">trainer</span></code> section is used to configure the trainer. It contains two parts: <code class="docutils literal notranslate"><span class="pre">path</span></code> and <code class="docutils literal notranslate"><span class="pre">args</span></code>. <code class="docutils literal notranslate"><span class="pre">path</span></code> is a string that specifies the path to the trainer class. <code class="docutils literal notranslate"><span class="pre">args</span></code> is a dictionary that specifies the arguments of the trainer class. It looks like:</p>
+<section id="trainer-section">
+<h3><code class="docutils literal notranslate"><span class="pre">trainer</span></code> section<a class="headerlink" href="#trainer-section" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">trainer</span></code> section is used to configure a trainer. It contains two parts: <code class="docutils literal notranslate"><span class="pre">path</span></code> and <code class="docutils literal notranslate"><span class="pre">args</span></code>.
+<code class="docutils literal notranslate"><span class="pre">path</span></code> is a string that specifies the path to the trainer class. <code class="docutils literal notranslate"><span class="pre">args</span></code> is a dictionary that specifies the arguments of the trainer class. It should be like:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[trainer]</span>
 <span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;trainer.Trainer&quot;</span>
 <span class="k">[trainer.args]</span>
@@ -186,76 +187,81 @@ You can track configuration changes using version control and reproduce experime
 <span class="p">...</span>
 </pre></div>
 </div>
-<p>In this case, AudioZEN will load the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class from <code class="docutils literal notranslate"><span class="pre">trainer.py</span></code> and initialize it with the arguments in the <code class="docutils literal notranslate"><span class="pre">[trainer.args]</span></code> section. <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class must be a subclass of <code class="docutils literal notranslate"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer</span></code>. It supports the following arguments at least:</p>
+<p>In this example, AudioZEN will load a custom <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class from <code class="docutils literal notranslate"><span class="pre">trainer.py</span></code> in the python search path and initialize it with the arguments in the <code class="docutils literal notranslate"><span class="pre">[trainer.args]</span></code> section. You are able to use multiple ways to specify the <code class="docutils literal notranslate"><span class="pre">path</span></code> argument. See the next section for more details.
+In AudioZEN, <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class must be a subclass of <code class="docutils literal notranslate"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer</span></code>. It supports the following arguments at least:</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Item</p></th>
+<th class="head"><p>Default</p></th>
 <th class="head"><p>Description</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_epochs</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">9999</span></code></p></td>
 <td><p>The maximum number of epochs to train.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">clip_grad_norm_value</span></code></p></td>
-<td><p>The maximum norm of the gradients used for clipping.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p></td>
+<td><p>The maximum norm of the gradients used for clipping. “-1” means no clipping.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">save_max_score</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
 <td><p>Whether to find the best model by the maximum score.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">save_ckpt_interval</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
 <td><p>The interval of saving checkpoints.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">patience</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
 <td><p>The number of epochs with no improvement after which the training will be stopped.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">validation_interval</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">plot_norm</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Whether to plot the norm of the gradients.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">validation_interval</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
 <td><p>The interval of validation.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_num_checkpoints</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_num_checkpoints</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
 <td><p>The maximum number of checkpoints to keep. Saving too many checkpoints causes disk space to run out.</p></td>
 </tr>
 </tbody>
 </table>
-<section id="finding-modules-by-path-argument">
-<h4>Finding modules by <code class="docutils literal notranslate"><span class="pre">path</span></code> argument<a class="headerlink" href="#finding-modules-by-path-argument" title="Permalink to this heading"></a></h4>
-<p>We support multiple ways to find modules by the <code class="docutils literal notranslate"><span class="pre">path</span></code> argument in the <code class="docutils literal notranslate"><span class="pre">*.toml</span></code>. For example, we have the following directory structure:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>recipes/intel_ndns_challenge
+<section id="loading-a-module-by-path-argument">
+<h4>Loading a module by <code class="docutils literal notranslate"><span class="pre">path</span></code> argument<a class="headerlink" href="#loading-a-module-by-path-argument" title="Permalink to this heading"></a></h4>
+<p>We support multiple ways to load the module by the <code class="docutils literal notranslate"><span class="pre">path</span></code> argument in the <code class="docutils literal notranslate"><span class="pre">*.toml</span></code>. For example, we have the following directory structure:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>recipes/intel_ndns
 ├── README.md
 ├── run.py
-└── sdnn_intel_ndns_challengedelays
+└── sdnn_delays
     ├── baseline.toml
-    ├── exp
-    │   └── baseline
-    │       └── baseline.log
     ├── model.py
     └── trainer.py
 </pre></div>
 </div>
-<div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">sys</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s1">&#39;/path/to/audiozen/recipes/intel_ndns_challenge/sdnn_delays&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;/path/to/audiozen/recipes/intel_ndns_challenge&#39;</span><span class="p">,</span>
-    <span class="o">...</span>
-<span class="p">]</span>
-</pre></div>
-</div>
-<p>In <code class="docutils literal notranslate"><span class="pre">recipes/dns_1/baseline.toml</span></code>, the <code class="docutils literal notranslate"><span class="pre">path</span></code> of the <code class="docutils literal notranslate"><span class="pre">trainer</span></code> is set to:</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/sdnn_delays/baseline.toml</span></code>, the <code class="docutils literal notranslate"><span class="pre">path</span></code> of the <code class="docutils literal notranslate"><span class="pre">trainer</span></code> is set to:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[trainer]</span>
-<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;trainer.Trainer&quot;</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;sdnn_delays.trainer.Trainer&quot;</span>
 </pre></div>
 </div>
-<p>In this case, we will try to find the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class in <code class="docutils literal notranslate"><span class="pre">recipes/dns_1/trainer</span></code>. If we set the <code class="docutils literal notranslate"><span class="pre">path</span></code> to:</p>
+<p>In this case, we will call the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class in the module <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/sdnn_delays/trainer</span></code>. If we set the <code class="docutils literal notranslate"><span class="pre">path</span></code> to:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[trainer]</span>
 <span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;audiozen.trainer.custom_trainer.CustomTrainer&quot;</span>
 </pre></div>
 </div>
-<p>We will try to find the <code class="docutils literal notranslate"><span class="pre">CustomTrainer</span></code> class in <code class="docutils literal notranslate"><span class="pre">audiozen/trainer/custom_trainer.py</span></code>.</p>
-<p>!!! note
-If you want to call <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> in <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package, you must install it in editable way by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code> first.</p>
+<p>We will call the <code class="docutils literal notranslate"><span class="pre">CustomTrainer</span></code> class in <code class="docutils literal notranslate"><span class="pre">audiozen/trainer/custom_trainer.py</span></code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>If you want to get the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> in <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package, you must install it in editable way by <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code> first.</p>
+</div>
 </section>
 </section>
-<section id="loss-function-lr-scheduler-optimizer-model-and-dataset">
-<h3><code class="docutils literal notranslate"><span class="pre">loss_function</span></code>, <code class="docutils literal notranslate"><span class="pre">lr_scheduler</span></code>, <code class="docutils literal notranslate"><span class="pre">optimizer</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, and <code class="docutils literal notranslate"><span class="pre">dataset</span></code><a class="headerlink" href="#loss-function-lr-scheduler-optimizer-model-and-dataset" title="Permalink to this heading"></a></h3>
+<section id="loss-function-optimizer-lr-scheduler-model-and-dataset-sections">
+<h3><code class="docutils literal notranslate"><span class="pre">loss_function</span></code>, <code class="docutils literal notranslate"><span class="pre">optimizer</span></code>, <code class="docutils literal notranslate"><span class="pre">lr_scheduler</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, and <code class="docutils literal notranslate"><span class="pre">dataset</span></code> sections<a class="headerlink" href="#loss-function-optimizer-lr-scheduler-model-and-dataset-sections" title="Permalink to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">loss_function</span></code>, <code class="docutils literal notranslate"><span class="pre">lr_scheduler</span></code>, <code class="docutils literal notranslate"><span class="pre">optimizer</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, <code class="docutils literal notranslate"><span class="pre">dataset</span></code> sections are used to configure the loss function, learning rate scheduler, optimizer, model, and dataset, respectively.
 They have the same logic as the <code class="docutils literal notranslate"><span class="pre">trainer</span></code> section.</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[loss_function|lr_scheduler|optimizer|model|dataset]</span>
@@ -264,13 +270,13 @@ They have the same logic as the <code class="docutils literal notranslate"><span
 <span class="p">...</span>
 </pre></div>
 </div>
-<p>For example, you may use the loss function provided by PyTorch or implement your own loss function. For example, the following configuration is used to configure the <code class="docutils literal notranslate"><span class="pre">MSELoss</span></code>:</p>
+<p>You may use the loss function provided by PyTorch or implement your own loss function. For example, the following configuration is used to configure the <code class="docutils literal notranslate"><span class="pre">MSELoss</span></code> of PyTorch:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[loss_function]</span>
 <span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;torch.nn.MSELoss&quot;</span>
 <span class="k">[loss_function.args]</span>
 </pre></div>
 </div>
-<p>Configuration of a custom loss function:</p>
+<p>Use a custom loss function from <code class="docutils literal notranslate"><span class="pre">audiozen.loss</span></code>:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[loss_function]</span>
 <span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;audiozen.loss.MyLoss&quot;</span>
 <span class="k">[loss_function.args]</span>
@@ -288,13 +294,15 @@ They have the same logic as the <code class="docutils literal notranslate"><span
 <span class="k">[lr_scheduler.args]</span>
 <span class="n">step_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span>
 <span class="n">gamma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span>
+<span class="p">...</span>
 </pre></div>
 </div>
 </section>
-<section id="acoustics">
-<h3><code class="docutils literal notranslate"><span class="pre">acoustics</span></code><a class="headerlink" href="#acoustics" title="Permalink to this heading"></a></h3>
+<section id="acoustics-section">
+<h3><code class="docutils literal notranslate"><span class="pre">acoustics</span></code> section<a class="headerlink" href="#acoustics-section" title="Permalink to this heading"></a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">acoustics</span></code> section is used to configure the acoustic features.
-These configurations are used for the whole project, like visualization, except for the <code class="docutils literal notranslate"><span class="pre">dataloader</span></code> and <code class="docutils literal notranslate"><span class="pre">model</span></code> sections.</p>
+These configurations are used for the whole project, like visualization, except for the <code class="docutils literal notranslate"><span class="pre">dataloader</span></code> and <code class="docutils literal notranslate"><span class="pre">model</span></code> sections.
+You are able to call them in any place of the custom<code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Item</p></th>

@@ -99,6 +99,190 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">test_step</span></code>: The test step. It contains the operations to be executed in each test iteration.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">test_epoch_end</span></code>: The test epoch end. It contains the operations to be executed at the end of each test epoch.</p></li>
 </ul>
+<dl class="py function">
+<dt class="sig sig-object py" id="audiozen.trainer.base_trainer.BaseTrainer.training_step">
+<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">training_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.training_step" title="Permalink to this definition"></a></dt>
+<dd><p>Implement a training step.</p>
+<p>Implement your own training step here.
+The input batch is from a training dataloader and the output of this function should be a loss tensor.
+Here is the persuade code for training a model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_epoch</span><span class="p">,</span> <span class="n">end_epoch</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+    <span class="n">training_epoch_output</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">batch</span><span class="p">,</span> <span class="n">batch_index</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+        <span class="n">zero_grad</span><span class="p">()</span>
+<span class="hll">        <span class="n">loss</span> <span class="o">=</span> <span class="n">training_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">)</span>
+</span>        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+    <span class="n">training_epoch_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+    <span class="n">training_epoch_end</span><span class="p">(</span><span class="n">training_epoch_output</span><span class="p">)</span>
+
+    <span class="n">save_checkpoint</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">some_condition</span><span class="p">:</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">validate</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
+            <span class="n">save_checkpoint</span><span class="p">(</span><span class="n">best</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – a batch of data, which passed from a custom training dataloader.</p></li>
+<li><p><strong>batch_idx</strong> – the index of the current batch.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the loss of the batch.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>loss</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="audiozen.trainer.base_trainer.BaseTrainer.training_epoch_end">
+<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">training_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_epoch_output</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.training_epoch_end" title="Permalink to this definition"></a></dt>
+<dd><p>Implement the logic of the end of a training epoch.</p>
+<p>When the training epoch ends, this function will be called.
+The input is a list of the loss value of each batch in the training epoch.
+You may want to log the epoch-level training loss here.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_epoch</span><span class="p">,</span> <span class="n">end_epoch</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+    <span class="n">training_epoch_output</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">batch</span><span class="p">,</span> <span class="n">batch_index</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+        <span class="n">zero_grad</span><span class="p">()</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">training_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">)</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+    <span class="n">training_epoch_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+<span class="hll">    <span class="n">training_epoch_end</span><span class="p">(</span><span class="n">training_epoch_output</span><span class="p">)</span>
+</span>
+    <span class="n">save_checkpoint</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">some_condition</span><span class="p">:</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">validate</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
+            <span class="n">save_checkpoint</span><span class="p">(</span><span class="n">best</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>training_epoch_output</strong> – the output of the training epoch. It may a list of the output of each batch.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="audiozen.trainer.base_trainer.BaseTrainer.validation_step">
+<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">validation_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.validation_step" title="Permalink to this definition"></a></dt>
+<dd><p>Implement a validation step.</p>
+<p>This function defines the validation step. The input batch is from a validation dataloader.
+Here is the persuade code for validating a model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">validation_output</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">dataloader_idx</span><span class="p">,</span> <span class="n">dataloader</span> <span class="ow">in</span> <span class="n">dataloaders</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">batch_index</span><span class="p">,</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+<span class="hll">        <span class="n">loss_or_data</span> <span class="o">=</span> <span class="n">validation_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">)</span>
+</span>        <span class="n">validation_epoch_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_or_data</span><span class="p">)</span>
+
+<span class="n">score</span> <span class="o">=</span> <span class="n">validation_epoch_end</span><span class="p">(</span><span class="n">validation_epoch_output</span><span class="p">)</span>
+<span class="k">return</span> <span class="n">score</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – a batch of data.</p></li>
+<li><p><strong>batch_idx</strong> – the index of the batch.</p></li>
+<li><p><strong>dataloader_idx</strong> – the index of the dataloader.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the output of the batch. It may enhanced audio signals.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>output</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="audiozen.trainer.base_trainer.BaseTrainer.validation_epoch_end">
+<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">validation_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_epoch_output</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.validation_epoch_end" title="Permalink to this definition"></a></dt>
+<dd><p>Validation epoch end.</p>
+<p>The input <cite>validation_epoch_output</cite> will be a list of list. For example, if you have two dataloaders, the <cite>validation_epoch_output</cite> will be:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">validation_epoch_output</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="n">dataloader_1_batch_1_output</span><span class="p">,</span> <span class="n">dataloader_1_batch_2_output</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="p">[</span><span class="n">dataloader_2_batch_1_output</span><span class="p">,</span> <span class="n">dataloader_2_batch_2_output</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="o">...</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>The output of this function should be a metric score, which will be used to determine whether the current model is the best model.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">validation_output</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">dataloader_idx</span><span class="p">,</span> <span class="n">dataloader</span> <span class="ow">in</span> <span class="n">dataloaders</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">batch_index</span><span class="p">,</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+        <span class="n">loss_or_data</span> <span class="o">=</span> <span class="n">validation_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">)</span>
+        <span class="n">validation_epoch_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_or_data</span><span class="p">)</span>
+
+<span class="hll"><span class="n">score</span> <span class="o">=</span> <span class="n">validation_epoch_end</span><span class="p">(</span><span class="n">validation_epoch_output</span><span class="p">)</span>
+</span><span class="k">return</span> <span class="n">score</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>validation_epoch_output</strong> – the output of the validation epoch. It is a list of list.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the metric score of the validation epoch.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>score</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="audiozen.trainer.base_trainer.BaseTrainer.test_step">
+<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">test_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.test_step" title="Permalink to this definition"></a></dt>
+<dd><p>Similar to validation_step, but for testing.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">ckpt_path</span><span class="p">)</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="k">for</span> <span class="n">batch</span><span class="p">,</span> <span class="n">batch_index</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+<span class="hll"><span class="linenos"> 4</span>    <span class="n">loss</span> <span class="o">=</span> <span class="n">test_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">)</span>
+</span><span class="linenos"> 5</span>
+<span class="linenos"> 6</span>    <span class="n">test_epoch_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span><span class="n">test_epoch_end</span><span class="p">(</span><span class="n">test_epoch_output</span><span class="p">)</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="k">return</span> <span class="n">score</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="audiozen.trainer.base_trainer.BaseTrainer.test_epoch_end">
+<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">test_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_epoch_output</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.test_epoch_end" title="Permalink to this definition"></a></dt>
+<dd><p>Similar to validation_epoch_end, but for testing.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">ckpt_path</span><span class="p">)</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="k">for</span> <span class="n">batch</span><span class="p">,</span> <span class="n">batch_index</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+<span class="linenos"> 4</span>    <span class="n">loss</span> <span class="o">=</span> <span class="n">test_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">)</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span>    <span class="n">test_epoch_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+<span class="linenos"> 7</span>
+<span class="hll"><span class="linenos"> 8</span><span class="n">test_epoch_end</span><span class="p">(</span><span class="n">test_epoch_output</span><span class="p">)</span>
+</span><span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="k">return</span> <span class="n">score</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </section>
 
 
