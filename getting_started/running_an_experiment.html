@@ -80,7 +80,7 @@
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Running an experiment</li>
       <li class="wy-breadcrumbs-aside">
-              <a href="https://github.com/haoxiangsnr/audiozen/blob/maingetting_started/running_an_experiment.md" class="fa fa-github"> Edit on GitHub</a>
+              <a href="https://github.com/haoxiangsnr/audiozen/blob/main/docs/source/getting_started/running_an_experiment.md" class="fa fa-github"> Edit on GitHub</a>
       </li>
   </ul>
   <hr/>
@@ -198,12 +198,12 @@ Then, we call this <code class="docutils literal notranslate"><span class="pre">
 <span class="w">    </span>--ckpt_path<span class="w"> </span>best
 </pre></div>
 </div>
-<p>!!! important
-Before use <code class="docutils literal notranslate"><span class="pre">torchrun</span></code>, don’t forget to use the environment variable <code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES</span></code> to control the GPU usage. For example, the following command will use the first and second GPUs:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>```shell
-export CUDA_VISIABLE_DEVICES=0,1
-```
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>Before use <code class="docutils literal notranslate"><span class="pre">torchrun</span></code>, don’t forget to use the environment variable <code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES</span></code> to control the GPU usage. For example, the following command will use the first and second GPUs:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CUDA_VISIABLE_DEVICES</span><span class="o">=</span><span class="m">0</span>,1
 </pre></div>
+</div>
 </div>
 </section>
 </section>
