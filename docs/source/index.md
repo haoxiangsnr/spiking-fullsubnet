@@ -1,6 +1,7 @@
 # Welcome to AudioZEN
 
-Welcome to AudioZEN's documentation! AudioZEN is a personal project used to conduct the research on the audio/speech signal processing.
+Welcome to AudioZEN's documentation! AudioZEN is a deep learning toolkit used to conduct the research on the audio/speech signal processing.
+Check the Getting Started section for more details.
 
 ```{toctree}
 :caption: Getting Started
