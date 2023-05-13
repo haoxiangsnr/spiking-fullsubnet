@@ -20,10 +20,7 @@ def run(config, resume):
     if rank == 0:
         init_logging_logger(config)
 
-    model = instantiate(
-        config["model"]["path"],
-        args=config["model"]["args"],
-    )
+    model = instantiate(config["model"]["path"], args=config["model"]["args"])
 
     # With multi GPU, the shape update happens on the spawned dataparallel copy
     # but is not reflected back on the main model, so it needs to be done on the main copy
@@ -76,13 +73,11 @@ def run(config, resume):
 
         validate_dataloaders = []
         for validate_config in config["validate_dataset"]:
-            valid_dataset = instantiate(
-                validate_config["path"], args=validate_config["args"]
-            )
             validate_dataloaders.append(
                 DataLoader(
-                    dataset=valid_dataset,
-                    sampler=DistributedSampler(valid_dataset, rank=rank, shuffle=False),
+                    dataset=instantiate(
+                        validate_config["path"], args=validate_config["args"]
+                    ),
                     num_workers=0,
                     batch_size=1,
                 )
