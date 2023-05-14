@@ -36,7 +36,7 @@ clip_grad_norm_value = -1
 save_max_score = true
 save_ckpt_interval = 1
 plot_norm = false
-patience = 5
+patience = 20
 validation_interval = 1
 max_num_checkpoints = 10
 
