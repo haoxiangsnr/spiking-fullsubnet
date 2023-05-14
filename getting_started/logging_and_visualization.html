@@ -90,12 +90,12 @@
              
   <section id="logging-and-visualization">
 <h1>Logging and Visualization<a class="headerlink" href="#logging-and-visualization" title="Permalink to this heading"></a></h1>
-<p>After the training process is completed, the log information will be stored in the <code class="docutils literal notranslate"><span class="pre">save_dir</span></code> directory. Assuming that:</p>
+<p>Now, the training process has been completed. The log information will be stored in the <code class="docutils literal notranslate"><span class="pre">save_dir</span></code> directory. Assuming that:</p>
 <ul class="simple">
-<li><p>The file name of the training configuration file is: <code class="docutils literal notranslate"><span class="pre">baseline.toml</span></code></p></li>
-<li><p>The value of the <code class="docutils literal notranslate"><span class="pre">save_dir</span></code> parameter in the training configuration file <code class="docutils literal notranslate"><span class="pre">basline.toml</span></code> is <code class="docutils literal notranslate"><span class="pre">~/exp</span></code></p></li>
+<li><p>The filename of the training configuration file is: <code class="docutils literal notranslate"><span class="pre">baseline.toml</span></code></p></li>
+<li><p>The value of the <code class="docutils literal notranslate"><span class="pre">save_dir</span></code> parameter in the <code class="docutils literal notranslate"><span class="pre">baseline.toml</span></code> is <code class="docutils literal notranslate"><span class="pre">sdnn_delays/exp</span></code></p></li>
 </ul>
-<p>Then the log information will be stored in the <code class="docutils literal notranslate"><span class="pre">~/exp/baseline</span></code> directory, which contains the following information:</p>
+<p>Then, the log information will be stored in the <code class="docutils literal notranslate"><span class="pre">sdnn_delays/exp/baseline</span></code> directory, which contains the following information:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>.
 ├──<span class="w"> </span>baseline.log
 ├──<span class="w"> </span>checkpoints
@@ -106,14 +106,14 @@
 </pre></div>
 </div>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">baseline.log</span></code>: log information</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">checkpoints/</span></code>: model checkpoints</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">config__2023_04_13--10_27_42.toml</span></code>: training configuration file</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">enhanced</span></code>: enhanced audio files when running in test mode</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tb_log/</span></code>: TensorBoard log information, we can visualize it through TensorBoard</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">baseline.log</span></code>: the log information.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">checkpoints/</span></code>: model checkpoints.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">config__2023_04_13--10_27_42.toml</span></code>: a backup of the training configuration file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enhanced</span></code>: the enhanced audio files when running in test mode</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tb_log/</span></code>: <code class="docutils literal notranslate"><span class="pre">tensorBoard</span></code> log information, we can visualize it through TensorBoard</p></li>
 </ul>
-<p>Currently, we only support TensorBoard for visualization. Assuming that the value of the <code class="docutils literal notranslate"><span class="pre">save_dir</span></code> parameter in the training configuration file <code class="docutils literal notranslate"><span class="pre">basline.toml</span></code> is <code class="docutils literal notranslate"><span class="pre">~/exp</span></code>, then we can use the following command to visualize the log information:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>tensorboard<span class="w"> </span>--logdir<span class="w"> </span>~/exp
+<p>Currently, we only support TensorBoard for visualization. Assuming that the value of the <code class="docutils literal notranslate"><span class="pre">save_dir</span></code> parameter in the <code class="docutils literal notranslate"><span class="pre">basline.toml</span></code> is <code class="docutils literal notranslate"><span class="pre">sdnn_delays/exp</span></code>, then we can use the following command to visualize the log information:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>tensorboard<span class="w"> </span>--logdir<span class="w"> </span>sdnn_delays/exp<span class="w"> </span>--bind_all
 </pre></div>
 </div>
 </section>

@@ -56,7 +56,7 @@ pip install -r requirements.txt
 
 ## Install AudioZEN package in editable mode
 
-Finally, we will install the AudioZEN package in editable mode (a.k.a. development mode). By installing in editable mode, we can call `audiozen` package in everywhere of code, e.g, in `recipes` and `tools` folders. In addition, we can modify the source code of `audiozen` package directly. Any changes to the original package would reflect directly in your environment.
+Finally, we will install the AudioZEN package in editable mode (a.k.a. development mode). By installing in editable mode, we can call `audiozen` package in everywhere of code, e.g, in `recipes` and `tools` folders. In addition, we can modify the source code of `audiozen` package directly. Any changes to the original package would reflect directly in your python environment.
 
 ```shell
 pip install --editable .
