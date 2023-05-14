@@ -1,5 +1,18 @@
 # Intel N-DNS Challenge Track 1
 
+## Dataset
+
+### Training set
+
+Please follow the [instructions](https://github.com/IntelLabs/IntelNeuromorphicDNSChallenge#dataset) provided by the Intel N-DNS Challenge organizers to download the training set. If you can access servers (`10.21.4.69` and `10.21.4.65`) in PolyU, you may directly use the simulated data at `/datasets/datasets_fullband/training_set`.
+
+Note that the origianl dataset is very large (about 700 GB). We recommend you to download the training set as early as possible.
+
+### Validation set
+
+Please download the validation set from the release page.
+If you can access servers (`10.21.4.69` and `10.21.4.65`) in PolyU, you may directly use the simulated data at `/datasets/datasets_fullband/validation_set`.
+
 ## Reference
 
 |                Entry                | <sub>$\text{SI-SNR}$ <sup>(dB) | <sub>$\text{SI-SNRi}$ <sup>data (dB) | <sub>$\text{SI-SNRi}$ <sup>enc+dec (dB) | <sub>$\text{MOS}$ <sup>(ovrl) | <sub>$\text{MOS}$ <sup>(sig) | <sub>$\text{MOS}$ <sup>(bak) | <sub>$\text{latency}$ <sup>enc+dec (ms) | <sub>$\text{latency}$ <sup>total (ms) | <sub>$\text{Power}$ $\text{proxy}$ <sup>(M-Ops/s) | <sub>$\text{PDP}$ $\text{proxy}$ <sup>(M-Ops) | <sub>$\text{Params}$ <sup>($\times 10^3$) | <sub>$\text{Size}$ <sup>(KB) |
