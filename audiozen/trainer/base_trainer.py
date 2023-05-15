@@ -389,8 +389,6 @@ class BaseTrainer:
                 self.scaler.scale(loss).backward()
                 self.scaler.unscale_(self.optimizer)
 
-                self.model.module.validate_gradients()
-
                 if self.clip_grad_norm_value != -1:
                     self.total_norm = torch.nn.utils.clip_grad_norm_(
                         self.model.parameters(), self.clip_grad_norm_value
