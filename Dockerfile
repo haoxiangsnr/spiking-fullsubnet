@@ -23,7 +23,6 @@ RUN echo -e \
     fuse_clone_fd = false \n\
     objecter_max_osd_sessions = 80" >> /etc/ceph/ceph.conf
 RUN curl -o /etc/yum.repos.d/ceph_el7.repo http://gaia.repo.oa.com/ceph_el7.repo && yum install ceph-fuse --enablerepo=ceph-luminous -y
-# RUN taiji_client mount -l sz -tk ${TOKEN} /mnt/private_${USER}
 
 # Install htop, unzip, etc.
 RUN yum install -y htop unzip && yum clean all && rm -rf /var/cache/yum
