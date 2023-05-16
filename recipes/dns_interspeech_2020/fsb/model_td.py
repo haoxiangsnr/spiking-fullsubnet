@@ -538,18 +538,18 @@ if __name__ == "__main__":
         hop_length=256,
         win_length=512,
         num_freqs=256,
-        sequence_model="LSTM",
-        fb_hidden_size=512,
+        sequence_model="GRU",
+        fb_hidden_size=400,
         fb_output_activate_function=False,
-        freq_cutoffs=[20, 80],
-        sb_num_center_freqs=[1, 2, 4],
-        sb_num_neighbor_freqs=[15, 15, 15],
-        fb_num_center_freqs=[1, 2, 4],
-        fb_num_neighbor_freqs=[0, 0, 0],
-        sb_hidden_size=384,
+        freq_cutoffs=[32, 128, 192],
+        sb_num_center_freqs=[4, 12, 32, 32],
+        sb_num_neighbor_freqs=[15, 15, 15, 15],
+        fb_num_center_freqs=[4, 12, 32, 32],
+        fb_num_neighbor_freqs=[0, 0, 0, 0],
+        sb_hidden_size=192,
         sb_output_activate_function=False,
         norm_type="offline_laplace_norm",
     )
-    noisy_y = torch.rand(1, 16400)
+    noisy_y = torch.rand(1, 16000)
     print(model(noisy_y).shape)
     summary(model, input_data=(noisy_y,), device="cpu")
