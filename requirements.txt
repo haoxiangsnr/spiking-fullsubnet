@@ -13,10 +13,10 @@ pandas
 pesq
 pre-commit
 pystoi
+pyyaml
 scipy
 soundfile
 tabulate
 toml
 torchinfo
 tqdm
-pyyaml
