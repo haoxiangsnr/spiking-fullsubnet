@@ -107,6 +107,27 @@ sr = 16000
 offset = 0
 limit = false
 
+[[predict_dataset]]
+path = "dataset_predict.Dataset"
+[predict_dataset.args]
+path_or_path_list = [
+    "/apdcephfs/share_1149801/speech_user/tomasyu/experiment/ASR/AutoAnnotate/AutoAnnotatePipeline_USR/data/ruyi/ruiyi-2_16k.wav",
+    # "/apdcephfs/share_1149801/speech_user/tomasyu/experiment/ASR/AutoAnnotate/AutoAnnotatePipeline_USR/data/qutao_ori/wav.0.scp",
+]
+sr = 16000
+offset = 0
+limit = false
+
+[[predict_dataset]]
+path = "dataset_predict.Dataset"
+[predict_dataset.args]
+path_or_path_list = [
+    # "/apdcephfs/share_1149801/speech_user/tomasyu/experiment/ASR/AutoAnnotate/AutoAnnotatePipeline_USR/data/ruyi/ruiyi-2_16k.wav",
+    "/apdcephfs/share_1149801/speech_user/tomasyu/experiment/ASR/AutoAnnotate/AutoAnnotatePipeline_USR/data/qutao_ori/wav.0.scp",
+]
+sr = 16000
+offset = 0
+limit = 20
 
 # -------------------- Model -------------------- #
 [model]
