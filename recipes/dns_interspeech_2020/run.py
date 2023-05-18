@@ -92,6 +92,22 @@ def run(config, resume):
                 )
             )
 
+    if "predict" in args.mode:
+        if not isinstance(["predict_dataset"], list):
+            config["predict_dataset"] = [config["predict_dataset"]]
+
+        predict_dataloaders = []
+        for predict_config in config["predict_dataset"]:
+            predict_dataloaders.append(
+                DataLoader(
+                    dataset=instantiate(
+                        predict_config["path"], args=predict_config["args"]
+                    ),
+                    num_workers=0,
+                    batch_size=1,
+                )
+            )
+
     for flag in args.mode:
         if flag == "train":
             trainer.train(train_dataloader, validate_dataloaders)
@@ -100,7 +116,7 @@ def run(config, resume):
         elif flag == "test":
             trainer.test(test_dataloaders, config["meta"]["ckpt_path"])
         elif flag == "predict":
-            raise NotImplementedError("Predict is not implemented yet.")
+            trainer.predict(predict_dataloaders, config["meta"]["ckpt_path"])
         elif flag == "finetune":
             raise NotImplementedError("Finetune is not implemented yet.")
         else:
@@ -146,7 +162,7 @@ if __name__ == "__main__":
     config["meta"]["exp_id"] = config_path.stem
     config["meta"]["config_path"] = config_path.as_posix()
 
-    if "test" in args.mode:
+    if "test" in args.mode or "predict" in args.mode:
         if args.ckpt_path is None:
             raise ValueError("checkpoint path is required for test. Use '--ckpt_path'.")
         else:

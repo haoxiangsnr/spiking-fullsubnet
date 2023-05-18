@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Literal, Optional, Union
 
 import librosa
@@ -10,6 +11,56 @@ from numpy.typing import NDArray
 from torch import Tensor
 
 from audiozen.constant import EPSILON
+
+
+def find_files(
+    path_or_path_list: list,
+    offset: int = 0,
+    limit: Union[int, None] = None,
+):
+    """Find wav files from a directory, or a list of files, or a txt file, or the combination of them.
+
+    Args:
+        path: path to wav file, str, pathlib.Path
+        limit: limit of samples to load
+        offset: offset of samples to load
+
+    Returns:
+        A list of wav file paths.
+
+    Examples:
+        >>> # Load 10 files from a directory
+        >>> wav_paths = file_loader(path="~/dataset", limit=10, offset=0)
+        >>> # Load files from a directory, a txt file, and a wav file
+        >>> wav_paths = file_loader(path=["~/dataset", "~/scp.txt", "~/test.wav"])
+    """
+    if not isinstance(path_or_path_list, list):
+        path_or_path_list = [path_or_path_list]
+
+    output_paths = []
+    for path in path_or_path_list:
+        path = Path(path).resolve()
+
+        if path.is_dir():
+            wav_paths = librosa.util.find_files(path, ext="wav")
+            output_paths += wav_paths
+
+        if path.is_file():
+            if path.suffix == ".wav":
+                output_paths.append(path.as_posix())
+            else:
+                for line in open(path, "r"):
+                    line = line.rstrip("\n")
+                    line = Path(line).resolve()
+                    output_paths.append(line.as_posix())
+
+    if offset > 0:
+        output_paths = output_paths[offset:]
+
+    if limit:
+        output_paths = output_paths[:limit]
+
+    return output_paths
 
 
 def is_audio(y_s: Union[list[NDArray], NDArray]):
@@ -95,7 +146,7 @@ def sxr2gain(
     return scalar
 
 
-def load_wav(file: str, sr: int = 16000) -> NDArray:
+def load_wav(wav_path: str, sr: int = 16000) -> NDArray:
     """Load a wav file.
 
     Args:
@@ -105,9 +156,9 @@ def load_wav(file: str, sr: int = 16000) -> NDArray:
     Returns:
         Waveform with shape of [C, T] or [T].
     """
-    return librosa.load(os.path.abspath(os.path.expanduser(file)), mono=False, sr=sr)[
-        0
-    ]  # [C, T] or [T]
+    wav_path = Path(wav_path).resolve()
+    y, _ = librosa.load(wav_path, sr=sr, mono=False)
+    return y
 
 
 def save_wav(data, fpath, sr):

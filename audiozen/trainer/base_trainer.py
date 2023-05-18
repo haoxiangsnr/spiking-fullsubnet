@@ -505,7 +505,6 @@ class BaseTrainer:
                         dataloader,
                         desc=f"Inference on dataloader {dataloader_idx}",
                         bar_format="{l_bar}{r_bar}",
-                        dynamic_ncols=True,
                     )
                 ):
                     step_output = self.test_step(batch, batch_idx, dataloader_idx)
@@ -514,6 +513,36 @@ class BaseTrainer:
                 test_output.append(step_outputs)
 
             self.test_epoch_end(test_output)
+
+    @torch.no_grad()
+    def predict(self, dataloaders, ckpt_path="best"):
+        """Predict.
+
+        Notes:
+            In predict, there are no labels available, only the model inputs, meaning prediction isn't used for evaluation.
+
+        Args:
+            dataloaders: the dataloader(s) to predict.
+            ckpt_path: the checkpoint path to load the model weights from.
+        """
+        if self.rank == 0:
+            logger.info(f"Begin predicting...")
+            self.model.eval()
+
+            if not isinstance(dataloaders, list):
+                dataloaders = [dataloaders]
+
+            self._load_checkpoint(ckpt_path)
+
+            for dataloader_idx, dataloader in enumerate(dataloaders):
+                for batch_idx, batch in enumerate(
+                    tqdm(
+                        dataloader,
+                        desc=f"Inference on dataloader {dataloader_idx}",
+                        bar_format="{l_bar}{r_bar}",
+                    )
+                ):
+                    self.predict_step(batch, batch_idx, dataloader_idx)
 
     def _check_improvement(self, score, save_max_score=True):
         """Check if the current model got the best metric score"""
@@ -708,3 +737,19 @@ class BaseTrainer:
             return score
         """
         raise NotImplementedError
+
+    def predict_step(self, batch, batch_idx, dataloader_idx):
+        """Similar to validation_step, but for predict.
+
+        .. code-block:: python
+            :linenos:
+            :emphasize-lines: 4
+
+            load_checkpoint(ckpt_path)
+
+            for batch, batch_index in dataloader:
+                loss = predict_step(batch, batch_idx)
+
+                predict_epoch_output.append(loss)
+        """
+        pass

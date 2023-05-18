@@ -127,3 +127,31 @@ class Trainer(BaseTrainer):
             df_metrics_mean_df = df_metrics_mean.to_frame().T
 
             logger.info(f"\n{df_metrics_mean_df.to_markdown()}")
+
+    def predict_step(self, batch, batch_idx, dataloader_idx=0):
+        noisy, fpath = batch
+        seg_duration = 30
+
+        if noisy.shape[-1] > self.sr * seg_duration:
+            logger.info(f"Splitted {fpath[0]} into {seg_duration}s segments")
+            noisy = torch.split(noisy, self.sr * seg_duration, dim=-1)
+            logger.info(f"Number of segments: {len(noisy)}")
+        else:
+            noisy = [noisy]
+
+        enhanced = []
+        for noisy_seg in noisy:
+            enhanced_seg = self.model(noisy_seg.to(self.device))
+            enhanced.append(enhanced_seg)
+
+        # save enhanced audio
+        enhanced = torch.cat(enhanced, dim=-1)
+
+        stem = Path(fpath[0]).stem
+        enhanced_dir = self.enhanced_dir / f"dataloader_{dataloader_idx}"
+        enhanced_dir.mkdir(exist_ok=True, parents=True)
+        enhanced_fpath = enhanced_dir / f"{stem}.wav"
+        save_wav(enhanced, enhanced_fpath.as_posix(), self.sr)
+
+    def predict_epoch_end(self, outputs):
+        pass
