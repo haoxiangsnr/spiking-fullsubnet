@@ -43,7 +43,6 @@ class SubbandSectionModel(BaseModel):
             sequence_model=sequence_model,
             output_activate_function=output_activate_function,
         )
-        self.linear = nn.Linear(output_size, output_size)
 
     def forward(self, input):
         # [B, N, C, F_sb, T]
