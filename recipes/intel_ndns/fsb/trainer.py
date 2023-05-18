@@ -67,7 +67,7 @@ class Trainer(BaseTrainer):
                 f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}..."
             )
 
-            rows = Parallel(n_jobs=40, prefer="threads")(
+            rows = Parallel(n_jobs=40)(
                 delayed(self.compute_validation_metrics)(dataloader_idx, step_out)
                 for step_out in tqdm(dataloader_outputs)
             )
@@ -116,7 +116,7 @@ class Trainer(BaseTrainer):
                 f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}..."
             )
 
-            rows = Parallel(n_jobs=10, prefer="threads")(
+            rows = Parallel(n_jobs=10)(
                 delayed(self.compute_validation_metrics)(dataloader_idx, step_out)
                 for step_out in tqdm(dataloader_outputs)
             )
