@@ -207,12 +207,12 @@ def stft(
         If output_type is None, return a list of magnitude, phase, real, and imag spectrogram.
     """
     ndim = y.dim()
-    assert ndim in [2, 3], f"Only support single/multi-channel signals. {ndim=}."
+    assert ndim in [2, 3], f"Only support single-/multi-channel signals. {ndim=}."
 
     batch_size, *_, num_samples = y.shape
 
+    # Compatible with multi-channel signals
     if ndim == 3:
-        # single-channel
         y = y.reshape(-1, num_samples)
 
     complex_valued_stft = torch.stft(
@@ -227,7 +227,6 @@ def stft(
     _, num_freqs, num_frames = complex_valued_stft.shape
 
     if ndim == 3:
-        # single-channel
         complex_valued_stft = complex_valued_stft.reshape(
             batch_size, -1, num_freqs, num_frames
         )
