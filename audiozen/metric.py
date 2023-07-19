@@ -213,18 +213,27 @@ class pDNSMOS:
 
 
 class DNSMOS:
-    def __init__(self, input_sr=16000) -> None:
+    def __init__(self, input_sr=16000, device=-1) -> None:
         super().__init__()
 
         root_dir = Path(__file__).parent.absolute()
 
+        if device > -1
+            providers = [
+                ("CUDAExecutionProvider", {"device_id": device}),
+                "CPUExecutionProvider",
+            ]
+        else:
+            providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+
         self.p835_sess = ort.InferenceSession(
             (root_dir / "external" / "DNSMOS" / "sig_bak_ovr.onnx").as_posix(),
-            providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
+            providers=providers,
         )
+
         self.p808_sess = ort.InferenceSession(
             (root_dir / "external" / "DNSMOS" / "model_v8.onnx").as_posix(),
-            providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
+            providers=providers,
         )
 
         self.input_sr = input_sr
