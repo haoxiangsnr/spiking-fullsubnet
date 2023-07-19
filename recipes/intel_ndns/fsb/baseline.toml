@@ -6,7 +6,7 @@ use_amp = false
 use_deterministic_algorithms = false
 
 [trainer]
-path = "trainer.Trainer"
+path = "fsb.trainer_accelerate.Trainer"
 [trainer.args]
 max_epoch = 9999
 clip_grad_norm_value = 10
@@ -28,7 +28,7 @@ path = "torch.optim.AdamW"
 lr = 0.001
 
 [model]
-path = "model_td.Separator"
+path = "fsb.model_td.Separator"
 
 [model.args]
 sr = 16000
@@ -63,7 +63,7 @@ gamma = 0.99
 
 
 [train_dataset]
-path = "dataloader.DNSAudio"
+path = "fsb.dataloader.DNSAudio"
 [train_dataset.args]
 root = "/datasets/datasets_fullband/training_set/"
 limit = false
@@ -76,6 +76,6 @@ pin_memory = false
 
 
 [validate_dataset]
-path = "dataloader.DNSAudio"
+path = "fsb.dataloader.DNSAudio"
 [validate_dataset.args]
 root = "/datasets/datasets_fullband/validation_set/"
