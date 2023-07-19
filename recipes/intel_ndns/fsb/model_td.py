@@ -529,27 +529,15 @@ class Separator(BaseModel):
 
 
 if __name__ == "__main__":
+    import toml
     from torchinfo import summary
 
-    model = Separator(
-        sr=16000,
-        fdrc=0.5,
-        n_fft=512,
-        hop_length=256,
-        win_length=512,
-        num_freqs=256,
-        sequence_model="LSTM",
-        fb_hidden_size=512,
-        fb_output_activate_function=False,
-        freq_cutoffs=[20, 80],
-        sb_num_center_freqs=[1, 2, 4],
-        sb_num_neighbor_freqs=[15, 15, 15],
-        fb_num_center_freqs=[1, 2, 4],
-        fb_num_neighbor_freqs=[0, 0, 0],
-        sb_hidden_size=384,
-        sb_output_activate_function=False,
-        norm_type="offline_laplace_norm",
+    config = toml.load(
+        # "recipes/dns_interspeech_2020/fsb/fix_distSampler_ctr124_4s_modelTD_1G.toml"
+        "recipes/intel_ndns/fsb/fix_distSampler_ctr124_4s_modelTD_300M.toml"
     )
-    noisy_y = torch.rand(1, 16400)
+
+    model = Separator(**config["model"]["args"])
+    noisy_y = torch.rand(1, 16000)
     print(model(noisy_y).shape)
     summary(model, input_data=(noisy_y,), device="cpu")
