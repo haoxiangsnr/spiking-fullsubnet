@@ -282,6 +282,7 @@ class BaseTrainer:
                         f"loss_g: {loss_dict['loss_g'].item():.4f}, "
                         f"loss_g_fake: {loss_dict['loss_g_fake'].item():.4f}, "
                         f"loss_time: {loss_dict['loss_time'].item():.4f}, "
+                        f"loss_mag: {loss_dict['loss_mag'].item():.4f}, "
                         f"loss_d: {loss_dict['loss_d'].item():.4f}, "
                         f"loss_d_real: {loss_dict['loss_d_real'].item():.4f}, "
                         f"loss_d_fake: {loss_dict['loss_d_fake'].item():.4f}, "
@@ -328,31 +329,33 @@ class BaseTrainer:
     @torch.no_grad()
     def validate(self, dataloaders):
         logger.info(f"Begin validation...")
-        self.model_g.eval()
-        self.model_d.eval()
 
-        if not isinstance(dataloaders, list):
-            dataloaders = [dataloaders]
+        if self.accelerator.is_local_main_process:
+            self.model_g.eval()
+            self.model_d.eval()
 
-        validation_output = []
-        for dataloader_idx, dataloader in enumerate(dataloaders):
-            dataloader_output = []
-            for batch_idx, batch in enumerate(
-                tqdm(
-                    dataloader,
-                    desc=f"Inferring on dataloader {dataloader_idx}",
-                    bar_format="{l_bar}{r_bar}",
-                    dynamic_ncols=True,
-                )
-            ):
-                step_output = self.validation_step(batch, batch_idx, dataloader_idx)
-                dataloader_output.append(step_output)
-            validation_output.append(dataloader_output)
+            if not isinstance(dataloaders, list):
+                dataloaders = [dataloaders]
 
-        logger.info(f"Validation inference finished, begin validation epoch end...")
-        score = self.validation_epoch_end(validation_output)
+            validation_output = []
+            for dataloader_idx, dataloader in enumerate(dataloaders):
+                dataloader_output = []
+                for batch_idx, batch in enumerate(
+                    tqdm(
+                        dataloader,
+                        desc=f"Inferring on dataloader {dataloader_idx}",
+                        bar_format="{l_bar}{r_bar}",
+                        dynamic_ncols=True,
+                    )
+                ):
+                    step_output = self.validation_step(batch, batch_idx, dataloader_idx)
+                    dataloader_output.append(step_output)
+                validation_output.append(dataloader_output)
 
-        return score
+            logger.info(f"Validation inference finished, begin validation epoch end...")
+            score = self.validation_epoch_end(validation_output)
+
+            return score
 
     @torch.no_grad()
     def test(self, dataloaders, ckpt_path="best"):

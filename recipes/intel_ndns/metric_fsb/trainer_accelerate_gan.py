@@ -1,12 +1,8 @@
-import logging
-
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
 from accelerate.logging import get_logger
-from joblib import Parallel, delayed
-from tqdm import tqdm
 
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
 from audiozen.trainer.base_trainer_gan_accelerate import BaseTrainer
@@ -51,9 +47,10 @@ class Trainer(BaseTrainer):
 
         enhanced_y, enhanced_mag = self.model_g(noisy_y)
         pred_fake = self.model_d(clean_mag, enhanced_mag)  # [B, 1]
-        loss_g_fake = F.mse_loss(pred_fake, one_labels)
-        loss_time = self.loss_function(enhanced_y, clean_y)
-        loss_g = loss_time + loss_g_fake
+        loss_g_fake = 0.05 * F.mse_loss(pred_fake, one_labels)
+        loss_time = 0.2 * F.l1_loss(enhanced_y, clean_y)
+        loss_mag = 0.9 * F.mse_loss(enhanced_mag, clean_mag)
+        loss_g = loss_g_fake + loss_time + loss_mag
 
         self.accelerator.backward(loss_g)
         self.optimizer_g.step()
@@ -75,6 +72,7 @@ class Trainer(BaseTrainer):
             "loss_g": loss_g,
             "loss_g_fake": loss_g_fake,
             "loss_time": loss_time,
+            "loss_mag": loss_mag,
             "loss_d": loss_d,
             "loss_d_real": loss_d_real,
             "loss_d_fake": loss_d_fake,
@@ -94,6 +92,9 @@ class Trainer(BaseTrainer):
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
         noisy_y, clean_y, _ = batch
+        noisy_y = noisy_y.to(self.accelerator.device)
+        clean_y = clean_y.to(self.accelerator.device)
+
         enhanced_y, enhanced_mag = self.model_g(noisy_y)
         return noisy_y, clean_y, enhanced_y
 
@@ -114,10 +115,9 @@ class Trainer(BaseTrainer):
                 f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}..."
             )
 
-            rows = Parallel(n_jobs=40)(
-                delayed(self.compute_validation_metrics)(dataloader_idx, step_out)
-                for step_out in tqdm(dataloader_outputs)
-            )
+            rows = []
+            for step_out in dataloader_outputs:
+                rows.append(self.compute_validation_metrics(dataloader_idx, step_out))
 
             df_metrics = pd.DataFrame(rows)
 

@@ -218,13 +218,13 @@ class DNSMOS:
 
         root_dir = Path(__file__).parent.absolute()
 
-        if device != -1:
+        if device > -1:
+            print(f"Using device: {device}")
             providers = [
-                ("CUDAExecutionProvider", {"device_id": device}),
-                "CPUExecutionProvider",
+                ("CUDAExecutionProvider", {"device_id": device})
             ]
         else:
-            providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+            providers = ["CPUExecutionProvider"]
 
         self.p835_sess = ort.InferenceSession(
             (root_dir / "external" / "DNSMOS" / "sig_bak_ovr.onnx").as_posix(),

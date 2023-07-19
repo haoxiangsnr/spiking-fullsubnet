@@ -1,0 +1,95 @@
+[meta]
+save_dir = "exp"
+description = "This is a description of audiozen experiment."
+seed = 20220815
+use_amp = false
+use_deterministic_algorithms = false
+
+[trainer]
+path = "trainer_accelerate_gan.Trainer"
+[trainer.args]
+max_epoch = 9999
+clip_grad_norm_value = 10
+save_max_score = true
+save_ckpt_interval = 1
+patience = 50
+plot_norm = true
+validation_interval = 1
+max_num_checkpoints = 10
+
+[loss_function]
+path = "torch.nn.MSELoss"
+[loss_function.args]
+
+
+[optimizer_g]
+path = "torch.optim.AdamW"
+[optimizer_g.args]
+lr = 5e-4
+
+[optimizer_d]
+path = "torch.optim.AdamW"
+[optimizer_d.args]
+lr = 1e-3
+
+[lr_scheduler_g]
+path = "torch.optim.lr_scheduler.ExponentialLR"
+[lr_scheduler_g.args]
+gamma = 0.99
+
+[lr_scheduler_d]
+path = "torch.optim.lr_scheduler.ExponentialLR"
+[lr_scheduler_d.args]
+gamma = 0.99
+
+[model_g]
+path = "model_td.Separator"
+[model_g.args]
+sr = 16000
+fdrc = 0.5
+n_fft = 512
+hop_length = 128
+win_length = 512
+num_freqs = 256
+sequence_model = "LSTM"
+fb_hidden_size = 512
+fb_output_activate_function = false
+freq_cutoffs = [20, 80]
+sb_num_center_freqs = [1, 4, 8]
+sb_num_neighbor_freqs = [15, 15, 15]
+fb_num_center_freqs = [1, 4, 8]
+fb_num_neighbor_freqs = [0, 0, 0]
+sb_hidden_size = 384
+sb_output_activate_function = false
+norm_type = "offline_laplace_norm"
+
+[model_d]
+path = "discriminator.Discriminator"
+[model_d.args]
+
+[acoustics]
+n_fft = 512
+win_length = 512
+sr = 16000
+hop_length = 128
+
+
+[train_dataset]
+path = "dataloader.DNSAudio"
+[train_dataset.args]
+root = "/datasets/datasets_fullband/training_set/"
+limit = false
+offset = 0
+train = true
+[train_dataset.dataloader]
+batch_size = 10 # 32
+num_workers = 10
+drop_last = true
+pin_memory = false
+
+
+[validate_dataset]
+path = "dataloader.DNSAudio"
+[validate_dataset.args]
+root = "/datasets/datasets_fullband/validation_set/"
+train = false
