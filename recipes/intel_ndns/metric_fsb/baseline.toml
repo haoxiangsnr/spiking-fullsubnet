@@ -82,8 +82,8 @@ limit = false
 offset = 0
 train = true
 [train_dataset.dataloader]
-batch_size = 5 # 32
-num_workers = 5
+batch_size = 10 # 32
+num_workers = 10
 drop_last = true
 pin_memory = false
 

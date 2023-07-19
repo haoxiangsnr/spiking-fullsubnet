@@ -218,7 +218,7 @@ class DNSMOS:
 
         root_dir = Path(__file__).parent.absolute()
 
-        if device > -1
+        if device != -1:
             providers = [
                 ("CUDAExecutionProvider", {"device_id": device}),
                 "CPUExecutionProvider",
@@ -264,7 +264,7 @@ class DNSMOS:
 
         return sig_poly, bak_poly, ovr_poly
 
-    def __call__(self, audio):
+    def __call__(self, audio, return_p808=True):
         if audio.ndim != 1:
             audio = audio.reshape(-1)
 
@@ -299,24 +299,30 @@ class DNSMOS:
                 continue
 
             input_features = np.array(audio_seg).astype("float32")[np.newaxis, :]
-            p808_input_features = np.array(
-                self.audio_melspec(audio=audio_seg[:-160])
-            ).astype("float32")[np.newaxis, :, :]
             oi = {"input_1": input_features}
-            p808_oi = {"input_1": p808_input_features}
-            p808_mos = self.p808_sess.run(None, p808_oi)[0][0][0]
+
+            if return_p808:
+                p808_input_features = np.array(
+                    self.audio_melspec(audio=audio_seg[:-160])
+                ).astype("float32")[np.newaxis, :, :]
+                p808_oi = {"input_1": p808_input_features}
+                p808_mos = self.p808_sess.run(None, p808_oi)[0][0][0]
+                predicted_p808_mos.append(p808_mos)
+
             mos_sig_raw, mos_bak_raw, mos_ovr_raw = self.p835_sess.run(None, oi)[0][0]
             mos_sig, mos_bak, mos_ovr = self.get_polyfit_val(
                 mos_sig_raw, mos_bak_raw, mos_ovr_raw
             )
 
-            predicted_p808_mos.append(p808_mos)
             predicted_mos_ovr_seg.append(mos_ovr)
             predicted_mos_sig_seg.append(mos_sig)
             predicted_mos_bak_seg.append(mos_bak)
 
         clip_dict = {}
-        clip_dict["P808"] = np.mean(predicted_p808_mos)
+
+        if return_p808:
+            clip_dict["P808"] = np.mean(predicted_p808_mos)
+
         clip_dict["OVRL"] = np.mean(predicted_mos_ovr_seg)
         clip_dict["SIG"] = np.mean(predicted_mos_sig_seg)
         clip_dict["BAK"] = np.mean(predicted_mos_bak_seg)

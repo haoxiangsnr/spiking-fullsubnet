@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 class Trainer(BaseTrainer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.dns_mos = DNSMOS(input_sr=self.sr)
+        self.dns_mos = DNSMOS(input_sr=self.sr, device=self.accelerator.process_index)
         self.stoi = STOI(sr=self.sr)
         self.pesq_wb = PESQ(sr=self.sr, mode="wb")
         self.pesq_nb = PESQ(sr=self.sr, mode="nb")
@@ -30,7 +30,7 @@ class Trainer(BaseTrainer):
 
         scores = []
         for audio in audio_list:
-            scores.append(self.dns_mos(audio)["OVRL"])
+            scores.append(self.dns_mos(audio, return_p808=False)["OVRL"])
 
         scores = np.array(scores)
 
