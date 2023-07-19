@@ -220,11 +220,11 @@ class DNSMOS:
 
         self.p835_sess = ort.InferenceSession(
             (root_dir / "external" / "DNSMOS" / "sig_bak_ovr.onnx").as_posix(),
-            providers=["CPUExecutionProvider"],
+            providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
         )
         self.p808_sess = ort.InferenceSession(
             (root_dir / "external" / "DNSMOS" / "model_v8.onnx").as_posix(),
-            providers=["CPUExecutionProvider"],
+            providers=["CUDAExecutionProvider", "CPUExecutionProvider"],
         )
 
         self.input_sr = input_sr
@@ -268,7 +268,6 @@ class DNSMOS:
         if self.input_sr != 16000:
             audio = librosa.resample(audio, orig_sr=self.input_sr, target_sr=SAMPLERATE)
 
-        actual_audio_len = len(audio)
         len_samples = int(INPUT_LENGTH * SAMPLERATE)
 
         while len(audio) < len_samples:
@@ -277,9 +276,10 @@ class DNSMOS:
         num_hops = int(np.floor(len(audio) / SAMPLERATE) - INPUT_LENGTH) + 1
 
         hop_len_samples = SAMPLERATE
-        predicted_mos_sig_seg_raw = []
-        predicted_mos_bak_seg_raw = []
-        predicted_mos_ovr_seg_raw = []
+        predicted_mos_sig_seg = []
+        predicted_mos_bak_seg = []
+        predicted_mos_ovr_seg = []
+
         predicted_p808_mos = []
 
         for idx in range(num_hops):
@@ -297,18 +297,19 @@ class DNSMOS:
             p808_oi = {"input_1": p808_input_features}
             p808_mos = self.p808_sess.run(None, p808_oi)[0][0][0]
             mos_sig_raw, mos_bak_raw, mos_ovr_raw = self.p835_sess.run(None, oi)[0][0]
+            mos_sig, mos_bak, mos_ovr = self.get_polyfit_val(
+                mos_sig_raw, mos_bak_raw, mos_ovr_raw
+            )
 
             predicted_p808_mos.append(p808_mos)
-            predicted_mos_ovr_seg_raw.append(mos_ovr_raw)
-            predicted_mos_sig_seg_raw.append(mos_sig_raw)
-            predicted_mos_bak_seg_raw.append(mos_bak_raw)
+            predicted_mos_ovr_seg.append(mos_ovr)
+            predicted_mos_sig_seg.append(mos_sig)
+            predicted_mos_bak_seg.append(mos_bak)
 
         clip_dict = {}
-        # clip_dict["sr"] = SAMPLERATE
-        # clip_dict["len"] = actual_audio_len / SAMPLERATE
         clip_dict["P808"] = np.mean(predicted_p808_mos)
-        clip_dict["OVRL"] = np.mean(predicted_mos_ovr_seg_raw)
-        clip_dict["SIG"] = np.mean(predicted_mos_sig_seg_raw)
-        clip_dict["BAK"] = np.mean(predicted_mos_bak_seg_raw)
+        clip_dict["OVRL"] = np.mean(predicted_mos_ovr_seg)
+        clip_dict["SIG"] = np.mean(predicted_mos_sig_seg)
+        clip_dict["BAK"] = np.mean(predicted_mos_bak_seg)
 
         return clip_dict
