@@ -6,9 +6,11 @@ import numpy as np
 import soundfile as sf
 from torch.utils.data import Dataset
 
+from audiozen.acoustics.audio_feature import subsample
+
 
 class DNSAudio(Dataset):
-    def __init__(self, root="./", limit=None, offset=0) -> None:
+    def __init__(self, root="./", limit=None, offset=0, train=True) -> None:
         """Audio dataset loader for DNS.
 
         Args:
@@ -29,6 +31,8 @@ class DNSAudio(Dataset):
         self.snr_from_name = re.compile("snr(-?\d+)")
         self.target_level_from_name = re.compile("tl(-?\d+)")
         self.source_info_from_name = re.compile("^(.*?)_snr")
+
+        self.train = train
 
     def _get_filenames(self, n):
         noisy_file = self.noisy_files[n % self.__len__()]
@@ -60,6 +64,7 @@ class DNSAudio(Dataset):
         clean_audio, _ = sf.read(clean_file)
         noise_audio, _ = sf.read(noise_file)
         num_samples = 30 * sampling_frequency  # 30 sec data
+        train_num_samples = 6 * sampling_frequency
         metadata["fs"] = sampling_frequency
 
         if len(noisy_audio) > num_samples:
@@ -84,6 +89,18 @@ class DNSAudio(Dataset):
         noisy_audio = noisy_audio.astype(np.float32)
         clean_audio = clean_audio.astype(np.float32)
         noise_audio = noise_audio.astype(np.float32)
+
+        if self.train:
+            noisy_audio, start_position = subsample(
+                noisy_audio,
+                sub_sample_length=train_num_samples,
+                return_start_position=True,
+            )
+            clean_audio = subsample(
+                clean_audio,
+                sub_sample_length=train_num_samples,
+                start_position=start_position,
+            )
 
         return noisy_audio, clean_audio, noise_audio
 
