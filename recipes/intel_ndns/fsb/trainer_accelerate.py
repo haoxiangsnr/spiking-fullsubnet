@@ -24,7 +24,7 @@ class Trainer(BaseTrainer):
         self.si_sdr = SISDR()
 
     def training_step(self, batch, batch_idx):
-        noisy, clean = batch
+        noisy, clean, _ = batch
         noisy = noisy.to(self.device)
         clean = clean.to(self.device)
 
@@ -42,7 +42,7 @@ class Trainer(BaseTrainer):
             self.writer.add_scalar(f"Loss/Train", loss_mean, self.current_epoch)
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
-        noisy, clean = batch
+        noisy, clean, _ = batch
         clean = clean.to(self.device)
         noisy = noisy.to(self.device)
 

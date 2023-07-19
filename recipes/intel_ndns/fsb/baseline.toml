@@ -1,5 +1,5 @@
 [meta]
-save_dir = "exp"
+save_dir = "exp/fsb"
 description = "This is a description of audiozen experiment."
 seed = 20220815
 use_amp = false
@@ -63,11 +63,12 @@ gamma = 0.99
 
 
 [train_dataset]
-path = "fsb.dataloader.DNSAudio"
+path = "dataloader.DNSAudio"
 [train_dataset.args]
 root = "/datasets/datasets_fullband/training_set/"
 limit = false
 offset = 0
+train = true
 [train_dataset.dataloader]
 batch_size = 5 # 32
 num_workers = 5
@@ -76,6 +77,7 @@ pin_memory = false
 
 
 [validate_dataset]
-path = "fsb.dataloader.DNSAudio"
+path = "dataloader.DNSAudio"
 [validate_dataset.args]
 root = "/datasets/datasets_fullband/validation_set/"
+train = false
