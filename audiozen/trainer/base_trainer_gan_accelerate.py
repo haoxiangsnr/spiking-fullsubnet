@@ -35,8 +35,7 @@ class BaseTrainer:
         lr_scheduler_d,
         loss_function,
     ) -> None:
-        self.args = config
-
+        """Create an instance of BaseTrainer for training, validation, and testing."""
         # Setup directories
         self._initialize_exp_dirs_and_paths(config)
 
@@ -116,8 +115,8 @@ class BaseTrainer:
         # logger.info(f"Project code is backed up to {self.source_code_backup_dir.as_posix()}.")
 
         # Model summary
-        model_summary = summary(self.model, verbose=0)  # no output
-        logger.info(f"\n {model_summary}")
+        logger.info(f"\n {summary(self.model_g, verbose=0)}")
+        logger.info(f"\n {summary(self.model_d, verbose=0)}")
 
     @staticmethod
     def _get_time_now():
@@ -181,14 +180,12 @@ class BaseTrainer:
         """
         self.start_epoch.value = epoch
 
-        # Save checkpoint based on the epoch
-        checkpoint_fpath = self.checkpoints_dir / f"epoch_{str(epoch).zfill(4)}"
-
         if is_best_epoch:
             self.accelerator.save_state(self.checkpoints_dir / "best")
         else:
             # Regular checkpoint
-            self.accelerator.save_state(checkpoint_fpath.as_posix())
+            ckpt_path = self.checkpoints_dir / f"epoch_{str(epoch).zfill(4)}"
+            self.accelerator.save_state(ckpt_path.as_posix())
             self.accelerator.save_state(self.checkpoints_dir / "latest")
 
         # Find all regular checkpoints and only keep the latest `max_num_checkpoints` regular checkpoints
@@ -277,9 +274,7 @@ class BaseTrainer:
             )
 
             for batch_idx, batch in enumerate(dataloader_bar):
-                # Forward
                 loss_dict = self.training_step(batch, batch_idx)
-
                 training_epoch_output.append(loss_dict)
 
                 if self.accelerator.is_local_main_process:
@@ -332,7 +327,8 @@ class BaseTrainer:
     @torch.no_grad()
     def validate(self, dataloaders):
         logger.info(f"Begin validation...")
-        self.model.eval()
+        self.model_g.eval()
+        self.model_d.eval()
 
         if not isinstance(dataloaders, list):
             dataloaders = [dataloaders]
@@ -367,7 +363,8 @@ class BaseTrainer:
         """
         if self.rank == 0:
             logger.info(f"Begin testing...")
-            self.model.eval()
+            self.model_g.eval()
+            self.model_d.eval()
 
             if not isinstance(dataloaders, list):
                 dataloaders = [dataloaders]

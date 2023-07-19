@@ -53,7 +53,7 @@ def initialize_ddp(rank: int):
 
 
 def instantiate(path: str, args: Optional[dict] = None, initialize: bool = True):
-    """Load module or callable (like function) dynamically.
+    """Load module or callable (like function) dynamically based on config string.
 
     Assume that the config items are as follows:
 

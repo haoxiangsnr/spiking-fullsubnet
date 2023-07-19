@@ -19,7 +19,7 @@ class TensorboardLogger(SummaryWriter):
 
 
 def init_logging_logger(config):
-    """Initialize logging logger.
+    """Initialize logging logger with handlers.
 
     Args:
         log_fpath: Path to save log file.

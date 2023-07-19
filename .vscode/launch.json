@@ -41,6 +41,25 @@
                 "-M",
                 "train"
             ],
+        },
+        {
+            "name": "Torchrun Debug Accelerate",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/xianghao/mambaforge/envs/audiozen/bin/accelerate",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/recipes/intel_ndns/metric_fsb",
+            "args": [
+                "launch",
+                "--config_file",
+                "ddp_four_cards.yaml",
+                "run_accelerate_gan.py",
+                "-C",
+                "baseline.toml",
+                "-M",
+                "train"
+            ],
         }
     ]
 }

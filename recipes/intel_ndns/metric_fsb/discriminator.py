@@ -59,22 +59,6 @@ class Discriminator(nn.Module):
         xy = torch.cat([x, y], dim=1)
         return self.layers(xy)
 
-    @torch.no_grad()
-    def batch_dns_mos(self, x):
-        """Calculate MOS score for batch of audio, return [B, 1]"""
-        audio_list = list(x.squeeze(1).detach().cpu().numpy())
-
-        scores = []
-        for audio in audio_list:
-            scores.append(self.dns_mos(audio)["OVR"])
-
-        scores = np.array(scores)
-
-        # Normalize
-        scores = (scores - 1.0) / 4.0
-
-        return torch.from_numpy(scores).float().reshape(-1, 1)
-
 
 if __name__ == "__main__":
     import numpy as np

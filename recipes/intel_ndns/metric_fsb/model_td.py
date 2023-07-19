@@ -528,7 +528,7 @@ class Separator(BaseModel):
             window=torch.hann_window(self.win_length, device=y.device),
             length=y.size(-1),
         )
-        enhanced_y = enhanced_y.unsqueeze(1)  # [B, 1, T]
+        enhanced_y = enhanced_y  # [B, 1, T]
         return enhanced_y, enhanced_mag
 
 
