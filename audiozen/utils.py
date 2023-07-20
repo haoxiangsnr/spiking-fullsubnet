@@ -3,6 +3,7 @@ import logging
 import os
 import random
 import time
+from datetime import timedelta
 from typing import Optional
 
 import numpy as np
@@ -47,7 +48,7 @@ def initialize_ddp(rank: int):
 
     # torchrun and multi-process distributed (single-node or multi-node) GPU training currently only achieves the best performance using the NCCL distributed backend.
     # The environment variables necessary to initialize a Torch process group are provided to you by this module, and no need for you to pass ``RANK`` manually.
-    dist.init_process_group(backend="nccl")
+    dist.init_process_group(backend="nccl", timeout=timedelta(seconds=3600))
 
     print(f"Initialized DistributedDataParallel process group on GPU {rank}.")
 
