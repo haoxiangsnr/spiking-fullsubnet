@@ -10,9 +10,9 @@ Usage:
 Note:
     "*.onnx" is required to run this script.
 """
-import argparse
 from pathlib import Path
 
+import click
 import librosa
 import numpy as np
 import onnxruntime as ort
@@ -58,6 +58,12 @@ def dns_mos_p835(onnx_sess, audio):
     return np.mean(predicted_mos_ovr_seg_raw)
 
 
+@click.command()
+@click.argument("src_dir", type=click.Path(exists=True))
+@click.argument("dest_dir", type=click.Path())
+@click.option("--mos_threshold", type=float, default=4.25)
+@click.option("--len_upper_threshold", type=float, default=60)
+@click.option("--len_lower_threshold", type=float, default=3)
 def main(
     src_dir,
     dest_dir,
@@ -74,7 +80,7 @@ def main(
     out_len = 0
 
     onnx_sess = ort.InferenceSession(
-        "/data/ssp/public/data/dns/dns_mos/DNSMOS/sig_bak_ovr.onnx",
+        "/home/xianghao/proj/audiozen/audiozen/external/DNSMOS/sig_bak_ovr.onnx",
         providers=["CUDAExecutionProvider"],
     )
 
@@ -103,18 +109,4 @@ def main(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--src_dir", type=str, required=True)
-    parser.add_argument("-o", "--dest_dir", type=str, required=True)
-    parser.add_argument("-m", "--mos_threshold", type=float, default=4.00)
-    parser.add_argument("--len_upper_threshold", type=float, default=60)
-    parser.add_argument("--len_lower_threshold", type=float, default=3)
-    args = parser.parse_args()
-
-    main(
-        args.src_dir,
-        args.dest_dir,
-        args.mos_threshold,
-        args.len_upper_threshold,
-        args.len_lower_threshold,
-    )
+    main()
