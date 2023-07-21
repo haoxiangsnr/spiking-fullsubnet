@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class Trainer(BaseTrainer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.dns_mos = DNSMOS(input_sr=self.sr)
+        self.dns_mos = DNSMOS(input_sr=self.sr, device=self.accelerator.process_index)
         self.stoi = STOI(sr=self.sr)
         self.pesq_wb = PESQ(sr=self.sr, mode="wb")
         self.pesq_nb = PESQ(sr=self.sr, mode="nb")
@@ -25,8 +25,6 @@ class Trainer(BaseTrainer):
 
     def training_step(self, batch, batch_idx):
         noisy, clean, _ = batch
-        noisy = noisy.to(self.device)
-        clean = clean.to(self.device)
 
         enhanced = self.model(noisy)
 
@@ -37,7 +35,7 @@ class Trainer(BaseTrainer):
     def training_epoch_end(self, training_epoch_output):
         loss_mean = torch.mean(torch.tensor(training_epoch_output))
 
-        if self.rank == 0:
+        if self.accelerator.is_local_main_process:
             logger.info(f"Training loss on epoch {self.current_epoch}: {loss_mean}")
             self.writer.add_scalar(f"Loss/Train", loss_mean, self.current_epoch)
 
@@ -67,10 +65,9 @@ class Trainer(BaseTrainer):
                 f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}..."
             )
 
-            rows = Parallel(n_jobs=40)(
-                delayed(self.compute_validation_metrics)(dataloader_idx, step_out)
-                for step_out in tqdm(dataloader_outputs)
-            )
+            rows = []
+            for step_out in dataloader_outputs:
+                rows.append(self.compute_validation_metrics(dataloader_idx, step_out))
 
             df_metrics = pd.DataFrame(rows)
 
@@ -79,7 +76,7 @@ class Trainer(BaseTrainer):
 
             logger.info(f"\n{df_metrics_mean_df.to_markdown()}")
 
-            score += df_metrics_mean["pesq_wb"]
+            score += df_metrics_mean["OVRL"]
 
             for metric, value in df_metrics_mean.items():
                 self.writer.add_scalar(

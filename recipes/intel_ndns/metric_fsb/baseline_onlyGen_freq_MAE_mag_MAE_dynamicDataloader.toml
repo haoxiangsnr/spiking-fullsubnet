@@ -1,31 +1,28 @@
 [meta]
 save_dir = "exp"
-description = "This is a description of audiozen experiment."
+description = "Train a model using Generative Adversarial Networks (GANs)"
 seed = 20220815
-use_amp = false
-use_deterministic_algorithms = false
 
 [trainer]
-path = "trainer_accelerate_gan.Trainer"
+path = "trainer_accelerate_gan_onlyGen_freq_MAE_mag_MAE.Trainer"
 [trainer.args]
 max_epoch = 9999
 clip_grad_norm_value = 10
 save_max_score = true
-save_ckpt_interval = 1
-patience = 50
+save_ckpt_interval = 2
+patience = 10
 plot_norm = true
-validation_interval = 1
+validation_interval = 2
 max_num_checkpoints = 10
 
 [loss_function]
 path = "torch.nn.MSELoss"
 [loss_function.args]
 
-
 [optimizer_g]
 path = "torch.optim.AdamW"
 [optimizer_g.args]
-lr = 5e-4
+lr = 1e-3
 
 [optimizer_d]
 path = "torch.optim.AdamW"
@@ -68,28 +65,35 @@ path = "discriminator.Discriminator"
 [model_d.args]
 
 [acoustics]
-hop_length = 128
 n_fft = 512
+hop_length = 128
 win_length = 512
 sr = 16000
 
-
 [train_dataset]
-path = "dataloader.DNSAudio"
+path = "dataloader_dynamic.DNSAudio"
 [train_dataset.args]
-root = "/datasets/datasets_fullband/training_set/"
-limit = false
-offset = 0
-train = true
+clean_dataset = "/datasets/datasets_fullband/datasets_fullband_16k/clean_fullband"
+clean_dataset_limit = false
+clean_dataset_offset = 0
+noise_dataset = "/datasets/datasets_fullband/datasets_fullband_16k/noise_fullband"
+noise_dataset_limit = false
+noise_dataset_offset = 0
+snr_range = [-5, 20]
+sr = 16000
+loudness_lvl = -25
+loudness_floating_value = 10
+sample_length = 6
+dataset_length = 60000
+
 [train_dataset.dataloader]
-batch_size = 10 # 32
-num_workers = 10
+batch_size = 16
+num_workers = 16
 drop_last = true
 pin_memory = false
-
 
 [validate_dataset]
 path = "dataloader.DNSAudio"
 [validate_dataset.args]
 root = "/datasets/datasets_fullband/validation_set/"
-train = false
+limit = false
