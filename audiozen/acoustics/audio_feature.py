@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import Literal, Optional, Union
 
@@ -121,6 +120,56 @@ def loudness_rms_norm(
         scalar = 10 ** (lvl / 20) / (current_level + eps)
 
     return y * scalar, scalar
+
+
+def active_rms(clean, noise, sr=16000, energy_threshold=-50, eps=EPSILON):
+    """Compute the active RMS of clean and noise signals based on the energy threshold (dB)."""
+    window_size = 100  # ms
+    window_samples = int(sr * window_size / 1000)
+    sample_start = 0
+
+    noise_active_segments = []
+    clean_active_segments = []
+
+    while sample_start < len(noise):
+        sample_end = min(sample_start + window_samples, len(noise))
+        noise_win = noise[sample_start:sample_end]
+        clean_win = clean[sample_start:sample_end]
+        noise_seg_rms = compute_rms(noise_win)
+
+        if noise_seg_rms > energy_threshold:
+            noise_active_segments = np.append(noise_active_segments, noise_win)
+            clean_active_segments = np.append(clean_active_segments, clean_win)
+
+        sample_start += window_samples
+
+    if len(noise_active_segments) != 0:
+        noise_rms = compute_rms(noise_active_segments)
+    else:
+        noise_rms = eps
+
+    if len(clean_active_segments) != 0:
+        clean_rms = compute_rms(clean_active_segments)
+    else:
+        clean_rms = eps
+
+    return clean_rms, noise_rms
+
+
+def normalize_segmental_rms(audio, rms, target_lvl=-25, eps=EPSILON):
+    """Normalize the RMS of a segment to a target level.
+
+    Args:
+        audio: audio segment.
+        rms: RMS of the audio segment.
+        target_lvl: target level in dBFS.
+        eps: a small value to avoid dividing by zero.
+
+    Returns:
+        Normalized audio segment.
+    """
+    scalar = 10 ** (target_lvl / 20) / (rms + eps)
+    return audio * scalar
 
 
 def sxr2gain(

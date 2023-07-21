@@ -1,6 +1,8 @@
 from pathlib import Path
 
+import librosa
 import numpy as np
+import soundfile as sf
 from joblib import Parallel, delayed
 from torch.utils import data
 from tqdm import tqdm
@@ -77,3 +79,39 @@ class BaseDataset(data.Dataset):
             noise_y = noise_y[idx_start : idx_start + target_length]
 
         return noise_y
+
+    @staticmethod
+    def _load_wav(path, duration=None, sr=None):
+        if isinstance(path, Path):
+            path = path.as_posix()
+
+        with sf.SoundFile(path) as sf_desc:
+            orig_sr = sf_desc.samplerate
+
+            if duration is not None:
+                frame_orig_duration = sf_desc.frames
+                frame_duration = int(duration * orig_sr)
+                if frame_duration < frame_orig_duration:
+                    # Randomly select a segment
+                    offset = np.random.randint(frame_orig_duration - frame_duration)
+                    sf_desc.seek(offset)
+                    y = sf_desc.read(
+                        frames=frame_duration, dtype=np.float32, always_2d=True
+                    ).T
+                else:
+                    y = sf_desc.read(dtype=np.float32, always_2d=True).T  # [C, T]
+                    y = np.pad(
+                        y, ((0, 0), (0, frame_duration - frame_orig_duration)), "wrap"
+                    )
+            else:
+                y = sf_desc.read(dtype=np.float32, always_2d=True).T
+
+        if y.shape[0] == 1:
+            y = y[0]
+
+        if sr is not None:
+            y = librosa.resample(y, orig_sr=orig_sr, target_sr=sr)
+        else:
+            sr = orig_sr
+
+        return y, sr

@@ -278,17 +278,12 @@ class BaseTrainer:
                 training_epoch_output.append(loss_dict)
 
                 if self.accelerator.is_local_main_process:
-                    dataloader_bar.set_description(
-                        f"loss_g: {loss_dict['loss_g'].item():.4f}, "
-                        f"loss_g_fake: {loss_dict['loss_g_fake'].item():.4f}, "
-                        f"loss_time: {loss_dict['loss_time'].item():.4f}, "
-                        f"loss_mag: {loss_dict['loss_mag'].item():.4f}, "
-                        f"loss_d: {loss_dict['loss_d'].item():.4f}, "
-                        f"loss_d_real: {loss_dict['loss_d_real'].item():.4f}, "
-                        f"loss_d_fake: {loss_dict['loss_d_fake'].item():.4f}, "
-                        f"lr_g: {self.lr_scheduler_g.get_last_lr()[-1]:.6f}, "
-                        f"lr_d: {self.lr_scheduler_d.get_last_lr()[-1]:.6f}"
-                    )
+                    bar_desc = ""
+                    for k, v in loss_dict.items():
+                        bar_desc += f"{k}: {v.item():.4f}, "
+                    bar_desc += f"lr_g: {self.lr_scheduler_g.get_last_lr()[-1]:.6f}, "
+                    bar_desc += f"lr_d: {self.lr_scheduler_d.get_last_lr()[-1]:.6f}"
+                    dataloader_bar.set_description(bar_desc)
 
                     # Log to tensorboard
                     for key, value in loss_dict.items():

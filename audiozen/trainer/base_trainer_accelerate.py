@@ -174,14 +174,12 @@ class BaseTrainer:
         """
         self.start_epoch.value = epoch
 
-        # Save checkpoint based on the epoch
-        checkpoint_fpath = self.checkpoints_dir / f"epoch_{str(epoch).zfill(4)}"
-
         if is_best_epoch:
             self.accelerator.save_state(self.checkpoints_dir / "best")
         else:
             # Regular checkpoint
-            self.accelerator.save_state(checkpoint_fpath.as_posix())
+            ckpt_path = self.checkpoints_dir / f"epoch_{str(epoch).zfill(4)}"
+            self.accelerator.save_state(ckpt_path.as_posix())
             self.accelerator.save_state(self.checkpoints_dir / "latest")
 
         # Find all regular checkpoints and only keep the latest `max_num_checkpoints` regular checkpoints
@@ -253,7 +251,7 @@ class BaseTrainer:
         for epoch in range(self.start_epoch.value, self.max_epoch + 1):
             self.current_epoch = epoch
 
-            logger.info(f"{'=' * 15} {epoch} epoch {'=' * 15}")
+            logger.info(f"{'=' * 15} Epoch {epoch} {'=' * 15}")
             logger.info("Begin training...")
 
             self.model.train()

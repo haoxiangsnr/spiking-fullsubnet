@@ -220,9 +220,7 @@ class DNSMOS:
 
         if device > -1:
             print(f"Using device: {device}")
-            providers = [
-                ("CUDAExecutionProvider", {"device_id": device})
-            ]
+            providers = [("CUDAExecutionProvider", {"device_id": device})]
         else:
             providers = ["CPUExecutionProvider"]
 
