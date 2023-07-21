@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 
-from audiozen.metric import DNSMOS
-
 
 class LearnableSigmoid(nn.Module):
     def __init__(self, in_features, beta=1):
@@ -18,7 +16,6 @@ class LearnableSigmoid(nn.Module):
 class Discriminator(nn.Module):
     def __init__(self, ndf=16, in_channel=2):
         super().__init__()
-        self.dns_mos = DNSMOS()
         self.layers = nn.Sequential(
             nn.utils.spectral_norm(
                 nn.Conv2d(in_channel, ndf, (4, 4), (2, 2), (1, 1), bias=False)
@@ -61,7 +58,6 @@ class Discriminator(nn.Module):
 
 
 if __name__ == "__main__":
-    import numpy as np
     import torch
 
     model = Discriminator()
