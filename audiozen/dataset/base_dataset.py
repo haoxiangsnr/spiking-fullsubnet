@@ -15,6 +15,36 @@ class BaseDataset(data.Dataset):
         super().__init__()
 
     @staticmethod
+    def _load_dataset_from_text_and_dir_list(dataset_list):
+        """Load dataset from text file or directory.
+
+        Args:
+            dataset_list: A list of dataset path, which can be a directory or a text file. `dataset_list` can also be a single path of directory or text file.
+
+        Raises:
+            FileNotFoundError: If the dataset path is not found.
+
+        Returns:
+            A list of file path.
+        """
+        if isinstance(dataset_list, str):
+            dataset_list = [dataset_list]
+
+        fpath_list = []
+
+        for dataset in dataset_list:
+            dataset = Path(dataset).expanduser().absolute()
+            if dataset.is_dir():
+                fpath_list += librosa.util.find_files(dataset.as_posix(), ext="wav")
+            elif dataset.is_file():
+                with open(dataset, "r") as f:
+                    fpath_list += [line.rstrip("\n") for line in f]
+            else:
+                raise FileNotFoundError(f"File {dataset} not found.")
+
+        return fpath_list
+
+    @staticmethod
     def _load_dataset_in_txt(dataset_path, return_empty_if_not_exist=False):
         dataset_path = Path(dataset_path).expanduser().absolute()
         if dataset_path.is_file():
@@ -81,7 +111,7 @@ class BaseDataset(data.Dataset):
         return noise_y
 
     @staticmethod
-    def _load_wav(path, duration=None, sr=None):
+    def _load_wav(path, duration=None, sr=None, mode="wrap"):
         if isinstance(path, Path):
             path = path.as_posix()
 
@@ -101,7 +131,7 @@ class BaseDataset(data.Dataset):
                 else:
                     y = sf_desc.read(dtype=np.float32, always_2d=True).T  # [C, T]
                     y = np.pad(
-                        y, ((0, 0), (0, frame_duration - frame_orig_duration)), "wrap"
+                        y, ((0, 0), (0, frame_duration - frame_orig_duration)), mode
                     )
             else:
                 y = sf_desc.read(dtype=np.float32, always_2d=True).T
