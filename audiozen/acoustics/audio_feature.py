@@ -441,7 +441,7 @@ def activity_detector(
     Returns:
 
     """
-    audio, _, _ = tune_dB_FS(audio, target_level)
+    audio, _ = loudness_rms_norm(audio, target_level)
     window_size = 50  # ms
     window_samples = int(fs * window_size / 1000)
     sample_start = 0
