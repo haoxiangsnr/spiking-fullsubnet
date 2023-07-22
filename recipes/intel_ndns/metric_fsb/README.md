@@ -2,6 +2,8 @@
 
 ## Recipe overview
 
+### Only Generator
+
 - `baseline_onlyGen`: Baseline model with only generator using time-domain and magnitude loss.
   - **9M** parameters
   - loss: time-domain loss + magnitude loss
@@ -9,10 +11,19 @@
   - base_trainer: `audiozen/trainer/base_trainer_gan_accelerate.py`
 - `baseline_onlyGen_freq_MAE_mag_MAE`
   - trainer: `trainer_accelerate_gan_onlyGen_freq_MAE_mag_MAE` which changed the loss function to freqMAE + magMAE
+- `baseline_onlyGen_freq_MAE_mag_MAE_SDR`
+  - trainer: `trainer_accelerate_gan_onlyGen_freq_MAE_mag_MAE_SDR` which changed the loss function to freqMAE + magMAE + (0.01 * SDR)
 - `baseline_onlyGen_freq_MAE_mag_MAE_dynamicDataloader`
   - dataloader: `dataloader_dynamic` which mixing data using dynamic mixing
 - `baseline_onlyGen_freq_MAE_mag_MAE_dynamicDataloader_mos4_len1`
   - dataloader: `dataloader_dynamic` use `/datasets/datasets_fullband/datasets_fullband_16k/clean_fullband_mos4`
+
+
+### Generator and Discriminator
+
+- `baseline_freq_MAE_mag_MAE`
+  - trainer: `trainer_accelerate_gan_freq_MAE_mag_MAE` which changed the loss function to freqMAE + magMAE
+
 
 ## Dataloader
 
