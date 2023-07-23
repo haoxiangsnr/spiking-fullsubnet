@@ -38,13 +38,14 @@ Average duration: 30.00 s.
 ```
 
 - `dataloader`: load data following the official repo. It contains 60000 samples with 30s length. Total 500 hours. However, for each sample, we only use 6s length for speed up training. So, we have 83 hours data for training at each epoch.
+- `dataloader_v2`:
+  - support load segmental audio data directly using `subsample` function.
 - `dataloader_dynamic`: mixing data using dynamic mixing. We set the sample length to 6s and total samples to 60000.
 
 Note:
 
 The data in `/datasets/datasets_fullband/datasets_fullband_16k/clean_fullband_mos4`
 is with 16k sample rate, mos > 4.0, and length > 1.
-
 
 ## Trainer
 

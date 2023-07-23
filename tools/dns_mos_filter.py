@@ -89,7 +89,7 @@ def main(
 
     progress_bar = tqdm(fpath_list)
     for fpath in progress_bar:
-        progress_bar.set_description(f"Filtered {out_len} files from {orig_len} files.")
+        progress_bar.set_description(f"Saved {out_len} files from {orig_len} files.")
         fpath = Path(fpath)
         dest_fpath = dest_dir / fpath.relative_to(src_dir)
         dest_fpath.parent.mkdir(parents=True, exist_ok=True)
@@ -108,7 +108,7 @@ def main(
         sf.write(dest_fpath.as_posix(), audio, SAMPLERATE)
         out_len += 1
 
-    print(f"Filtered {orig_len - out_len} files out of {orig_len} files.")
+    print(f"Removed {orig_len - out_len} files. {out_len} files left.")
 
 
 if __name__ == "__main__":

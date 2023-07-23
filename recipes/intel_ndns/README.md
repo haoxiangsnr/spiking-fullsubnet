@@ -2,7 +2,16 @@
 
 ## Dataset
 
+Here is the data length distribution of the DNS Challenge dataset.
+The bucket denotes the range of the data length in seconds.
+The total counts denote the number of files in the corresponding bucket.
+
+<details>
+<summary> Click to show the data length distribution of the DNS Challenge clean dataset </summary>
+
 ```shell
+# /datasets/datasets_fullband/clean_fullband
+
 Drawing histgram...
         bucket       | ________________________________________________________________________________ Total Counts
 [0       , 0.676787) | ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀ 150
@@ -50,10 +59,35 @@ Total number of files: 804132.
 Total duration: 1869 hr 43 min 7.05 s.
 Average duration: 8.37 s.
 ```
+</details>
+
+There are some files with 0 duration. We have filtered them out.
 
 - `russian_speech/M-AILABS_Speech_Dataset/ru_RU_47hrs_48k/male/minaev/oblomov/wavs/oblomov_s002765.wav` is `[1, 0]`.
 - `russian_speech/M-AILABS_Speech_Dataset/ru_RU_47hrs_48k/male/minaev/oblomov/wavs/oblomov_s003811.wav` is `[1, 0]`.
 - Number of non-mono wav files: 0
+
+### Clean subset
+
+Some audio files have low DNS-MOS score. We have filtered them out by setting the threshold to 4.0.
+At mean time, we have also resampled the audio files to 16k sample rate. Here is the information of the filtered dataset.
+
+```shell
+Found 804125 files in /datasets/datasets_fullband/datasets_fullband_16k/clean_fullband.
+Remove 596912 files out of 804125 files.
+
+821M  =>  8.0K    emotional_speech
+19G   =>  5.2G    french_speech
+84G   =>  13G     german_speech
+9.5G  =>  3.0G    italian_speech
+69G   =>  34G     read_speech
+2.7G  =>  979M    russian_speech
+15G   =>  3.2G    spanish_speech
+4.4G  =>  374M    vctk_wav48_silence_trimmed
+330M  =>  4.0K    VocalSet_48kHz_mono
+```
+
+We saved them to `/datasets/datasets_fullband/datasets_fullband_16k/clean_fullband_mos4_l0.1s`
 
 ### Training set
 
@@ -62,6 +96,9 @@ Please follow the [instructions](https://github.com/IntelLabs/IntelNeuromorphicD
 Note that the original dataset is very large (about 700 GB). We recommend you to download the training set as early as possible.
 
 RIRs in 65 server have been deleted due to the limited storage space. The RIRs in 69 server are still available.
+
+News: we have updated the new training set with the same size as the original one based on the high-quality audio files (with DNS-MOS score > 4.0 `/datasets/datasets_fullband/datasets_fullband_16k/clean_fullband_mos4_l0.1s`). Check here for more details `/datasets/datasets_fullband/training_set_20230728`
+
 
 ### Validation set
 
