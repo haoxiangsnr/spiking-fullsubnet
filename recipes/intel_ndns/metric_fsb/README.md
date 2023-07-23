@@ -13,6 +13,10 @@
   - trainer: `trainer_accelerate_gan_onlyGen_freq_MAE_mag_MAE` which changed the loss function to freqMAE + magMAE
 - `baseline_onlyGen_freq_MAE_mag_MAE_SDR`
   - trainer: `trainer_accelerate_gan_onlyGen_freq_MAE_mag_MAE_SDR` which changed the loss function to freqMAE + magMAE + (0.01 * SDR)
+- `baseline_onlyGen_freq_MAE_mag_MAE_lowSNR`
+  - trainer: use 0.001 * SNR
+- `baseline_onlyGen_freq_MAE_mag_MAE_multiframe`
+  - 20 to 80 frequency bins use 3 frame size
 - `baseline_onlyGen_freq_MAE_mag_MAE_dynamicDataloader`
   - dataloader: `dataloader_dynamic` which mixing data using dynamic mixing
 - `baseline_onlyGen_freq_MAE_mag_MAE_dynamicDataloader_mos4_len1`

@@ -81,6 +81,7 @@ class Trainer(BaseTrainer):
             "loss_g": loss_g,
             "loss_freq_mae": loss_freq_mae,
             "loss_mag_mae": loss_mag_mae,
+            "loss_sdr": loss_sdr,
             # "loss_g_fake": loss_g_fake,
             # "loss_time": loss_time,
             # "loss_mag": loss_mag,
