@@ -71,6 +71,9 @@ def main(
     len_upper_threshold=20,
     len_lower_threshold=3,
 ):
+    print(
+        f"Filtering audio files with MOS score higher than {mos_threshold}. length between {len_lower_threshold} and {len_upper_threshold}"
+    )
     src_dir = Path(src_dir).expanduser().absolute()
     dest_dir = Path(dest_dir).expanduser().absolute()
 
