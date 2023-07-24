@@ -89,6 +89,12 @@ Remove 596912 files out of 804125 files.
 
 We saved them to `/datasets/datasets_fullband/datasets_fullband_16k/clean_fullband_mos4_l0.1s`
 
+Also, we use 3.8 as the threshold to filter out the files with low SNR.
+
+```shell
+Removed 364355 files. 439770 files left.
+```
+
 ### Training set
 
 Please follow the [instructions](https://github.com/IntelLabs/IntelNeuromorphicDNSChallenge#dataset) provided by the Intel N-DNS Challenge organizers to download the training set. If you can access servers (`10.21.4.69` and `10.21.4.65`) at PolyU, you may directly use the simulated data at `/datasets/datasets_fullband/training_set`.
