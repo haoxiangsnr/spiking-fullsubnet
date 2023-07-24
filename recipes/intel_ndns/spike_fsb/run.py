@@ -86,13 +86,14 @@ def run(config, resume):
                     dataset=instantiate(
                         validate_config["path"], args=validate_config["args"]
                     ),
-                    num_workers=0,
-                    batch_size=1,
+                    **validate_config["dataloader"],
                 )
             )
 
+        validate_dataloaders = accelerator.prepare(*validate_dataloaders)
+
     if "test" in args.mode:
-        if not isinstance(["test_dataset"], list):
+        if not isinstance(config["test_dataset"], list):
             config["test_dataset"] = [config["test_dataset"]]
 
         test_dataloaders = []
@@ -100,10 +101,11 @@ def run(config, resume):
             test_dataloaders.append(
                 DataLoader(
                     dataset=instantiate(test_config["path"], args=test_config["args"]),
-                    num_workers=0,
-                    batch_size=1,
+                    **test_config["dataloader"],
                 )
             )
+
+        test_dataloaders = accelerator.prepare(*test_dataloaders)
 
     trainer = instantiate(config["trainer"]["path"], initialize=False)(
         accelerator=accelerator,

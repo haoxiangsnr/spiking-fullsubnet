@@ -4,7 +4,7 @@ description = "Train a model using Generative Adversarial Networks (GANs)"
 seed = 20220815
 
 [trainer]
-path = "trainer_accelerate_gan_freq_MAE_mag_MAE_lowerSDR.Trainer"
+path = "trainer.Trainer"
 [trainer.args]
 max_epoch = 9999
 clip_grad_norm_value = 10
@@ -92,3 +92,15 @@ path = "dataloader.DNSAudio"
 [validate_dataset.args]
 root = "/datasets/datasets_fullband/validation_set/"
 train = false
+[validate_dataset.dataloader]
+batch_size = 4
+num_workers = 4
+
+[test_dataset]
+path = "dataloader.DNSAudio"
+[test_dataset.args]
+root = "/datasets/datasets_fullband/validation_set/"
+train = false
+[test_dataset.dataloader]
+batch_size = 4
+num_workers = 4

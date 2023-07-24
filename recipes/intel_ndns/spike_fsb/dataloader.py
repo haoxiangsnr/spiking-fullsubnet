@@ -62,7 +62,6 @@ class DNSAudio(Dataset):
         noisy_file, clean_file, noise_file, metadata = self._get_filenames(n)
         noisy_audio, sampling_frequency = sf.read(noisy_file)
         clean_audio, _ = sf.read(clean_file)
-        # noise_audio, _ = sf.read(noise_file)
         num_samples = 30 * sampling_frequency  # 30 sec data
         train_num_samples = 6 * sampling_frequency
         metadata["fs"] = sampling_frequency
@@ -79,16 +78,9 @@ class DNSAudio(Dataset):
             clean_audio = np.concatenate(
                 [clean_audio, np.zeros(num_samples - len(clean_audio))]
             )
-        # if len(noise_audio) > num_samples:
-        #     noise_audio = noise_audio[:num_samples]
-        # else:
-        #     noise_audio = np.concatenate(
-        #         [noise_audio, np.zeros(num_samples - len(noise_audio))]
-        #     )
 
         noisy_audio = noisy_audio.astype(np.float32)
         clean_audio = clean_audio.astype(np.float32)
-        # noise_audio = noise_audio.astype(np.float32)
 
         if self.train:
             noisy_audio, start_position = subsample(
@@ -102,7 +94,7 @@ class DNSAudio(Dataset):
                 start_position=start_position,
             )
 
-        return noisy_audio, clean_audio, "placeholder"
+        return noisy_audio, clean_audio, noisy_file
 
     def __len__(self) -> int:
         """Length of the dataset."""

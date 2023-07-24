@@ -3,10 +3,11 @@ import pandas as pd
 import torch
 import torch.nn.functional as F
 from accelerate.logging import get_logger
+from tqdm import tqdm
 
 from audiozen.loss import SISNRLoss, freq_MAE, mag_MAE
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
-from audiozen.trainer.base_trainer_gan_accelerate import BaseTrainer
+from audiozen.trainer.base_trainer_gan_accelerate_ddp_validate import BaseTrainer
 
 logger = get_logger(__name__)
 
@@ -97,21 +98,38 @@ class Trainer(BaseTrainer):
                 )
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
-        noisy_y, clean_y, _ = batch
+        noisy_y, clean_y, filename = batch
         noisy_y = noisy_y.to(self.accelerator.device)
         clean_y = clean_y.to(self.accelerator.device)
 
         enhanced_y, *_ = self.model_g(noisy_y)
         return noisy_y, clean_y, enhanced_y
 
-    def compute_validation_metrics(self, dataloader_idx, step_out):
+    def compute_metrics(self, dataloader_idx, step_out):
         noisy, clean, enhanced = step_out
+
         si_sdr = self.si_sdr(enhanced, clean)
-        stoi = self.stoi(enhanced, clean)
-        pesq_wb = self.pesq_wb(enhanced, clean)
-        pesq_nb = self.pesq_nb(enhanced, clean)
+        # stoi = self.stoi(enhanced, clean)
+        # pesq_wb = self.pesq_wb(enhanced, clean)
+        # pesq_nb = self.pesq_nb(enhanced, clean)
         dns_mos = self.dns_mos(enhanced)
-        return stoi | pesq_wb | pesq_nb | si_sdr | dns_mos
+        return si_sdr | dns_mos
+
+    def compute_batch_metrics(self, dataloader_idx, step_out):
+        noisy, clean, enhanced = step_out
+        assert noisy.ndim == clean.ndim == enhanced.ndim == 2
+
+        # [num_ranks * batch_size, num_samples]
+        results = []
+        for i in range(noisy.shape[0]):
+            enhanced_i = enhanced[i, :]
+            clean_i = clean[i, :]
+            noisy_i = noisy[i, :]
+            results.append(
+                self.compute_metrics(dataloader_idx, (noisy_i, clean_i, enhanced_i))
+            )
+
+        return results
 
     def validation_epoch_end(self, outputs):
         score = 0.0
@@ -122,8 +140,8 @@ class Trainer(BaseTrainer):
             )
 
             rows = []
-            for step_out in dataloader_outputs:
-                rows.append(self.compute_validation_metrics(dataloader_idx, step_out))
+            for step_out in tqdm(dataloader_outputs):
+                rows += self.compute_batch_metrics(dataloader_idx, step_out)
 
             df_metrics = pd.DataFrame(rows)
 
@@ -140,3 +158,23 @@ class Trainer(BaseTrainer):
                 )
 
         return score
+
+    def test_step(self, batch, batch_idx, dataloader_idx=0):
+        return self.validation_step(batch, batch_idx, dataloader_idx)
+
+    def test_epoch_end(self, outputs):
+        for dataloader_idx, dataloader_outputs in enumerate(outputs):
+            logger.info(
+                f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}..."
+            )
+
+            rows = []
+            for step_out in tqdm(dataloader_outputs):
+                rows += self.compute_batch_metrics(dataloader_idx, step_out)
+
+            df_metrics = pd.DataFrame(rows)
+
+            df_metrics_mean = df_metrics.mean(numeric_only=True)
+            df_metrics_mean_df = df_metrics_mean.to_frame().T
+
+            logger.info(f"\n{df_metrics_mean_df.to_markdown()}")
