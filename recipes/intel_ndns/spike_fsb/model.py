@@ -1,12 +1,48 @@
+from functools import partial
+
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from einops import rearrange
+from torch import Tensor, nn
 from torch.nn import functional
 
 EPSILON = np.finfo(np.float32).eps
 
+
+# from audiozen.models.module.custom_lstm import LSTMState, script_lnlstm, script_lstm, flatten_states, script_stacked_rnn
 from efficient_spiking_neuron import LSTMState, efficient_spiking_neuron
+from neuron import LIFNode, MemoryModule, Triangle
+
+
+def deepfiltering(complex_spec, coefs, frame_size: int):
+    """Deep filtering implementation using `torch.einsum`. Requires unfolded spectrogram.
+
+    Args:
+        spec (complex Tensor): Spectrogram of shape [B, C, F, T, 2]
+        coefs (complex Tensor): Coefficients of shape [B, C * frame_size, F, T, 2]
+
+    Returns:
+        spec (complex Tensor): Spectrogram of shape [B, C, F, T]
+    """
+    need_unfold = frame_size > 1
+
+    if need_unfold:
+        complex_spec = F.pad(complex_spec, (frame_size - 1, 0))
+        complex_spec = complex_spec.unfold(3, frame_size, 1)  # [B, C, F, T, df]
+    else:
+        complex_spec = complex_spec.unsqueeze(-1)  # [B, C, F, T, 1]
+
+    complex_coefs = torch.complex(coefs[..., 0], coefs[..., 1])  # [B, C, F, T]
+    complex_coefs = rearrange(
+        complex_coefs, "b (c df) f t -> b c df f t", df=frame_size
+    )
+
+    # df
+    out = torch.einsum("...ftn,...nft->...ft", complex_spec, complex_coefs)
+
+    return out
 
 
 class SequenceModel(nn.Module):
@@ -23,7 +59,7 @@ class SequenceModel(nn.Module):
         mogrify_steps=5,
         dropout=0.0,
         shared_weights=False,
-        bn=False
+        bn=False,
     ):
         super().__init__()
         if sequence_model == "LSTM":
@@ -42,13 +78,84 @@ class SequenceModel(nn.Module):
                 bidirectional=bidirectional,
                 dropout=dropout,
             )
-        elif sequence_model == "ESN":
-            self.sequence_model = efficient_spiking_neuron(input_size=input_size,
-                                                           hidden_size=hidden_size,
-                                                           num_layers=num_layers,
-                                                           shared_weights=shared_weights,
-                                                           bn=bn
-                                                           )
+        elif sequence_model == "S4":
+            raise NotImplementedError("S4 is not implemented yet.")
+            # from s4d import S4Model
+
+            # self.sequence_model = S4Model(
+            #     d_input=input_size,
+            #     d_output=output_size,
+            #     d_model=hidden_size,
+            #     n_layers=num_layers,
+            # )
+        elif sequence_model == "LIF":
+            self.sequence_model = LIFModel(
+                input_size=input_size,
+                hidden_size=hidden_size,
+                output_size=output_size,
+            )
+            bidirectional = False
+            # self.sequence_model = nn.GRU(
+            #     input_size=input_size,
+            #     hidden_size=hidden_size,
+            #     num_layers=num_layers,
+            #     bidirectional=bidirectional,
+            #     dropout=dropout,
+            # )
+        elif sequence_model == "SigmaDelta":
+            from lava.lib.dl import slayer
+
+            threshold = 0.1
+            tau_grad = 0.1
+            scale_grad = 0.8
+            max_delay = 64
+            out_delay = 0
+            sigma_params = {  # sigma-delta neuron parameters
+                "threshold": threshold,  # delta unit threshold
+                "tau_grad": tau_grad,  # delta unit surrogate gradient relaxation parameter
+                "scale_grad": scale_grad,  # delta unit surrogate gradient scale parameter
+                "requires_grad": False,  # trainable threshold
+                "shared_param": True,  # layer wise threshold
+            }
+            sdnn_params = {
+                **sigma_params,
+                "activation": F.relu,  # activation function
+            }
+            # self.input_quantizer = lambda x: slayer.utils.quantize(x, step=1 / 64)
+            self.sequence_model = torch.nn.Sequential(
+                slayer.block.sigma_delta.Input(sdnn_params),
+                slayer.block.sigma_delta.Dense(
+                    sdnn_params,
+                    input_size,
+                    hidden_size,
+                    weight_norm=False,
+                    delay=True,
+                    delay_shift=True,
+                ),
+                slayer.block.sigma_delta.Dense(
+                    sdnn_params,
+                    hidden_size,
+                    hidden_size,
+                    weight_norm=False,
+                    delay=True,
+                    delay_shift=True,
+                ),
+                slayer.block.sigma_delta.Output(
+                    sdnn_params, hidden_size, output_size, weight_norm=False
+                ),
+            )
+            # self.blocks[0].pre_hook_fx = self.input_quantizer
+            self.sequence_model[1].delay.max_delay = max_delay
+            self.sequence_model[2].delay.max_delay = max_delay
+        elif sequence_model == "GSU":
+            # print(f"input_size: {input_size}, hidden_size: {hidden_size}, num_layers: {num_layers}, output_size: {output_size}")
+            self.sequence_model = efficient_spiking_neuron(
+                input_size=input_size,
+                hidden_size=hidden_size,
+                num_layers=num_layers,
+                shared_weights=shared_weights,
+                bn=bn,
+            )
         else:
             raise NotImplementedError(f"Not implemented {sequence_model}")
 
@@ -102,25 +209,88 @@ class SequenceModel(nn.Module):
                 )
                 for _ in range(self.num_layers)
             ]
-        elif self.sequence_model_name == "ESN":
+        elif self.sequence_model_name == "GSU":
             states = [
-                LSTMState(torch.zeros(batch_size, self.hidden_size, device=x.device),
-                          torch.zeros(batch_size, self.hidden_size, device=x.device))
+                LSTMState(
+                    torch.zeros(batch_size, self.hidden_size, device=x.device),
+                    torch.zeros(batch_size, self.hidden_size, device=x.device),
+                )
                 for _ in range(self.num_layers)
             ]
         else:
             states = None
 
         x = x.permute(2, 0, 1).contiguous()  # [B, F, T] => [T, B, F]
-        o, _ = self.sequence_model(x, states)  # [T, B, F] => [T, B, F]
+        if (
+            self.sequence_model_name == "LSTM"
+            or self.sequence_model_name == "GRU"
+            or self.sequence_model_name == "GSU"
+        ):
+            assert self.sequence_model_name == "GSU"
+            if self.sequence_model_name == "GSU":
+                o, _, all_layer_outputs = self.sequence_model(x, states)
+            else:
+                o, _ = self.sequence_model(x, states)  # [T, B, F] => [T, B, F]
+            if self.output_size:
+                o = self.fc_output_layer(o)  # [T, B, F] => [T, B, F]
+                all_layer_outputs += [o]
+            if self.output_activate_function:
+                o = self.activate_function(o)
+        elif self.sequence_model_name == "LIF":
+            o = self.sequence_model(x)
 
-        if self.output_size:
-            o = self.fc_output_layer(o)  # [T, B, F] => [T, B, F]
+        return (
+            o.permute(1, 2, 0).contiguous(),
+            all_layer_outputs,
+        )  # [T, B, F] => [B, F, T]
 
-        if self.output_activate_function:
-            o = self.activate_function(o)
 
-        return o.permute(1, 2, 0).contiguous()  # [T, B, F] => [B, F, T]
+class LIFModel(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(LIFModel, self).__init__()
+        spk_params = {
+            "tau": 40,
+            "v_threshold": 1.0,
+            "surrogate_function": Triangle.apply,
+            "hard_reset": False,
+            "detach_reset": False,
+        }
+
+        spiking_neuron = partial(
+            LIFNode,
+            tau=spk_params["tau"],
+            v_threshold=spk_params["v_threshold"],
+            surrogate_function=nn.ReLU(),
+            hard_reset=spk_params["hard_reset"],
+            detach_reset=spk_params["detach_reset"],
+        )
+
+        self.fc = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.BatchNorm1d(hidden_size),
+            spiking_neuron(),
+            nn.Linear(hidden_size, hidden_size),
+            nn.BatchNorm1d(hidden_size),
+            spiking_neuron(),
+            nn.Linear(hidden_size, output_size),
+        )
+
+    def forward(self, x):
+        self.reset_states()
+        output_mem = []
+        for step in range(x.size(0)):
+            output_mem.append(self.fc(x[step]))
+        x = torch.stack(output_mem, dim=0)
+        return x
+
+    def reset_states(self):
+        for m in self.modules():
+            if hasattr(m, "reset"):
+                if not isinstance(m, MemoryModule):
+                    print(
+                        f"Trying to call `reset()` of {m}, which is not base.MemoryModule"
+                    )
+                m.reset()
 
 
 class BaseModel(nn.Module):
@@ -219,10 +389,20 @@ class BaseModel(nn.Module):
 
 
 class SubBandSequenceWrapper(SequenceModel):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, df_order, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.df_order = df_order
 
     def forward(self, subband_input):
+        """Forward pass.
+
+        Args:
+            subband_input: the input of shape [B, N, C, F_subband, T]
+
+        Returns:
+            output: the output of shape [B, df_order, N * F_subband_out, T, 2]
+        """
+
         (
             batch_size,
             num_subband_units,
@@ -232,21 +412,38 @@ class SubBandSequenceWrapper(SequenceModel):
         ) = subband_input.shape
         assert num_channels == 1
 
-        output = subband_input.reshape(
-            batch_size * num_subband_units, num_subband_freqs, num_frames
+        output = rearrange(subband_input, "b n c fs t -> (b n) (c fs) t")
+        output, all_layer_outputs = super().forward(output)
+        output = rearrange(
+            output,
+            "(b n) (c fc df) t -> b df (n fc) t c",
+            b=batch_size,
+            c=num_channels * 2,
+            df=self.df_order,
         )
-        output = super().forward(output)
 
-        # [B, N, C, 2, center, T]
-        output = output.reshape(batch_size, num_subband_units, 2, -1, num_frames)
+        # e.g., [B, 3, 20, T, 2]
 
-        # [B, 2, N, center, T]
-        output = output.permute(0, 2, 1, 3, 4).contiguous()
+        return output, all_layer_outputs
 
-        # [B, C, N * F_subband_out, T]
-        output = output.reshape(batch_size, 2, -1, num_frames)
+        # for deep filter
+        # [B, df_order, F, T, C]
 
-        return output
+        # output = subband_input.reshape(
+        #     batch_size * num_subband_units, num_subband_freqs, num_frames
+        # )
+        # output = super().forward(output)
+
+        # # [B, N, C, 2, center, T]
+        # output = output.reshape(batch_size, num_subband_units, 2, -1, num_frames)
+
+        # # [B, 2, N, center, T]
+        # output = output.permute(0, 2, 1, 3, 4).contiguous()
+
+        # # [B, C, N * F_subband_out, T]
+        # output = output.reshape(batch_size, 2, -1, num_frames)
+
+        # return output
 
 
 class SubbandModel(BaseModel):
@@ -257,12 +454,13 @@ class SubbandModel(BaseModel):
         sb_num_neighbor_freqs,
         fb_num_center_freqs,
         fb_num_neighbor_freqs,
+        sb_df_orders,
         sequence_model,
         hidden_size,
         activate_function=False,
         norm_type="offline_laplace_norm",
         shared_weights=False,
-        bn=False
+        bn=False,
     ):
         super().__init__()
 
@@ -272,24 +470,27 @@ class SubbandModel(BaseModel):
             sb_num_neighbor_freq,
             fb_num_center_freq,
             fb_num_neighbor_freq,
+            df_order,
         ) in zip(
             sb_num_center_freqs,
             sb_num_neighbor_freqs,
             fb_num_center_freqs,
             fb_num_neighbor_freqs,
+            sb_df_orders,
         ):
             sb_models.append(
                 SubBandSequenceWrapper(
+                    df_order=df_order,
                     input_size=(sb_num_center_freq + sb_num_neighbor_freq * 2)
                     + (fb_num_center_freq + fb_num_neighbor_freq * 2),
-                    output_size=sb_num_center_freq * 2,
+                    output_size=sb_num_center_freq * 2 * df_order,
                     hidden_size=hidden_size,
                     num_layers=2,
                     sequence_model=sequence_model,
                     bidirectional=False,
                     output_activate_function=activate_function,
                     shared_weights=shared_weights,
-                    bn=bn
+                    bn=bn,
                 )
             )
 
@@ -332,7 +533,7 @@ class SubbandModel(BaseModel):
             raise ValueError(
                 f"The number of center frequencies should be divisible by the subband freqency interval. "
                 f"Got {num_center_freqs=}, {upper_cutoff_freq=}, and {lower_cutoff_freq=}. "
-                f"The subband freqency interval is {upper_cutoff_freq-lower_cutoff_freq}."
+                f"The subband freqency interval is {upper_cutoff_freq - lower_cutoff_freq}."
             )
 
         # extract valid input with the shape of [batch_size, 1, num_freqs, num_frames]
@@ -399,6 +600,7 @@ class SubbandModel(BaseModel):
         assert num_channels == 1, "Only mono audio is supported."
 
         subband_output = []
+        subband_all_layer_outputs = []
         for sb_idx, sb_model in enumerate(self.sb_models):
             if sb_idx == 0:
                 lower_cutoff_freq = 0
@@ -431,12 +633,13 @@ class SubbandModel(BaseModel):
 
             sb_model_input = torch.cat([noisy_subband, fb_subband], dim=-2)
             sb_model_input = self.norm(sb_model_input)
-            subband_output.append(sb_model(sb_model_input))
+            sb_model_output, sb_all_layer_outputs = sb_model(sb_model_input)
+            subband_output.append(sb_model_output)
+            subband_all_layer_outputs.append(sb_all_layer_outputs)
 
         # [B, C, F, T]
-        output = torch.cat(subband_output, dim=-2)
-
-        return output
+        # output = torch.cat(subband_output, dim=-2)
+        return subband_output, subband_all_layer_outputs
 
 
 class Separator(BaseModel):
@@ -464,18 +667,21 @@ class Separator(BaseModel):
         fb_num_neighbor_freqs,
         fb_hidden_size,
         sb_hidden_size,
+        sb_df_orders,
         sequence_model,
         fb_output_activate_function,
         sb_output_activate_function,
         norm_type,
         shared_weights=False,
-        bn=False
+        bn=False,
     ):
         super().__init__()
         self.n_fft = n_fft
         self.hop_length = hop_length
         self.win_length = win_length
         self.fdrc = fdrc
+        self.freq_cutoffs = freq_cutoffs
+        self.sb_df_orders = sb_df_orders
 
         self.fb_model = SequenceModel(
             input_size=num_freqs,
@@ -486,7 +692,7 @@ class Separator(BaseModel):
             sequence_model=sequence_model,
             output_activate_function=fb_output_activate_function,
             shared_weights=shared_weights,
-            bn=bn
+            bn=bn,
         )
 
         self.sb_model = SubbandModel(
@@ -495,11 +701,12 @@ class Separator(BaseModel):
             sb_num_neighbor_freqs=sb_num_neighbor_freqs,
             fb_num_center_freqs=fb_num_center_freqs,
             fb_num_neighbor_freqs=fb_num_neighbor_freqs,
+            sb_df_orders=sb_df_orders,
             hidden_size=sb_hidden_size,
             sequence_model=sequence_model,
             activate_function=sb_output_activate_function,
             shared_weights=shared_weights,
-            bn=bn
+            bn=bn,
         )
 
         self.norm = self.norm_wrapper(norm_type)
@@ -520,41 +727,56 @@ class Separator(BaseModel):
             window=torch.hann_window(self.win_length, device=y.device),
             return_complex=True,
         )  # [B, F, T]
-        # print(f"complex_stft {complex_stft.size()}") # 5, 257, 3751
-        complex_stft_view_real = torch.view_as_real(complex_stft)  # [B, F, T, 2]
-        # print(f"complex_stft_view_real {complex_stft_view_real.size()}")
-        noisy_mag = torch.abs(complex_stft.unsqueeze(1))  # [B, 1, F, T]
-        # print(f"noisy_mag {noisy_mag.size()}")
+        complex_stft = complex_stft.unsqueeze(1)
+
+        noisy_mag = torch.abs(complex_stft)  # [B, 1, F, T]
 
         # ================== Fullband ==================
         noisy_mag = noisy_mag**self.fdrc  # fdrc
-        noisy_mag = noisy_mag[..., :-1, :]  # [B, 1, F, T] # 为什么不要最后一个
+        noisy_mag = noisy_mag[..., :-1, :]  # [B, 1, F, T]
         fb_input = rearrange(self.norm(noisy_mag), "b c f t -> b (c f) t")
-        fb_output = self.fb_model(fb_input)  # [B, F, T]
+        fb_output, fb_all_layer_outputs = self.fb_model(fb_input)  # [B, F, T]
         fb_output = rearrange(fb_output, "b f t -> b 1 f t")
 
         # ================== Subband ==================
-        cRM = self.sb_model(noisy_mag, fb_output)  # [B, 2, F, T]
-        cRM = functional.pad(cRM, (0, 0, 0, 1), mode="constant", value=0.0)
+        # list [[B, df, F_1, T, 2], [B, df, F_2, T, 2], ...]
+        df_coefs_list, sb_all_layer_outputs = self.sb_model(noisy_mag, fb_output)
 
-        # ================== Masking ==================
-        complex_stft_view_real = rearrange(complex_stft_view_real, "b f t c -> b c f t")
-        enhanced_spec = cRM * complex_stft_view_real  # [B, 2, F, T]
+        # ================== Iterative Masking ==================
+        num_filtered = 0
+        enhanced_spec_list = []
+        for df_coefs, df_order in zip(df_coefs_list, self.sb_df_orders):
+            # [B, C, F , T] = [B, C, F, ]
+            num_sub_freqs = df_coefs.shape[2]
+            complex_stft_in = complex_stft[
+                ..., num_filtered : num_filtered + num_sub_freqs, :
+            ]
+            enhanced_subband = deepfiltering(
+                complex_stft_in, df_coefs, frame_size=df_order
+            )  # [B, 1, F, T] of complex
+            enhanced_spec_list.append(enhanced_subband)
+            num_filtered += num_sub_freqs
 
-        # ================== ISTFT ==================
-        enhanced_complex = torch.complex(
-            enhanced_spec[:, 0, ...], enhanced_spec[:, 1, ...]
-        )
+        # [B, C, F, T]
+        enhanced_spec = torch.cat(enhanced_spec_list, dim=-2)
+
+        enhanced_stft = complex_stft.clone()  # [B, C, F， T]
+
+        enhanced_stft[..., :-1, :] = enhanced_spec
+        enhanced_stft = enhanced_stft.squeeze(1)  # [B, F, T]
+
+        # Magnitude
+        enhanced_mag = torch.abs(enhanced_stft)  # [B, F, T]
+
         enhanced_y = torch.istft(
-            enhanced_complex,
+            enhanced_stft,
             n_fft=self.n_fft,
             hop_length=self.hop_length,
             win_length=self.win_length,
             window=torch.hann_window(self.win_length, device=y.device),
             length=y.size(-1),
         )
-        enhanced_y = enhanced_y.unsqueeze(1)  # [B, 1, T]
-        return enhanced_y
+        return enhanced_y, enhanced_mag, fb_all_layer_outputs, sb_all_layer_outputs
 
 
 if __name__ == "__main__":
@@ -564,21 +786,33 @@ if __name__ == "__main__":
         sr=16000,
         fdrc=0.5,
         n_fft=512,
+        sb_df_orders=[5, 3, 1, 1],
         hop_length=256,
         win_length=512,
         num_freqs=256,
-        sequence_model="LSTM",
-        fb_hidden_size=512,
+        sequence_model="GSU",
+        fb_hidden_size=320,
         fb_output_activate_function=False,
-        freq_cutoffs=[20, 80],
-        sb_num_center_freqs=[1, 2, 4],
-        sb_num_neighbor_freqs=[15, 15, 15],
-        fb_num_center_freqs=[1, 2, 4],
-        fb_num_neighbor_freqs=[0, 0, 0],
-        sb_hidden_size=384,
+        freq_cutoffs=[32, 128, 192],
+        sb_num_center_freqs=[4, 32, 64, 64],
+        sb_num_neighbor_freqs=[15, 15, 15, 15],
+        fb_num_center_freqs=[4, 32, 64, 64],
+        fb_num_neighbor_freqs=[0, 0, 0, 0],
+        sb_hidden_size=160,
         sb_output_activate_function=False,
         norm_type="offline_laplace_norm",
+        shared_weights=True,
+        bn=True,
     )
-    noisy_y = torch.rand(1, 16400)
-    print(model(noisy_y).shape)
-    summary(model, input_data=(noisy_y,), device="cpu")
+    noisy_y = torch.rand(5, 16400)
+    enhanced, enhanced_mag, fb_all_layer_outputs, sb_all_layer_outputs = model(noisy_y)
+    print(enhanced.shape, enhanced_mag.shape)
+    # for i in range(len(fb_all_layer_outputs)):
+    #     print(fb_all_layer_outputs[i].size())
+    # for i in range(len(sb_all_layer_outputs)):
+    #     print(i)
+    #     for j in range(len(sb_all_layer_outputs[i])):
+    #         print(sb_all_layer_outputs[i][j].size())
+    # print(fb_all_layer_outputs)
+    # print(model(noisy_y).shape)
+    # summary(model, input_data=(noisy_y,), device="cpu")

@@ -7,13 +7,14 @@ from torch.nn import Parameter
 
 LSTMState = namedtuple("LSTMState", ["hx", "cx"])
 
+
 def efficient_spiking_neuron(
-        input_size,
-        hidden_size,
-        num_layers,
-        shared_weights=False,
-        bn=False,
-        batch_first=False,
+    input_size,
+    hidden_size,
+    num_layers,
+    shared_weights=False,
+    bn=False,
+    batch_first=False,
 ):
     """
     Instantiate efficient spiking networks where each spiking neuron uses the gating mechanism to control the decay of membrane potential.
@@ -36,6 +37,7 @@ def efficient_spiking_neuron(
         first_layer_args=[LSTMCell, input_size, hidden_size, shared_weights, bn],
         other_layer_args=[LSTMCell, hidden_size, hidden_size, shared_weights, bn],
     )
+
 
 class StackedLSTM(nn.Module):
     # __constants__ = ["layers"]  # Necessary for iterating through self.layers
@@ -60,11 +62,13 @@ class StackedLSTM(nn.Module):
             i += 1
         return output, output_states, all_layer_output
 
+
 def init_stacked_lstm(num_layers, layer, first_layer_args, other_layer_args):
     layers = [layer(*first_layer_args)] + [
         layer(*other_layer_args) for _ in range(num_layers - 1)
     ]
     return nn.ModuleList(layers)
+
 
 class LSTMLayer(nn.Module):
     def __init__(self, cell, *cell_args):
@@ -79,12 +83,13 @@ class LSTMLayer(nn.Module):
             outputs += [out]
         return torch.stack(outputs), state
 
+
 class Triangle(torch.autograd.Function):
     """Spike firing activation function"""
 
     @staticmethod
     def forward(ctx, input, gamma=1.0):
-        out = input.ge(0.).float()
+        out = input.ge(0.0).float()
         L = torch.tensor([gamma])
         ctx.save_for_backward(input, out, L)
         return out
@@ -97,6 +102,7 @@ class Triangle(torch.autograd.Function):
         tmp = (1 / gamma) * (1 / gamma) * ((gamma - input.abs()).clamp(min=0))
         grad_input = grad_input * tmp
         return grad_input, None
+
 
 class LSTMCell(nn.Module):
     def __init__(self, input_size, hidden_size, shared_weights=False, bn=False):
@@ -126,7 +132,6 @@ class LSTMCell(nn.Module):
         for weight in self.parameters():
             torch.nn.init.uniform_(weight, -stdv, stdv)
 
-
     def forward(self, input, state):
         hx, cx = state
         if self.shared_weights:
@@ -136,19 +141,22 @@ class LSTMCell(nn.Module):
             weight_ih = self.weight_ih
             weight_hh = self.weight_hh
         gates = (
-                torch.mm(input, weight_ih.t())
-                + self.bias_ih
-                + torch.mm(hx, weight_hh.t())
-                # + self.bias_hh
+            torch.mm(input, weight_ih.t())
+            + self.bias_ih
+            + torch.mm(hx, weight_hh.t())
+            # + self.bias_hh
         )
         forgetgate, cellgate = gates.chunk(2, 1)
         forgetgate = torch.sigmoid(forgetgate)
         cy = forgetgate * cx + (1 - forgetgate) * cellgate
         if self.use_bn:
             cy = self.batchnorm(cy)
-        hy = Triangle.apply(cy) # replace the Tanh activation function with step function to ensure binary outputs.
+        hy = Triangle.apply(
+            cy
+        )  # replace the Tanh activation function with step function to ensure binary outputs.
 
         return hy, (hy, cy)
+
 
 if __name__ == "__main__":
     input_size = 256
@@ -158,17 +166,20 @@ if __name__ == "__main__":
     bn = True
     batch_size = 128
     T = 100
-    x = torch.rand((batch_size, input_size, T)) # [B, F, T]
-    sequence_model = efficient_spiking_neuron(input_size=input_size,
-                                                   hidden_size=hidden_size,
-                                                   num_layers=num_layers,
-                                                   shared_weights=shared_weights,
-                                                   bn=bn
-                                                   )
+    x = torch.rand((batch_size, input_size, T))  # [B, F, T]
+    sequence_model = efficient_spiking_neuron(
+        input_size=input_size,
+        hidden_size=hidden_size,
+        num_layers=num_layers,
+        shared_weights=shared_weights,
+        bn=bn,
+    )
 
     states = [
-        LSTMState(torch.zeros(batch_size, hidden_size, device=x.device),
-                  torch.zeros(batch_size, hidden_size, device=x.device))
+        LSTMState(
+            torch.zeros(batch_size, hidden_size, device=x.device),
+            torch.zeros(batch_size, hidden_size, device=x.device),
+        )
         for _ in range(num_layers)
     ]
     x = x.permute(2, 0, 1).contiguous()  # [B, F, T] => [T, B, F]
