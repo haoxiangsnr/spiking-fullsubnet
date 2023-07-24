@@ -1,4 +1,3 @@
-import glob
 import os
 import random
 import re
@@ -7,9 +6,7 @@ from pathlib import Path
 import librosa
 import numpy as np
 import soundfile as sf
-from torch.utils.data import Dataset
 
-from audiozen.acoustics.audio_feature import subsample
 from audiozen.dataset.base_dataset import BaseDataset
 
 
@@ -22,10 +19,12 @@ class DNSAudio(BaseDataset):
         """
         super().__init__()
         self.root_dir = Path(root_dir).expanduser().absolute()
-        self.noisy_files = librosa.util.find_files(
-            (self.root_dir / "noisy").as_posix(), ext="wav"
-        )
-        print(f"Found {len(self.noisy_files)} files in {root_dir}noisy")
+        self.noisy_dir = self.root_dir / "noisy"
+        self.clean_dir = self.root_dir / "clean"
+
+        # Find all the noisy files
+        self.noisy_files = librosa.util.find_files(self.noisy_dir.as_posix(), ext="wav")
+        print(f"Found {len(self.noisy_files)} files in {root_dir}")
 
         if offset > 0:
             self.noisy_files = self.noisy_files[offset:]
@@ -46,50 +45,69 @@ class DNSAudio(BaseDataset):
     def _find_clean_fpath(self, noisy_fpath):
         filename = noisy_fpath.split(os.sep)[-1]
         file_id = int(self.file_id_from_name.findall(filename)[0])
-        clean_fpath = (
-            self.root_dir / "clean" / f"clean_fileid_{file_id}.wav"
-        ).as_posix()
-
+        clean_fpath = self.clean_dir / f"clean_fileid_{file_id}.wav"
         return clean_fpath
 
     @staticmethod
     def _load_wav_offset(
-        path, duration=None, sr=None, mode="wrap", offset=None, return_offset=False
+        path,
+        duration=None,
+        sr=None,
+        mode="constant",
+        offset=None,
+        return_offset=False,
     ):
+        """Loads a wav file and returns a numpy array.
+
+        Args:
+            path: a string or a Path object.
+            duration: seconds to load. If None, load the entire file.
+            sr: sample rate. If None, use the original sample rate.
+            mode: _description_. Defaults to "constant".
+            offset: only works when duration is not None.
+            return_offset: _description_. Defaults to False.
+
+        Returns:
+            _description_
+        """
         if isinstance(path, Path):
             path = path.as_posix()
 
-        offset = 0
         with sf.SoundFile(path) as sf_desc:
             orig_sr = sf_desc.samplerate
 
-            if duration is not None:
+            if duration is None:
+                # Load the entire file with no slicing and padding
+                y = sf_desc.read(dtype=np.float32, always_2d=True).T
+            else:
+                # Load a segment of the file with slicing or padding
                 frame_orig_duration = sf_desc.frames
                 frame_duration = int(duration * orig_sr)
+
+                # If the desired duration is shorter than the original duration, we need to slice
                 if frame_duration < frame_orig_duration:
-                    # Randomly select a segment
                     if offset is None:
                         offset = np.random.randint(frame_orig_duration - frame_duration)
 
                     sf_desc.seek(offset)
+
                     y = sf_desc.read(
                         frames=frame_duration, dtype=np.float32, always_2d=True
                     ).T
+                # If the desired duration is longer than the original duration, we need to pad
                 else:
                     y = sf_desc.read(dtype=np.float32, always_2d=True).T  # [C, T]
                     y = np.pad(
                         y, ((0, 0), (0, frame_duration - frame_orig_duration)), mode
                     )
-            else:
-                y = sf_desc.read(dtype=np.float32, always_2d=True).T
 
         if y.shape[0] == 1:
             y = y[0]
 
-        if sr is not None:
-            y = librosa.resample(y, orig_sr=orig_sr, target_sr=sr)
-        else:
+        if sr is None:
             sr = orig_sr
+        else:
+            y = librosa.resample(y, orig_sr=orig_sr, target_sr=sr)
 
         if return_offset:
             return y, sr, offset
@@ -107,6 +125,7 @@ class DNSAudio(BaseDataset):
         """
         noisy_fpath = random.choice(self.noisy_files)
         clean_fpath = self._find_clean_fpath(noisy_fpath)
+        sr = 16000
 
         if self.sub_sample_len > 0:
             # Use `offset` and `duration` arguments
@@ -116,7 +135,7 @@ class DNSAudio(BaseDataset):
             noisy_y, _, offset = self._load_wav_offset(
                 noisy_fpath,
                 duration=self.sub_sample_len,
-                sr=16000,
+                sr=sr,
                 offset=None,
                 return_offset=True,
                 mode="constant",  # very few are shorter than 30s
@@ -124,7 +143,7 @@ class DNSAudio(BaseDataset):
             clean_y, _, _ = self._load_wav_offset(
                 clean_fpath,
                 duration=self.sub_sample_len,
-                sr=16000,
+                sr=sr,
                 offset=offset,
                 mode="constant",
                 return_offset=True,
@@ -135,18 +154,18 @@ class DNSAudio(BaseDataset):
             # Some files are shorter than 30s, so we pad them with zeros
             noisy_y, _ = self._load_wav_offset(
                 noisy_fpath,
-                sr=16000,
+                sr=sr,
                 duration=30,
                 mode="constant",
             )
             clean_y, _ = self._load_wav_offset(
                 clean_fpath,
-                sr=16000,
+                sr=sr,
                 duration=30,
                 mode="constant",
             )
 
-        return noisy_y, clean_y
+        return noisy_y, clean_y, "placeholder"
 
 
 if __name__ == "__main__":
