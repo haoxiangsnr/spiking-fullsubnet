@@ -280,7 +280,7 @@ class BaseTrainer:
                 if self.accelerator.is_local_main_process:
                     bar_desc = ""
                     for k, v in loss_dict.items():
-                        bar_desc += f"{k}: {v.item():.4f}, "
+                        bar_desc += f"{k}: {v:.4f}, "
                     bar_desc += f"lr_g: {self.lr_scheduler_g.get_last_lr()[-1]:.6f}, "
                     bar_desc += f"lr_d: {self.lr_scheduler_d.get_last_lr()[-1]:.6f}"
                     dataloader_bar.set_description(bar_desc)
@@ -289,7 +289,7 @@ class BaseTrainer:
                     for key, value in loss_dict.items():
                         self.writer.add_scalar(
                             f"Train_Step/{key}",
-                            value.item(),
+                            value,
                             (epoch - 1) * len(train_dataloader) + batch_idx,
                         )
 

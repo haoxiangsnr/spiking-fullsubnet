@@ -128,46 +128,43 @@ class DNSAudio(BaseDataset):
         clean_fpath = self._find_clean_fpath(noisy_fpath)
         sr = 16000
 
-        # if self.sub_sample_len > 0:
-        #     # Use `offset` and `duration` arguments
-        #     # For the training set, we want to load a segment with a fixed length
-        #     # We also want to load the same start position for the clean and noisy files
-        #     # Here we use the offset returned by the noisy file to load the clean file
-        #     noisy_y, _, offset = self._load_wav_offset(
-        #         noisy_fpath,
-        #         duration=self.sub_sample_len,
-        #         sr=sr,
-        #         offset=None,
-        #         return_offset=True,
-        #         mode="constant",  # very few are shorter than 30s
-        #     )
-        #     clean_y, _, _ = self._load_wav_offset(
-        #         clean_fpath,
-        #         duration=self.sub_sample_len,
-        #         sr=sr,
-        #         offset=offset,
-        #         mode="constant",
-        #         return_offset=True,
-        #     )
-        # else:
-        #     # Only use `duration` argument
-        #     # For the validation set, we want to load the entire file
-        #     # Some files are shorter than 30s, so we pad them with zeros
-        #     noisy_y, _ = self._load_wav_offset(
-        #         noisy_fpath,
-        #         sr=sr,
-        #         duration=30,
-        #         mode="constant",
-        #     )
-        #     clean_y, _ = self._load_wav_offset(
-        #         clean_fpath,
-        #         sr=sr,
-        #         duration=30,
-        #         mode="constant",
-        #     )
-
-        noisy_y = np.random.rand(16000 * 6).astype(np.float32)
-        clean_y = np.random.rand(16000 * 6).astype(np.float32)
+        if self.sub_sample_len > 0:
+            # Use `offset` and `duration` arguments
+            # For the training set, we want to load a segment with a fixed length
+            # We also want to load the same start position for the clean and noisy files
+            # Here we use the offset returned by the noisy file to load the clean file
+            noisy_y, _, offset = self._load_wav_offset(
+                noisy_fpath,
+                duration=self.sub_sample_len,
+                sr=sr,
+                offset=None,
+                return_offset=True,
+                mode="constant",  # very few are shorter than 30s
+            )
+            clean_y, _, _ = self._load_wav_offset(
+                clean_fpath,
+                duration=self.sub_sample_len,
+                sr=sr,
+                offset=offset,
+                mode="constant",
+                return_offset=True,
+            )
+        else:
+            # Only use `duration` argument
+            # For the validation set, we want to load the entire file
+            # Some files are shorter than 30s, so we pad them with zeros
+            noisy_y, _ = self._load_wav_offset(
+                noisy_fpath,
+                sr=sr,
+                duration=30,
+                mode="constant",
+            )
+            clean_y, _ = self._load_wav_offset(
+                clean_fpath,
+                sr=sr,
+                duration=30,
+                mode="constant",
+            )
 
         return noisy_y, clean_y, "placeholder"
 

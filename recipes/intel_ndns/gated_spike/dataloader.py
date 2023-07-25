@@ -5,12 +5,11 @@ import re
 import numpy as np
 import soundfile as sf
 from torch.utils.data import Dataset
-
 from audiozen.acoustics.audio_feature import subsample
 
 
 class DNSAudio(Dataset):
-    def __init__(self, root="./", limit=None, offset=0, sublen=6, train=True) -> None:
+    def __init__(self, root="./", limit=None, offset=0, train=False) -> None:
         """Audio dataset loader for DNS.
 
         Args:
@@ -19,6 +18,7 @@ class DNSAudio(Dataset):
         super().__init__()
         self.root = root
         print(f"Loading dataset from {root}...")
+        print(f"train: {train}")
         self.noisy_files = glob.glob(root + "noisy/**.wav")
 
         if offset > 0:
@@ -33,15 +33,9 @@ class DNSAudio(Dataset):
         self.source_info_from_name = re.compile("^(.*?)_snr")
 
         self.train = train
-        self.sublen = sublen
-        self.length = len(self.noisy_files)
-
-    def __len__(self) -> int:
-        """Length of the dataset."""
-        return self.length
 
     def _get_filenames(self, n):
-        noisy_file = self.noisy_files[n % self.length]
+        noisy_file = self.noisy_files[n % self.__len__()]
         filename = noisy_file.split(os.sep)[-1]
         file_id = int(self.file_id_from_name.findall(filename)[0])
         clean_file = self.root + f"clean/clean_fileid_{file_id}.wav"
@@ -68,8 +62,9 @@ class DNSAudio(Dataset):
         noisy_file, clean_file, noise_file, metadata = self._get_filenames(n)
         noisy_audio, sampling_frequency = sf.read(noisy_file)
         clean_audio, _ = sf.read(clean_file)
+        noise_audio, _ = sf.read(noise_file)
         num_samples = 30 * sampling_frequency  # 30 sec data
-        train_num_samples = self.sublen * sampling_frequency
+        train_num_samples = 6 * sampling_frequency
         metadata["fs"] = sampling_frequency
 
         if len(noisy_audio) > num_samples:
@@ -84,23 +79,26 @@ class DNSAudio(Dataset):
             clean_audio = np.concatenate(
                 [clean_audio, np.zeros(num_samples - len(clean_audio))]
             )
+        if len(noise_audio) > num_samples:
+            noise_audio = noise_audio[:num_samples]
+        else:
+            noise_audio = np.concatenate(
+                [noise_audio, np.zeros(num_samples - len(noise_audio))]
+            )
 
         noisy_audio = noisy_audio.astype(np.float32)
         clean_audio = clean_audio.astype(np.float32)
+        noise_audio = noise_audio.astype(np.float32)
 
         if self.train:
-            noisy_audio, start_position = subsample(
-                noisy_audio,
-                sub_sample_length=train_num_samples,
-                return_start_position=True,
-            )
-            clean_audio = subsample(
-                clean_audio,
-                sub_sample_length=train_num_samples,
-                start_position=start_position,
-            )
+            noisy_audio, start_position = subsample(noisy_audio, sub_sample_length=train_num_samples, return_start_position=True)
+            clean_audio = subsample(clean_audio, sub_sample_length=train_num_samples, start_position=start_position)
 
-        return noisy_audio, clean_audio, noisy_file
+        return noisy_audio, clean_audio
+
+    def __len__(self) -> int:
+        """Length of the dataset."""
+        return len(self.noisy_files)
 
 
 if __name__ == "__main__":

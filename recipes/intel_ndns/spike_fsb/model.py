@@ -657,6 +657,7 @@ class Separator(BaseModel):
 
 
 if __name__ == "__main__":
+    import toml
     from torchinfo import summary
 
     model = Separator(

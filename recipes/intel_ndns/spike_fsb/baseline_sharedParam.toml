@@ -82,7 +82,7 @@ offset = 0
 
 [train_dataset.dataloader]
 batch_size = 64
-num_workers = 64
+num_workers = 8
 drop_last = true
 # pin_memory = true
 

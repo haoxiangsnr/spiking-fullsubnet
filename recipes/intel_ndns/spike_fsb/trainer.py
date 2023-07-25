@@ -75,14 +75,14 @@ class Trainer(BaseTrainer):
         self.optimizer_d.step()
 
         return {
-            "loss_g": loss_g,
-            "loss_freq_mae": loss_freq_mae,
-            "loss_mag_mae": loss_mag_mae,
-            "loss_sdr": loss_sdr,
-            "loss_g_fake": loss_g_fake,
-            "loss_d": loss_d,
-            "loss_d_real": loss_d_real,
-            "loss_d_fake": loss_d_fake,
+            "loss_g": loss_g.item(),
+            "loss_freq_mae": loss_freq_mae.item(),
+            "loss_mag_mae": loss_mag_mae.item(),
+            "loss_sdr": loss_sdr.item(),
+            "loss_g_fake": loss_g_fake.item(),
+            "loss_d": loss_d.item(),
+            "loss_d_real": loss_d_real.item(),
+            "loss_d_fake": loss_d_fake.item(),
         }
 
     def training_epoch_end(self, training_epoch_output):
