@@ -1,19 +1,13 @@
-from functools import partial
-
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from efficient_spiking_neuron import LSTMState, efficient_spiking_neuron
 from einops import rearrange
-from torch import Tensor, nn
+from torch import nn
 from torch.nn import functional
 
-EPSILON = np.finfo(np.float32).eps
-
-
-# from audiozen.models.module.custom_lstm import LSTMState, script_lnlstm, script_lstm, flatten_states, script_stacked_rnn
-from efficient_spiking_neuron import LSTMState, efficient_spiking_neuron
-from neuron import LIFNode, MemoryModule, Triangle
+from audiozen.constant import EPSILON
 
 
 def deepfiltering(complex_spec, coefs, frame_size: int):
@@ -78,75 +72,6 @@ class SequenceModel(nn.Module):
                 bidirectional=bidirectional,
                 dropout=dropout,
             )
-        elif sequence_model == "S4":
-            raise NotImplementedError("S4 is not implemented yet.")
-            # from s4d import S4Model
-
-            # self.sequence_model = S4Model(
-            #     d_input=input_size,
-            #     d_output=output_size,
-            #     d_model=hidden_size,
-            #     n_layers=num_layers,
-            # )
-        elif sequence_model == "LIF":
-            self.sequence_model = LIFModel(
-                input_size=input_size,
-                hidden_size=hidden_size,
-                output_size=output_size,
-            )
-            bidirectional = False
-            # self.sequence_model = nn.GRU(
-            #     input_size=input_size,
-            #     hidden_size=hidden_size,
-            #     num_layers=num_layers,
-            #     bidirectional=bidirectional,
-            #     dropout=dropout,
-            # )
-        elif sequence_model == "SigmaDelta":
-            from lava.lib.dl import slayer
-
-            threshold = 0.1
-            tau_grad = 0.1
-            scale_grad = 0.8
-            max_delay = 64
-            out_delay = 0
-            sigma_params = {  # sigma-delta neuron parameters
-                "threshold": threshold,  # delta unit threshold
-                "tau_grad": tau_grad,  # delta unit surrogate gradient relaxation parameter
-                "scale_grad": scale_grad,  # delta unit surrogate gradient scale parameter
-                "requires_grad": False,  # trainable threshold
-                "shared_param": True,  # layer wise threshold
-            }
-            sdnn_params = {
-                **sigma_params,
-                "activation": F.relu,  # activation function
-            }
-            # self.input_quantizer = lambda x: slayer.utils.quantize(x, step=1 / 64)
-            self.sequence_model = torch.nn.Sequential(
-                slayer.block.sigma_delta.Input(sdnn_params),
-                slayer.block.sigma_delta.Dense(
-                    sdnn_params,
-                    input_size,
-                    hidden_size,
-                    weight_norm=False,
-                    delay=True,
-                    delay_shift=True,
-                ),
-                slayer.block.sigma_delta.Dense(
-                    sdnn_params,
-                    hidden_size,
-                    hidden_size,
-                    weight_norm=False,
-                    delay=True,
-                    delay_shift=True,
-                ),
-                slayer.block.sigma_delta.Output(
-                    sdnn_params, hidden_size, output_size, weight_norm=False
-                ),
-            )
-            # self.blocks[0].pre_hook_fx = self.input_quantizer
-            self.sequence_model[1].delay.max_delay = max_delay
-            self.sequence_model[2].delay.max_delay = max_delay
         elif sequence_model == "GSU":
             # print(f"input_size: {input_size}, hidden_size: {hidden_size}, num_layers: {num_layers}, output_size: {output_size}")
             self.sequence_model = efficient_spiking_neuron(
@@ -243,54 +168,6 @@ class SequenceModel(nn.Module):
             o.permute(1, 2, 0).contiguous(),
             all_layer_outputs,
         )  # [T, B, F] => [B, F, T]
-
-
-class LIFModel(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(LIFModel, self).__init__()
-        spk_params = {
-            "tau": 40,
-            "v_threshold": 1.0,
-            "surrogate_function": Triangle.apply,
-            "hard_reset": False,
-            "detach_reset": False,
-        }
-
-        spiking_neuron = partial(
-            LIFNode,
-            tau=spk_params["tau"],
-            v_threshold=spk_params["v_threshold"],
-            surrogate_function=nn.ReLU(),
-            hard_reset=spk_params["hard_reset"],
-            detach_reset=spk_params["detach_reset"],
-        )
-
-        self.fc = nn.Sequential(
-            nn.Linear(input_size, hidden_size),
-            nn.BatchNorm1d(hidden_size),
-            spiking_neuron(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.BatchNorm1d(hidden_size),
-            spiking_neuron(),
-            nn.Linear(hidden_size, output_size),
-        )
-
-    def forward(self, x):
-        self.reset_states()
-        output_mem = []
-        for step in range(x.size(0)):
-            output_mem.append(self.fc(x[step]))
-        x = torch.stack(output_mem, dim=0)
-        return x
-
-    def reset_states(self):
-        for m in self.modules():
-            if hasattr(m, "reset"):
-                if not isinstance(m, MemoryModule):
-                    print(
-                        f"Trying to call `reset()` of {m}, which is not base.MemoryModule"
-                    )
-                m.reset()
 
 
 class BaseModel(nn.Module):
@@ -805,6 +682,8 @@ if __name__ == "__main__":
         bn=True,
     )
     noisy_y = torch.rand(5, 16400)
+    noisy_y = noisy_y.to("cuda:3")
+    model = model.to("cuda:3")
     enhanced, enhanced_mag, fb_all_layer_outputs, sb_all_layer_outputs = model(noisy_y)
     print(enhanced.shape, enhanced_mag.shape)
     # for i in range(len(fb_all_layer_outputs)):

@@ -40,6 +40,16 @@ class Trainer(BaseTrainer):
     def training_step(self, batch, batch_idx):
         noisy_y, clean_y, _ = batch
 
+        print("=" * 20)
+        print(f"stats of epoch {self.current_epoch} - batch {batch_idx}: ")
+        print(
+            f"noisy_y: {noisy_y.shape}, {noisy_y.min()}, {noisy_y.max()}, {noisy_y.mean()}"
+        )
+        print(
+            f"clean_y: {clean_y.shape}, {clean_y.min()}, {clean_y.max()}, {clean_y.mean()}"
+        )
+        print("=" * 20)
+
         batch_size, *_ = noisy_y.shape
 
         one_labels = torch.ones(batch_size, 1, device=self.accelerator.device).float()
