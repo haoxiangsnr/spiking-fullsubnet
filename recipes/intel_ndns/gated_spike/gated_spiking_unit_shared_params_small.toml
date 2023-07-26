@@ -1,0 +1,85 @@
+[meta]
+save_dir = "exp"
+description = "This is a description of audiozen experiment."
+seed = 20220815
+use_amp = false
+use_deterministic_algorithms = false
+
+# -------------------- Trainer -------------------- #
+[trainer]
+path = "trainer.Trainer"
+[trainer.args]
+max_epoch = 9999
+clip_grad_norm_value = 10
+save_max_score = true
+save_ckpt_interval = 2
+plot_norm = false
+patience = 20
+validation_interval = 30
+max_num_checkpoints = 2
+
+[loss_function]
+path = "torch.nn.MSELoss"
+[loss_function.args]
+
+
+[optimizer]
+path = "torch.optim.AdamW"
+[optimizer.args]
+lr = 0.001
+# -------------------- Model -------------------- #
+[model]
+path = "spk_model.Separator"
+
+[model.args]
+sr = 16000
+fdrc = 0.5
+n_fft = 512
+hop_length = 256
+win_length = 512
+num_freqs = 256
+sequence_model = "GSU" # "SigmaDelta"
+fb_hidden_size = 256
+fb_output_activate_function = false
+freq_cutoffs = [32, 128]
+sb_num_center_freqs = [4, 32, 64]
+sb_num_neighbor_freqs = [15, 15, 15]
+fb_num_center_freqs = [4, 32, 64]
+fb_num_neighbor_freqs = [0, 0, 0]
+sb_hidden_size = 160
+sb_output_activate_function = false
+norm_type = "offline_laplace_norm"
+shared_weights = true
+bn = true
+
+[acoustics]
+n_fft = 512
+win_length = 512
+sr = 16000
+hop_length = 128
+
+
+[lr_scheduler]
+path = "torch.optim.lr_scheduler.ExponentialLR"
+[lr_scheduler.args]
+gamma = 0.99
+
+[train_dataset]
+path = "dataloader.DNSAudio"
+[train_dataset.args]
+root = "/datasets/datasets_fullband/training_set/"
+limit = false
+offset = 0
+train = true
+[train_dataset.dataloader]
+batch_size = 128 #5 # 32
+num_workers = 5
+drop_last = true
+pin_memory = false
+
+
+[validate_dataset]
+path = "dataloader.DNSAudio"
+[validate_dataset.args]
+root = "/datasets/datasets_fullband/validation_set/"
+train = false
