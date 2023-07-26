@@ -1,6 +1,6 @@
 - team: Intel Neuromorphic Computing Lab
   model: Baseline SDNN solution
-  date: '2023-02-20'
+  date: "2023-02-20"
   SI-SNR: 12.5
   SI-SNRi_data: 4.88
   SI-SNRi_enc+dec: 4.88
@@ -15,7 +15,7 @@
   size_kilobytes: 465
 - team: Intel Neuromorphic Computing Lab
   model: Intel proprietary DNS
-  date: '2023-02-28'
+  date: "2023-02-28"
   SI-SNR: 12.71
   SI-SNRi_data: 5.090000000000001
   SI-SNRi_enc+dec: 5.090000000000001
@@ -29,8 +29,23 @@
   params: 1901000
   size_kilobytes: 3802
 - team: Clairaudience
+  model: FSB+ALIF
+  date: "2023-07-26"
+  SI-SNR: 13.68
+  SI-SNRi_data: 6.79
+  SI-SNRi_enc+dec: 6.79
+  MOS_ovrl: 0.3500000000000001
+  MOS_sig: 0.06000000000000005
+  MOS_bak: 0.9499999999999997
+  latency_enc+dec_ms: 0.036
+  latency_total_ms: 16.036
+  power_proxy_Ops/s: 14600000.0
+  PDP_proxy_Ops: 229554
+  params: 1580000
+  size_kilobytes: 6320
+- team: Clairaudience
   model: FSB+SNN
-  date: '2023-07-25'
+  date: "2023-07-25"
   SI-SNR: 14.24
   SI-SNRi_data: 7.3500000000000005
   SI-SNRi_enc+dec: 7.3500000000000005
@@ -45,7 +60,7 @@
   size_kilobytes: 3644
 - team: Clairaudience
   model: FSB+SNN (small)
-  date: '2023-07-25'
+  date: "2023-07-25"
   SI-SNR: 14.09
   SI-SNRi_data: 7.2
   SI-SNRi_enc+dec: 7.2
@@ -60,7 +75,7 @@
   size_kilobytes: 3644
 - team: Clairaudience
   model: FSB + SNN + GAN + MF + SISDRLoss
-  date: '2023-07-26'
+  date: "2023-07-26"
   SI-SNR: 14.43
   SI-SNRi_data: 7.54
   SI-SNRi_enc+dec: 7.54
