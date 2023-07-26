@@ -9,11 +9,11 @@ path = "trainer.Trainer"
 max_epoch = 9999
 clip_grad_norm_value = 10
 save_max_score = true
-save_ckpt_interval = 2
-patience = 10
+save_ckpt_interval = 1
+patience = 20
 plot_norm = true
-validation_interval = 2
-max_num_checkpoints = 10
+validation_interval = 1
+max_num_checkpoints = 9999
 
 [loss_function]
 path = "torch.nn.MSELoss"
@@ -40,24 +40,25 @@ path = "torch.optim.lr_scheduler.ExponentialLR"
 gamma = 0.99
 
 [model_g]
-path = "model.Separator"
+path = "model_low_freq.Separator"
 [model_g.args]
 sr = 16000
 fdrc = 0.5
 n_fft = 512
-hop_length = 256
+fb_freqs = 64
+hop_length = 128
 win_length = 512
 num_freqs = 256
 sequence_model = "GSU"
 fb_hidden_size = 320
 fb_output_activate_function = false
-freq_cutoffs = [32, 128, 192]
-sb_df_orders = [5, 3, 1, 1]
-sb_num_center_freqs = [4, 32, 64, 64]
-sb_num_neighbor_freqs = [15, 15, 15, 15]
-fb_num_center_freqs = [4, 32, 64, 64]
-fb_num_neighbor_freqs = [0, 0, 0, 0]
-sb_hidden_size = 160
+freq_cutoffs = [32, 128]
+sb_df_orders = [5, 3, 1]
+sb_num_center_freqs = [4, 32, 64]
+sb_num_neighbor_freqs = [15, 15, 15]
+fb_num_center_freqs = [4, 32, 64]
+fb_num_neighbor_freqs = [0, 0, 0]
+sb_hidden_size = 224
 sb_output_activate_function = false
 norm_type = "offline_laplace_norm"
 shared_weights = true
@@ -69,7 +70,7 @@ path = "discriminator.Discriminator"
 
 [acoustics]
 n_fft = 512
-hop_length = 256
+hop_length = 128
 win_length = 512
 sr = 16000
 
@@ -82,7 +83,7 @@ offset = 0
 
 [train_dataset.dataloader]
 batch_size = 64
-num_workers = 64
+num_workers = 8
 drop_last = true
 # pin_memory = true
 
@@ -93,8 +94,8 @@ path = "dataloader.DNSAudio"
 root = "/datasets/datasets_fullband/validation_set/"
 train = false
 [validate_dataset.dataloader]
-batch_size = 4
-num_workers = 4
+batch_size = 6
+num_workers = 6
 
 [test_dataset]
 path = "dataloader.DNSAudio"
@@ -102,5 +103,5 @@ path = "dataloader.DNSAudio"
 root = "/datasets/datasets_fullband/validation_set/"
 train = false
 [test_dataset.dataloader]
-batch_size = 4
-num_workers = 4
+batch_size = 6
+num_workers = 6

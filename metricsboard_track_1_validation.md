@@ -1,7 +1,7 @@
-| Team | Model | Date | SI-SNR | SI-SNRi_data | SI-SNRi_enc+dec | MOS_ovrl | MOS_sig | MOS_bak | latency_enc+dec_ms | latency_total_ms | power_proxy_Ops/s | PDP_proxy_Ops | params | size_kilobytes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Intel Neuromorphic Computing Lab | Baseline SDNN solution | 2023-02-20 | 12.50 | 4.88 | 4.88 | 2.71 | 3.21 | 3.46 | 0.036 | 8.036 | 11590000.00 | 90000.00 | 525000 | 465 |
-| Intel Neuromorphic Computing Lab | Intel proprietary DNS | 2023-02-28 | 12.71 | 5.09 | 5.09 | 3.09 | 3.35 | 4.08 | 0.036 | 8.036 | 0.00 | 0.00 | 1901000 | 3802 |
-| Clairaudience | validation_set | 2023-07-25 | 6.89 | 0.00 | 0.00 | 2.40 | 3.10 | 2.66 | 0.000 | 0.000 | 0.00 | 0.00 | 0 | 0 |
-| Clairaudience | baseline_sharedParam | 2023-07-25 | 13.92 | 7.03 | 7.03 | 2.93 | 3.25 | 3.91 | 0.000 | 8.036 | 11590000.00 | 90000.00 | 525000 | 465 |
-| Clairaudience | baseline_sharedParam | 2023-07-25 | 12.71 | 5.82 | 5.82 | 3.09 | 3.35 | 4.08 | 0.036 | 8.036 | 0.00 | 0.00 | 1901000 | 3802 |
+| team                             | model                            | date       | SI-SNR | SI-SNRi_data | SI-SNRi_enc+dec | MOS_ovrl | MOS_sig | MOS_bak | latency_enc+dec_ms | latency_total_ms | power_proxy_Ops/s | PDP_proxy_Ops |  params | size_kilobytes |
+| :------------------------------- | :------------------------------- | :--------- | -----: | -----------: | --------------: | -------: | ------: | ------: | -----------------: | ---------------: | ----------------: | ------------: | ------: | -------------: |
+| Clairaudience                    | FSB + SNN + GAN + MF + SISDRLoss | 2023-07-26 |  14.43 |         7.54 |            7.54 |      0.6 |    0.21 |    1.29 |              0.036 |            8.036 |               nan |           nan |  910000 |           3640 |
+| Clairaudience                    | FSB+SNN                          | 2023-07-25 |  14.24 |         7.35 |            7.35 |     0.52 |    0.15 |    1.22 |              0.036 |           16.036 |          2.46e+07 |        395078 |  911000 |           3644 |
+| Clairaudience                    | FSB+SNN (small)                  | 2023-07-25 |  14.09 |          7.2 |             7.2 |      0.5 |    0.13 |     1.2 |              0.036 |           16.036 |          2.46e+07 |        395078 |  643000 |           3644 |
+| Intel Neuromorphic Computing Lab | Intel proprietary DNS            | 2023-02-28 |  12.71 |         5.09 |            5.09 |     0.64 |    0.16 |    1.36 |              0.036 |            8.036 |               nan |           nan | 1901000 |           3802 |
+| Intel Neuromorphic Computing Lab | Baseline SDNN solution           | 2023-02-20 |   12.5 |         4.88 |            4.88 |     0.26 |    0.02 |    0.74 |              0.036 |            8.036 |         1.159e+07 |         90000 |  525000 |            465 |

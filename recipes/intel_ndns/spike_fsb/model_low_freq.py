@@ -1,3 +1,6 @@
+from functools import partial
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -6,6 +9,7 @@ from einops import rearrange
 from torch import nn
 from torch.nn import functional
 
+from audiozen.acoustics.audio_feature import istft, stft
 from audiozen.constant import EPSILON
 
 
@@ -519,15 +523,6 @@ class SubbandModel(BaseModel):
 
 
 class Separator(BaseModel):
-    """_summary_
-
-    Requires:
-        einops: install with `pip install einops`
-
-    Args:
-        nn: _description_
-    """
-
     def __init__(
         self,
         sr,
@@ -536,6 +531,7 @@ class Separator(BaseModel):
         win_length,
         fdrc,
         num_freqs,
+        fb_freqs,  # number of low frequency bins extracted from fullband model input.
         freq_cutoffs,
         sb_num_center_freqs,
         sb_num_neighbor_freqs,
@@ -558,10 +554,12 @@ class Separator(BaseModel):
         self.fdrc = fdrc
         self.freq_cutoffs = freq_cutoffs
         self.sb_df_orders = sb_df_orders
+        self.num_repeats = num_freqs // fb_freqs
+        self.fb_freqs = fb_freqs
 
         self.fb_model = SequenceModel(
-            input_size=num_freqs,
-            output_size=num_freqs,
+            input_size=fb_freqs,
+            output_size=fb_freqs,
             hidden_size=fb_hidden_size,
             num_layers=2,
             bidirectional=False,
@@ -585,34 +583,44 @@ class Separator(BaseModel):
             bn=bn,
         )
 
-        self.norm = self.norm_wrapper(norm_type)
-
-    def forward(self, y):
-        ndim = y.dim()
-        assert ndim in (2, 3), "Input must be 2D (B, T) or 3D tensor (B, 1, T)"
-
-        if ndim == 3:
-            assert y.size(1) == 1, "Input must be 2D (B, T) or 3D tensor (B, 1, T)"
-            y = y.squeeze(1)
-
-        complex_stft = torch.stft(
-            y,
+        self.stft = partial(
+            stft,
             n_fft=self.n_fft,
             hop_length=self.hop_length,
             win_length=self.win_length,
-            window=torch.hann_window(self.win_length, device=y.device),
-            return_complex=True,
-        )  # [B, F, T]
+        )
+        self.istft = partial(
+            istft,
+            n_fft=n_fft,
+            hop_length=hop_length,
+            win_length=win_length,
+        )
+        self.norm = self.norm_wrapper(norm_type)
+
+    def forward(self, noisy_y):
+        ndim = noisy_y.dim()
+        assert ndim in (2, 3), "Input must be 2D (B, T) or 3D tensor (B, 1, T)"
+
+        if ndim == 3:
+            assert (
+                noisy_y.size(1) == 1
+            ), "Input must be 2D (B, T) or 3D tensor (B, 1, T)"
+            noisy_y = noisy_y.squeeze(1)
+
+        noisy_mag, _, noisy_real, noisy_imag = self.stft(noisy_y)
+        complex_stft = torch.complex(noisy_real, noisy_imag)  # [B, F, T]
         complex_stft = complex_stft.unsqueeze(1)
 
-        noisy_mag = torch.abs(complex_stft)  # [B, 1, F, T]
-
         # ================== Fullband ==================
-        noisy_mag = noisy_mag**self.fdrc  # fdrc
+        noisy_mag = rearrange(noisy_mag, "b f t -> b 1 f t")
+        noisy_mag = noisy_mag**self.fdrc
         noisy_mag = noisy_mag[..., :-1, :]  # [B, 1, F, T]
-        fb_input = rearrange(self.norm(noisy_mag), "b c f t -> b (c f) t")
+        fb_input = noisy_mag[..., : self.fb_freqs, :]
+        fb_input = self.norm(fb_input)
+        fb_input = rearrange(fb_input, "b c f t -> b (c f) t")
         fb_output, fb_all_layer_outputs = self.fb_model(fb_input)  # [B, F, T]
         fb_output = rearrange(fb_output, "b f t -> b 1 f t")
+        fb_output = fb_output.repeat(1, 1, self.num_repeats, 1)
 
         # ================== Subband ==================
         # list [[B, df, F_1, T, 2], [B, df, F_2, T, 2], ...]
@@ -649,8 +657,8 @@ class Separator(BaseModel):
             n_fft=self.n_fft,
             hop_length=self.hop_length,
             win_length=self.win_length,
-            window=torch.hann_window(self.win_length, device=y.device),
-            length=y.size(-1),
+            window=torch.hann_window(self.win_length, device=noisy_y.device),
+            length=noisy_y.size(-1),
         )
         return enhanced_y, enhanced_mag, fb_all_layer_outputs, sb_all_layer_outputs
 
@@ -660,24 +668,11 @@ if __name__ == "__main__":
     from torchinfo import summary
 
     config = toml.load(
-        "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_sharedParam_small.toml"
+        # "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_s.toml"
+        # "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_m.toml"
+        "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_l.toml"
     )
     model_args = config["model_g"]["args"]
 
     model = Separator(**model_args)
-
-    print(summary(model, input_data=(torch.rand(5, 16400),), device="cpu"))
-    noisy_y = torch.rand(5, 16400)
-    noisy_y = noisy_y.to("cuda:3")
-    model = model.to("cuda:3")
-    enhanced, enhanced_mag, fb_all_layer_outputs, sb_all_layer_outputs = model(noisy_y)
-    print(enhanced.shape, enhanced_mag.shape)
-    # for i in range(len(fb_all_layer_outputs)):
-    #     print(fb_all_layer_outputs[i].size())
-    # for i in range(len(sb_all_layer_outputs)):
-    #     print(i)
-    #     for j in range(len(sb_all_layer_outputs[i])):
-    #         print(sb_all_layer_outputs[i][j].size())
-    # print(fb_all_layer_outputs)
-    # print(model(noisy_y).shape)
-    # summary(model, input_data=(noisy_y,), device="cpu")
+    summary(model, input_data=(torch.rand(1, 16000),), device="cpu")

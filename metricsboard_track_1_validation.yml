@@ -4,9 +4,9 @@
   SI-SNR: 12.5
   SI-SNRi_data: 4.88
   SI-SNRi_enc+dec: 4.88
-  MOS_ovrl: 2.71
-  MOS_sig: 3.21
-  MOS_bak: 3.46
+  MOS_ovrl: 0.2599999999999998
+  MOS_sig: 0.020000000000000018
+  MOS_bak: 0.7399999999999998
   latency_enc+dec_ms: 0.036
   latency_total_ms: 8.036
   power_proxy_Ops/s: 11590000.0
@@ -19,9 +19,9 @@
   SI-SNR: 12.71
   SI-SNRi_data: 5.090000000000001
   SI-SNRi_enc+dec: 5.090000000000001
-  MOS_ovrl: 3.09
-  MOS_sig: 3.35
-  MOS_bak: 4.08
+  MOS_ovrl: 0.6399999999999997
+  MOS_sig: 0.16000000000000014
+  MOS_bak: 1.3599999999999999
   latency_enc+dec_ms: 0.036
   latency_total_ms: 8.036
   power_proxy_Ops/s: null
@@ -29,47 +29,47 @@
   params: 1901000
   size_kilobytes: 3802
 - team: Clairaudience
-  model: validation_set
+  model: FSB+SNN
   date: '2023-07-25'
-  SI-SNR: 6.89
-  SI-SNRi_data: null
-  SI-SNRi_enc+dec: null
-  MOS_ovrl: 2.4
-  MOS_sig: 3.1
-  MOS_bak: 2.66
-  latency_enc+dec_ms: null
-  latency_total_ms: null
-  power_proxy_Ops/s: null
-  PDP_proxy_Ops: null
-  params: null
-  size_kilobytes: null
+  SI-SNR: 14.24
+  SI-SNRi_data: 7.3500000000000005
+  SI-SNRi_enc+dec: 7.3500000000000005
+  MOS_ovrl: 0.52
+  MOS_sig: 0.1499999999999999
+  MOS_bak: 1.2199999999999998
+  latency_enc+dec_ms: 0.036
+  latency_total_ms: 16.036
+  power_proxy_Ops/s: 24600000.0
+  PDP_proxy_Ops: 395078
+  params: 911000
+  size_kilobytes: 3644
 - team: Clairaudience
-  model: baseline_sharedParam
+  model: FSB+SNN (small)
   date: '2023-07-25'
-  SI-SNR: 13.92
-  SI-SNRi_data: 7.03
-  SI-SNRi_enc+dec: 7.03
-  MOS_ovrl: 2.93
-  MOS_sig: 3.25
-  MOS_bak: 3.91
-  latency_enc+dec_ms: null
-  latency_total_ms: 8.036
-  power_proxy_Ops/s: 11590000.0
-  PDP_proxy_Ops: 90000.0
-  params: 525000
-  size_kilobytes: 465
+  SI-SNR: 14.09
+  SI-SNRi_data: 7.2
+  SI-SNRi_enc+dec: 7.2
+  MOS_ovrl: 0.5
+  MOS_sig: 0.1299999999999999
+  MOS_bak: 1.1999999999999997
+  latency_enc+dec_ms: 0.036
+  latency_total_ms: 16.036
+  power_proxy_Ops/s: 24600000.0
+  PDP_proxy_Ops: 395078
+  params: 643000
+  size_kilobytes: 3644
 - team: Clairaudience
-  model: baseline_sharedParam
-  date: '2023-07-25'
-  SI-SNR: 12.71
-  SI-SNRi_data: 5.820000000000001
-  SI-SNRi_enc+dec: 5.820000000000001
-  MOS_ovrl: 3.09
-  MOS_sig: 3.35
-  MOS_bak: 4.08
+  model: FSB + SNN + GAN + MF + SISDRLoss
+  date: '2023-07-26'
+  SI-SNR: 14.43
+  SI-SNRi_data: 7.54
+  SI-SNRi_enc+dec: 7.54
+  MOS_ovrl: 0.6000000000000001
+  MOS_sig: 0.20999999999999996
+  MOS_bak: 1.29
   latency_enc+dec_ms: 0.036
   latency_total_ms: 8.036
   power_proxy_Ops/s: null
   PDP_proxy_Ops: null
-  params: 1901000
-  size_kilobytes: 3802
+  params: 910000
+  size_kilobytes: 3640
