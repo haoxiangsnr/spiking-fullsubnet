@@ -326,3 +326,35 @@ class DNSMOS:
         clip_dict["BAK"] = np.mean(predicted_mos_bak_seg)
 
         return clip_dict
+
+
+def compute_synops(fb_all_layer_outputs, sb_all_layer_outputs):
+    synops = 0.0
+    for i in range(1, len(fb_all_layer_outputs) - 1):
+        synops += (
+            torch.gt(fb_all_layer_outputs[i], 0).float().mean()
+            * fb_all_layer_outputs[i].size(-1)
+            * (fb_all_layer_outputs[i + 1].size(-1) + fb_all_layer_outputs[i].size(-1))
+        )
+    for i in range(len(sb_all_layer_outputs)):
+        for j in range(1, len(sb_all_layer_outputs[i]) - 1):
+            # print(sb_all_layer_outputs[i][j].size())
+            synops += (
+                torch.gt(sb_all_layer_outputs[i][j], 0).float().mean()
+                * sb_all_layer_outputs[i][j].size(-1)
+                * (
+                    sb_all_layer_outputs[i][j + 1].size(-1)
+                    + sb_all_layer_outputs[i][j].size(-1)
+                )
+            )
+    return {"synops": synops}
+
+
+def compute_neuronops(fb_all_layer_outputs, sb_all_layer_outputs):
+    neuronops = 0.0
+    for i in range(len(fb_all_layer_outputs)):
+        neuronops += fb_all_layer_outputs[i].size(-1)
+    for i in range(len(sb_all_layer_outputs)):
+        for j in range(len(sb_all_layer_outputs[i])):
+            neuronops += sb_all_layer_outputs[i][j].size(-1)
+    return {"neuronops": neuronops}

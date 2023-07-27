@@ -286,12 +286,12 @@ class BaseTrainer:
                     dataloader_bar.set_description(bar_desc)
 
                     # Log to tensorboard
-                    for key, value in loss_dict.items():
-                        self.writer.add_scalar(
-                            f"Train_Step/{key}",
-                            value,
-                            (epoch - 1) * len(train_dataloader) + batch_idx,
-                        )
+                    # for key, value in loss_dict.items():
+                    #     self.writer.add_scalar(
+                    #         f"Train_Step/{key}",
+                    #         value,
+                    #         (epoch - 1) * len(train_dataloader) + batch_idx,
+                    #     )
 
             self.training_epoch_end(training_epoch_output)
 
@@ -314,6 +314,8 @@ class BaseTrainer:
                     logger.info(f"Validation finished.")
 
             if not self.accelerator.optimizer_step_was_skipped:
+                # For mixed precision training,
+                # `optimizer_step_was_skipped` will be True if the gradients are `nan` or `inf`.
                 self.lr_scheduler_g.step()
                 self.lr_scheduler_d.step()
 
@@ -331,7 +333,7 @@ class BaseTrainer:
         logger.info(f"Begin validation...")
 
         self.model_g.eval()
-        self.model_d.eval()
+        # self.model_d.eval()
 
         if not isinstance(dataloaders, list):
             dataloaders = [dataloaders]
