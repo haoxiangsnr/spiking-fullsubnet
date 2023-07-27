@@ -51,7 +51,7 @@ class Trainer(BaseTrainer):
 
         enhanced_y, enhanced_mag, *_ = self.model_g(noisy_y)
 
-        pred_fake = self.model_d1(clean_mag, enhanced_mag)  # [B, 1]
+        pred_fake = self.model_d(clean_mag, enhanced_mag)  # [B, 1]
         loss_g_fake = 0.05 * F.mse_loss(pred_fake, one_labels)
         loss_freq_mae = freq_MAE(enhanced_y, clean_y)
         loss_mag_mae = mag_MAE(enhanced_y, clean_y)
@@ -61,11 +61,11 @@ class Trainer(BaseTrainer):
         self.accelerator.backward(loss_g)
         self.optimizer_g.step()
 
-        # ================== Train Discriminator ================== #
+        # ================== Train First Discriminator ================== #
         self.optimizer_d.zero_grad()
 
-        pred_real = self.model_d1(clean_mag, clean_mag)
-        pred_fake = self.model_d1(clean_mag, enhanced_mag.detach())
+        pred_real = self.model_d(clean_mag, clean_mag)
+        pred_fake = self.model_d(clean_mag, enhanced_mag.detach())
         mos_score = self.batch_dns_mos(enhanced_y)
         loss_d_real = F.mse_loss(pred_real, one_labels)
         loss_d_fake = F.mse_loss(pred_fake, mos_score)

@@ -1,16 +1,16 @@
 from functools import partial
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from efficient_spiking_neuron import LSTMState, efficient_spiking_neuron
+from efficient_spiking_neuron_8bit import LSTMState, efficient_spiking_neuron
 from einops import rearrange
 from torch import nn
 from torch.nn import functional
 
 from audiozen.acoustics.audio_feature import istft, stft
 from audiozen.constant import EPSILON
-from audiozen.metric import compute_neuronops
 
 
 def deepfiltering(complex_spec, coefs, frame_size: int):
@@ -667,8 +667,6 @@ if __name__ == "__main__":
     import toml
     from torchinfo import summary
 
-    from audiozen.metric import compute_synops
-
     config = toml.load(
         # "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_s.toml"
         "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_m.toml"
@@ -677,8 +675,9 @@ if __name__ == "__main__":
     model_args = config["model_g"]["args"]
 
     model = Separator(**model_args)
-    input = torch.rand(5, 160000)
-    y, mag, fb, sb = model(input)
-    synops = compute_synops(fb, sb)
-    neuron_ops = compute_neuronops(fb, sb)
-    print(synops, neuron_ops)
+    summary(model, input_data=(torch.rand(1, 16000),), device="cpu")
+
+    input = torch.rand(5, 16000)
+    output = model(input)
+
+    print(output[0].shape)

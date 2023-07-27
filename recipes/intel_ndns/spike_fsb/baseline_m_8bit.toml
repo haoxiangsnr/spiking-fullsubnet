@@ -9,10 +9,10 @@ path = "trainer.Trainer"
 max_epoch = 9999
 clip_grad_norm_value = 10
 save_max_score = true
-save_ckpt_interval = 1
+save_ckpt_interval = 2
 patience = 20
 plot_norm = true
-validation_interval = 1
+validation_interval = 2
 max_num_checkpoints = 9999
 
 [loss_function]
@@ -40,7 +40,7 @@ path = "torch.optim.lr_scheduler.ExponentialLR"
 gamma = 0.99
 
 [model_g]
-path = "model_low_freq.Separator"
+path = "model_low_freq_8bit.Separator"
 [model_g.args]
 sr = 16000
 fdrc = 0.5

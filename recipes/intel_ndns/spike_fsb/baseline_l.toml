@@ -9,10 +9,10 @@ path = "trainer.Trainer"
 max_epoch = 9999
 clip_grad_norm_value = 10
 save_max_score = true
-save_ckpt_interval = 2
+save_ckpt_interval = 1
 patience = 20
 plot_norm = true
-validation_interval = 2
+validation_interval = 1
 max_num_checkpoints = 9999
 
 [loss_function]
