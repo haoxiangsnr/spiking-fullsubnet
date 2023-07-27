@@ -313,8 +313,10 @@ class BaseTrainer:
 
                     logger.info(f"Validation finished.")
 
-            self.lr_scheduler_g.step()
-            self.lr_scheduler_d.step()
+            if not self.accelerator.optimizer_step_was_skipped:
+                self.lr_scheduler_g.step()
+                self.lr_scheduler_d.step()
+
             self.accelerator.wait_for_everyone()
 
             # Reduces the `early_stop_mark` data across all processes in such a way that all get the final result.

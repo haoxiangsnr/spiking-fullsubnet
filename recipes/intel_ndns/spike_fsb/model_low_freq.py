@@ -669,8 +669,8 @@ if __name__ == "__main__":
 
     config = toml.load(
         # "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_s.toml"
-        # "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_m.toml"
-        "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_l.toml"
+        "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_m.toml"
+        # "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_l.toml"
     )
     model_args = config["model_g"]["args"]
 

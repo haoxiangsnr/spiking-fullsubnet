@@ -50,6 +50,24 @@ entries = [
         "params": 1901 * 10**3,
         "size_kilobytes": 3802,  # float16
     },
+    # ======================= FSB + ALIF =======================
+    {
+        "team": "Clairaudience",
+        "model": "FSB+ALIF",
+        "date": "2023-07-26",
+        "SI-SNR": 13.68,
+        "SI-SNRi_data": 13.68 - custom_noisy["SI-SNR"],
+        "SI-SNRi_enc+dec": 13.68 - custom_noisy["SI-SNR"],
+        "MOS_ovrl": 2.75 - custom_noisy["MOS_ovrl"],
+        "MOS_sig": 3.16 - custom_noisy["MOS_sig"],
+        "MOS_bak": 3.61 - custom_noisy["MOS_bak"],
+        "latency_enc+dec_ms": 0.036,
+        "latency_total_ms": 16.036,
+        "power_proxy_Ops/s": 14.6 * 10**6,
+        "PDP_proxy_Ops": 229554,
+        "params": 1580 * 10**3,
+        "size_kilobytes": 1580 * 4,
+    },
     # ======================= FSB + SNN =======================
     {
         "team": "Clairaudience",
