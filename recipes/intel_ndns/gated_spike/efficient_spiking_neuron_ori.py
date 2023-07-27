@@ -104,28 +104,6 @@ class Triangle(torch.autograd.Function):
         return grad_input, None
 
 
-class GradedSpike(torch.autograd.Function):
-    """Altered from code of Temporal Efficient Training, ICLR 2022 (https://openreview.net/forum?id=_XNtisL32jv)
-    max(0, 1 − |ui[t] − θ|)"""
-
-    @staticmethod
-    def forward(ctx, input, scale=1):
-        clamped_input = input.clamp(min=-1, max=1)
-        out = torch.round(clamped_input / scale)
-
-        ctx.save_for_backward(input, scale)
-        return out
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        (input, scale) = ctx.saved_tensors
-
-        grad_input = grad_output.clone()
-        # tmp = ((input >= -1) & (input <= 1)).float()
-        grad_input = grad_input / scale
-        return grad_input, None
-
-
 class LSTMCell(nn.Module):
     def __init__(self, input_size, hidden_size, shared_weights=False, bn=False):
         super(LSTMCell, self).__init__()
@@ -146,12 +124,8 @@ class LSTMCell(nn.Module):
         # self.scale_factor = Parameter(torch.ones(hidden_size))
         if self.use_bn:
             self.batchnorm = nn.BatchNorm1d(hidden_size)
-        self.use_quantize = True
-        self.bits = 8
-        if self.use_quantize:
-            min_value = -1
-            max_value = 1
-            self.scale = torch.tensor((max_value - (min_value)) / (2**self.bits - 1))
+
+        # self.scale = torch.tensor((1 - (-1)) / (127 - (-128)))
 
     def reset_parameters(self):
         stdv = 1.0 / math.sqrt(self.hidden_size) if self.hidden_size > 0 else 0
@@ -177,12 +151,9 @@ class LSTMCell(nn.Module):
         cy = forgetgate * cx + (1 - forgetgate) * cellgate
         if self.use_bn:
             cy = self.batchnorm(cy)
-        if self.use_quantize:
-            hy = GradedSpike.apply(torch.tanh(cy), self.scale) * self.scale
-        else:
-            hy = Triangle.apply(
-                cy
-            )  # replace the Tanh activation function with step function to ensure binary outputs.
+        hy = Triangle.apply(
+            cy
+        )  # replace the Tanh activation function with step function to ensure binary outputs.
 
         return hy, (hy, cy)
 

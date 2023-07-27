@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from neuron import LIFNode, MemoryModule, Triangle
 
 # from audiozen.models.module.custom_lstm import LSTMState, script_lnlstm, script_lstm, flatten_states, script_stacked_rnn
-from recipes.intel_ndns.gated_spike.efficient_spiking_neuron import (
+from recipes.intel_ndns.gated_spike.efficient_spiking_neuron_ori import (
     LSTMState,
     efficient_spiking_neuron,
 )
@@ -712,19 +712,21 @@ if __name__ == "__main__":
         win_length=512,
         num_freqs=256,
         sequence_model="GSU",
-        fb_hidden_size=320,
+        fb_hidden_size=256,
         fb_output_activate_function=False,
-        freq_cutoffs=[32, 128, 192],
-        sb_num_center_freqs=[4, 32, 64, 64],
-        sb_num_neighbor_freqs=[15, 15, 15, 15],
-        fb_num_center_freqs=[4, 32, 64, 64],
-        fb_num_neighbor_freqs=[0, 0, 0, 0],
+        freq_cutoffs=[32, 128],
+        sb_num_center_freqs=[4, 32, 64],
+        sb_num_neighbor_freqs=[15, 15, 15],
+        fb_num_center_freqs=[4, 32, 64],
+        fb_num_neighbor_freqs=[0, 0, 0],
         sb_hidden_size=160,
         sb_output_activate_function=False,
         norm_type="offline_laplace_norm",
         shared_weights=True,
         bn=True,
     )
+
+    print(summary(model, input_size=(1, 16000)))
     noisy_y = torch.rand(5, 16400)
     enhanced, fb_all_layer_outputs, sb_all_layer_outputs = model(noisy_y)
     for i in range(len(fb_all_layer_outputs)):

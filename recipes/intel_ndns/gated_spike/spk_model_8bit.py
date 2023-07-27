@@ -8,13 +8,10 @@ EPSILON = np.finfo(np.float32).eps
 from functools import partial
 
 import torch.nn.functional as F
-from neuron import LIFNode, MemoryModule, Triangle
 
 # from audiozen.models.module.custom_lstm import LSTMState, script_lnlstm, script_lstm, flatten_states, script_stacked_rnn
-from recipes.intel_ndns.gated_spike.efficient_spiking_neuron import (
-    LSTMState,
-    efficient_spiking_neuron,
-)
+from efficient_spiking_neuron_8bit import LSTMState, efficient_spiking_neuron
+from neuron import LIFNode, MemoryModule, Triangle
 
 
 class SequenceModel(nn.Module):
@@ -725,14 +722,17 @@ if __name__ == "__main__":
         shared_weights=True,
         bn=True,
     )
-    noisy_y = torch.rand(5, 16400)
+
+    # print(summary(model, input_size=(1, 16000)))
+    model.eval()
+    noisy_y = torch.rand(1, 16000)
     enhanced, fb_all_layer_outputs, sb_all_layer_outputs = model(noisy_y)
-    for i in range(len(fb_all_layer_outputs)):
-        print(fb_all_layer_outputs[i].size())
-    for i in range(len(sb_all_layer_outputs)):
-        print(i)
-        for j in range(len(sb_all_layer_outputs[i])):
-            print(sb_all_layer_outputs[i][j].size())
+    # for i in range(len(fb_all_layer_outputs)):
+    #     print(fb_all_layer_outputs[i].size())
+    # for i in range(len(sb_all_layer_outputs)):
+    #     print(i)
+    #     for j in range(len(sb_all_layer_outputs[i])):
+    #         print(sb_all_layer_outputs[i][j].size())
     # print(fb_all_layer_outputs)
     # print(model(noisy_y).shape)
     # summary(model, input_data=(noisy_y,), device="cpu")
