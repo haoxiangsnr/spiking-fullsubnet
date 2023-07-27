@@ -53,7 +53,7 @@ entries = [
     # ======================= FSB + ALIF =======================
     {
         "team": "Clairaudience",
-        "model": "FSB+ALIF",
+        "model": "ALIF",
         "date": "2023-07-26",
         "SI-SNR": 13.68,
         "SI-SNRi_data": 13.68 - custom_noisy["SI-SNR"],
@@ -108,18 +108,18 @@ entries = [
         "team": "Clairaudience",
         "model": "FSB + SNN + GAN + MF + SISDRLoss",
         "date": "2023-07-26",
-        "SI-SNR": 14.43,
-        "SI-SNRi_data": 14.43 - custom_noisy["SI-SNR"],
-        "SI-SNRi_enc+dec": 14.43 - custom_noisy["SI-SNR"],
-        "MOS_ovrl": 3.00 - custom_noisy["MOS_ovrl"],
+        "SI-SNR": 14.52,
+        "SI-SNRi_data": 14.52 - custom_noisy["SI-SNR"],
+        "SI-SNRi_enc+dec": 14.52 - custom_noisy["SI-SNR"],
+        "MOS_ovrl": 3.01 - custom_noisy["MOS_ovrl"],
         "MOS_sig": 3.31 - custom_noisy["MOS_sig"],
         "MOS_bak": 3.95 - custom_noisy["MOS_bak"],
         "latency_enc+dec_ms": 0.036,
         "latency_total_ms": 8.036,
         "power_proxy_Ops/s": None,
         "PDP_proxy_Ops": None,
-        "params": 910 * 10**3,
-        "size_kilobytes": 910 * 4,
+        "params": 953 * 10**3,
+        "size_kilobytes": 953 * 4,
     },
 ]
 
