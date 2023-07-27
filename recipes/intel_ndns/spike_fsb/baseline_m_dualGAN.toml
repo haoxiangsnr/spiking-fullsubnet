@@ -4,7 +4,7 @@ description = "Train a model using Generative Adversarial Networks (GANs)"
 seed = 20220815
 
 [trainer]
-path = "trainer.Trainer"
+path = "trainer_dualGAN.Trainer"
 [trainer.args]
 max_epoch = 9999
 clip_grad_norm_value = 10
@@ -12,7 +12,7 @@ save_max_score = true
 save_ckpt_interval = 1
 patience = 20
 plot_norm = true
-validation_interval = 1
+validation_interval = 10
 max_num_checkpoints = 9999
 
 [loss_function]
@@ -24,9 +24,14 @@ path = "torch.optim.AdamW"
 [optimizer_g.args]
 lr = 1e-3
 
-[optimizer_d]
+[optimizer_d_sig]
 path = "torch.optim.AdamW"
-[optimizer_d.args]
+[optimizer_d_sig.args]
+lr = 1e-3
+
+[optimizer_d_bak]
+path = "torch.optim.AdamW"
+[optimizer_d_bak.args]
 lr = 1e-3
 
 [lr_scheduler_g]
@@ -34,9 +39,14 @@ path = "torch.optim.lr_scheduler.ExponentialLR"
 [lr_scheduler_g.args]
 gamma = 0.99
 
-[lr_scheduler_d]
+[lr_scheduler_d_sig]
 path = "torch.optim.lr_scheduler.ExponentialLR"
-[lr_scheduler_d.args]
+[lr_scheduler_d_sig.args]
+gamma = 0.99
+
+[lr_scheduler_d_bak]
+path = "torch.optim.lr_scheduler.ExponentialLR"
+[lr_scheduler_d_bak.args]
 gamma = 0.99
 
 [model_g]
@@ -52,21 +62,25 @@ num_freqs = 256
 sequence_model = "GSU"
 fb_hidden_size = 320
 fb_output_activate_function = false
-freq_cutoffs = [32, 128, 192]
-sb_df_orders = [5, 3, 1, 1]
-sb_num_center_freqs = [2, 4, 32, 64]
-sb_num_neighbor_freqs = [15, 15, 15, 15]
-fb_num_center_freqs = [2, 4, 32, 64]
-fb_num_neighbor_freqs = [0, 0, 0, 0]
-sb_hidden_size = 256
+freq_cutoffs = [32, 128]
+sb_df_orders = [5, 3, 1]
+sb_num_center_freqs = [4, 32, 64]
+sb_num_neighbor_freqs = [15, 15, 15]
+fb_num_center_freqs = [4, 32, 64]
+fb_num_neighbor_freqs = [0, 0, 0]
+sb_hidden_size = 224
 sb_output_activate_function = false
 norm_type = "offline_laplace_norm"
 shared_weights = true
 bn = true
 
-[model_d]
+[model_d_sig]
 path = "discriminator.Discriminator"
-[model_d.args]
+[model_d_sig.args]
+
+[model_d_bak]
+path = "discriminator.Discriminator"
+[model_d_bak.args]
 
 [acoustics]
 n_fft = 512
@@ -82,8 +96,8 @@ limit = false
 offset = 0
 
 [train_dataset.dataloader]
-batch_size = 24
-num_workers = 12
+batch_size = 64
+num_workers = 8
 drop_last = true
 pin_memory = true
 

@@ -100,7 +100,7 @@ class DNSAudio(Dataset):
                 start_position=start_position,
             )
 
-        return noisy_audio, clean_audio, noisy_file
+        return noisy_audio, clean_audio, np.random.rand(1)
 
 
 if __name__ == "__main__":

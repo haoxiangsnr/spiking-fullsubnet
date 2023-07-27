@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from audiozen.loss import SISNRLoss, freq_MAE, mag_MAE
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
-from audiozen.trainer.base_trainer_gan_accelerate_ddp_validate import BaseTrainer
+from audiozen.trainer.base_trainer_dualgan_accelerate_ddp_validate import BaseTrainer
 
 logger = get_logger(__name__)
 
@@ -27,16 +27,28 @@ class Trainer(BaseTrainer):
         """Calculate MOS score for batch of audio, [B, 1, T] => [B, 1]"""
         audio_list = list(x.squeeze(1).detach().cpu().numpy())
 
-        scores = []
+        sig_scores = []
+        bak_scores = []
         for audio in audio_list:
-            scores.append(self.dns_mos(audio, return_p808=False)["OVRL"])
+            metrics = self.dns_mos(audio, return_p808=False)
+            sig_scores.append(metrics["SIG"])
+            bak_scores.append(metrics["BAK"])
 
-        scores = np.array(scores)
+        # Average
+        sig_scores = np.array(sig_scores)
+        bak_scores = np.array(bak_scores)
 
         # Normalize
-        scores = (scores - 1.0) / 4.0
+        sig_scores = (sig_scores - 1) / 4
+        bak_scores = (bak_scores - 1) / 4
 
-        return torch.from_numpy(scores).float().to(x.device).unsqueeze(1)
+        return torch.from_numpy(sig_scores).float().to(
+            self.accelerator.device
+        ).unsqueeze(1), torch.from_numpy(bak_scores).float().to(
+            self.accelerator.device
+        ).unsqueeze(
+            1
+        )
 
     def training_step(self, batch, batch_idx):
         noisy_y, clean_y, _ = batch
@@ -51,38 +63,55 @@ class Trainer(BaseTrainer):
 
         enhanced_y, enhanced_mag, *_ = self.model_g(noisy_y)
 
-        pred_fake = self.model_d(clean_mag, enhanced_mag)  # [B, 1]
-        loss_g_fake = 0.05 * F.mse_loss(pred_fake, one_labels)
+        pred_fake_sig = self.model_d_sig(clean_mag, enhanced_mag)  # [B, 1]
+        loss_g_fake_sig = 0.05 * F.mse_loss(pred_fake_sig, one_labels)
+
+        pred_fake_bak = self.model_d_bak(clean_mag, enhanced_mag)  # [B, 1]
+        loss_g_fake_bak = 0.05 * F.mse_loss(pred_fake_bak, one_labels)
+
         loss_freq_mae = freq_MAE(enhanced_y, clean_y)
         loss_mag_mae = mag_MAE(enhanced_y, clean_y)
         loss_sdr = 0.001 * (100 - self.sisnr_loss(enhanced_y, clean_y))
-        loss_g = loss_freq_mae + loss_mag_mae + loss_g_fake + loss_sdr
+        loss_g = (
+            loss_freq_mae + loss_mag_mae + loss_sdr + loss_g_fake_sig + loss_g_fake_bak
+        )
 
         self.accelerator.backward(loss_g)
         self.optimizer_g.step()
 
         # ================== Train First Discriminator ================== #
-        self.optimizer_d.zero_grad()
+        sig_score, bak_score = self.batch_dns_mos(enhanced_y)
 
-        pred_real = self.model_d(clean_mag, clean_mag)
-        pred_fake = self.model_d(clean_mag, enhanced_mag.detach())
-        mos_score = self.batch_dns_mos(enhanced_y)
+        self.optimizer_d_sig.zero_grad()
+        pred_real = self.model_d_sig(clean_mag, clean_mag)
+        pred_fake = self.model_d_sig(clean_mag, enhanced_mag.detach())
         loss_d_real = F.mse_loss(pred_real, one_labels)
-        loss_d_fake = F.mse_loss(pred_fake, mos_score)
-        loss_d = loss_d_real + loss_d_fake
+        loss_d_fake = F.mse_loss(pred_fake, sig_score)
+        loss_d_sig = loss_d_real + loss_d_fake
 
-        self.accelerator.backward(loss_d)
-        self.optimizer_d.step()
+        self.accelerator.backward(loss_d_sig)
+        self.optimizer_d_sig.step()
+
+        # ================== Train Second Discriminator ================== #
+        self.optimizer_d_bak.zero_grad()
+        pred_real = self.model_d_bak(clean_mag, clean_mag)
+        pred_fake = self.model_d_bak(clean_mag, enhanced_mag.detach())
+        loss_d_real = F.mse_loss(pred_real, one_labels)
+        loss_d_fake = F.mse_loss(pred_fake, bak_score)
+        loss_d_bak = loss_d_real + loss_d_fake
+
+        self.accelerator.backward(loss_d_bak)
+        self.optimizer_d_bak.step()
 
         return {
             "loss_g": loss_g.item(),
             "loss_freq_mae": loss_freq_mae.item(),
             "loss_mag_mae": loss_mag_mae.item(),
             "loss_sdr": loss_sdr.item(),
-            "loss_g_fake": loss_g_fake.item(),
-            "loss_d": loss_d.item(),
-            "loss_d_real": loss_d_real.item(),
-            "loss_d_fake": loss_d_fake.item(),
+            "loss_g_fake_sig": loss_g_fake_sig.item(),
+            "loss_g_fake_bak": loss_g_fake_bak.item(),
+            "loss_d_sig": loss_d_sig.item(),
+            "loss_d_bak": loss_d_bak.item(),
         }
 
     def training_epoch_end(self, training_epoch_output):
