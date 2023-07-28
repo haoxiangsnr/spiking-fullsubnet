@@ -108,11 +108,11 @@ class Trainer(BaseTrainer):
         enhanced_y, enhanced_mag, fb_out, sb_out = self.model_g(noisy_y)
 
         # save enhanced audio
-        stem = Path(noisy_file[0]).stem
-        enhanced_dir = self.enhanced_dir / f"dataloader_{dataloader_idx}"
-        enhanced_dir.mkdir(exist_ok=True, parents=True)
-        enhanced_fpath = enhanced_dir / f"{stem}.wav"
-        save_wav(enhanced_y, enhanced_fpath.as_posix(), self.sr)
+        # stem = Path(noisy_file[0]).stem
+        # enhanced_dir = self.enhanced_dir / f"dataloader_{dataloader_idx}"
+        # enhanced_dir.mkdir(exist_ok=True, parents=True)
+        # enhanced_fpath = enhanced_dir / f"{stem}.wav"
+        # save_wav(enhanced_y, enhanced_fpath.as_posix(), self.sr)
 
         # detach and move to cpu
         synops = compute_synops(fb_out, sb_out)
