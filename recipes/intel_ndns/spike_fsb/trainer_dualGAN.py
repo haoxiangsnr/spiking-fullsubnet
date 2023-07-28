@@ -6,7 +6,7 @@ from accelerate.logging import get_logger
 from tqdm import tqdm
 
 from audiozen.loss import SISNRLoss, freq_MAE, mag_MAE
-from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
+from audiozen.metric import DNSMOS, PESQ, SISDR, STOI, compute_neuronops, compute_synops
 from audiozen.trainer.base_trainer_dualgan_accelerate_ddp_validate import BaseTrainer
 
 logger = get_logger(__name__)
@@ -64,10 +64,10 @@ class Trainer(BaseTrainer):
         enhanced_y, enhanced_mag, *_ = self.model_g(noisy_y)
 
         pred_fake_sig = self.model_d_sig(clean_mag, enhanced_mag)  # [B, 1]
-        loss_g_fake_sig = 0.05 * F.mse_loss(pred_fake_sig, one_labels)
+        loss_g_fake_sig = F.mse_loss(pred_fake_sig, one_labels)
 
         pred_fake_bak = self.model_d_bak(clean_mag, enhanced_mag)  # [B, 1]
-        loss_g_fake_bak = 0.05 * F.mse_loss(pred_fake_bak, one_labels)
+        loss_g_fake_bak = 0.5 * F.mse_loss(pred_fake_bak, one_labels)
 
         loss_freq_mae = freq_MAE(enhanced_y, clean_y)
         loss_mag_mae = mag_MAE(enhanced_y, clean_y)
@@ -131,21 +131,37 @@ class Trainer(BaseTrainer):
         noisy_y = noisy_y.to(self.accelerator.device)
         clean_y = clean_y.to(self.accelerator.device)
 
-        enhanced_y, *_ = self.model_g(noisy_y)
-        return noisy_y, clean_y, enhanced_y
+        enhanced_y, enhanced_mag, fb_out, sb_out = self.model_g(noisy_y)
+
+        # detach and move to cpu
+        synops = compute_synops(fb_out, sb_out)
+        neuron_ops = compute_neuronops(fb_out, sb_out)
+
+        # to tensor
+        synops = torch.tensor([synops], device=self.accelerator.device).unsqueeze(0)
+        synops = synops.repeat(enhanced_y.shape[0], 1)
+        neuron_ops = torch.tensor(
+            [neuron_ops], device=self.accelerator.device
+        ).unsqueeze(0)
+        neuron_ops = neuron_ops.repeat(enhanced_y.shape[0], 1)
+
+        return noisy_y, clean_y, enhanced_y, synops, neuron_ops
 
     def compute_metrics(self, dataloader_idx, step_out):
-        noisy, clean, enhanced = step_out
+        noisy, clean, enhanced, synops, neuron_ops = step_out
 
         si_sdr = self.si_sdr(enhanced, clean)
-        # stoi = self.stoi(enhanced, clean)
-        # pesq_wb = self.pesq_wb(enhanced, clean)
-        # pesq_nb = self.pesq_nb(enhanced, clean)
         dns_mos = self.dns_mos(enhanced)
-        return si_sdr | dns_mos
+
+        return (
+            si_sdr
+            | dns_mos
+            | {"synops": synops.item()}
+            | {"neuron_ops": neuron_ops.item()}
+        )
 
     def compute_batch_metrics(self, dataloader_idx, step_out):
-        noisy, clean, enhanced = step_out
+        noisy, clean, enhanced, synops, neuron_ops = step_out
         assert noisy.ndim == clean.ndim == enhanced.ndim == 2
 
         # [num_ranks * batch_size, num_samples]
@@ -154,8 +170,13 @@ class Trainer(BaseTrainer):
             enhanced_i = enhanced[i, :]
             clean_i = clean[i, :]
             noisy_i = noisy[i, :]
+            synops_i = synops[i, :]
+            neuron_ops_i = neuron_ops[i, :]
             results.append(
-                self.compute_metrics(dataloader_idx, (noisy_i, clean_i, enhanced_i))
+                self.compute_metrics(
+                    dataloader_idx,
+                    (noisy_i, clean_i, enhanced_i, synops_i, neuron_ops_i),
+                )
             )
 
         return results

@@ -1,0 +1,120 @@
+[[validate_dataset]]
+path = "dataloader.DNSAudio"
+
+[validate_dataset.args]
+root = "/datasets/datasets_fullband/validation_set/"
+train = false
+[validate_dataset.dataloader]
+batch_size = 6
+num_workers = 6
+
+[meta]
+save_dir = "exp"
+description = "Train a model using Generative Adversarial Networks (GANs)"
+seed = 20220815
+exp_id = "baseline_l"
+config_path = "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_l.toml"
+
+[trainer]
+path = "trainer.Trainer"
+
+[loss_function]
+path = "torch.nn.MSELoss"
+
+[optimizer_g]
+path = "torch.optim.AdamW"
+
+[optimizer_d]
+path = "torch.optim.AdamW"
+
+[lr_scheduler_g]
+path = "torch.optim.lr_scheduler.ExponentialLR"
+
+[lr_scheduler_d]
+path = "torch.optim.lr_scheduler.ExponentialLR"
+
+[model_g]
+path = "model_low_freq.Separator"
+
+[model_d]
+path = "discriminator.Discriminator"
+
+[acoustics]
+n_fft = 512
+hop_length = 128
+win_length = 512
+sr = 16000
+
+[train_dataset]
+path = "dataloader.DNSAudio"
+
+[test_dataset]
+path = "dataloader.DNSAudio"
+
+[trainer.args]
+max_epoch = 9999
+clip_grad_norm_value = 10
+save_max_score = true
+save_ckpt_interval = 1
+patience = 20
+plot_norm = true
+validation_interval = 1
+max_num_checkpoints = 9999
+
+[loss_function.args]
+
+[optimizer_g.args]
+lr = 0.001
+
+[optimizer_d.args]
+lr = 0.001
+
+[lr_scheduler_g.args]
+gamma = 0.99
+
+[lr_scheduler_d.args]
+gamma = 0.99
+
+[model_g.args]
+sr = 16000
+fdrc = 0.5
+n_fft = 512
+fb_freqs = 64
+hop_length = 128
+win_length = 512
+num_freqs = 256
+sequence_model = "GSU"
+fb_hidden_size = 320
+fb_output_activate_function = false
+freq_cutoffs = [ 32, 128, 192,]
+sb_df_orders = [ 5, 3, 1, 1,]
+sb_num_center_freqs = [ 2, 4, 32, 64,]
+sb_num_neighbor_freqs = [ 15, 15, 15, 15,]
+fb_num_center_freqs = [ 2, 4, 32, 64,]
+fb_num_neighbor_freqs = [ 0, 0, 0, 0,]
+sb_hidden_size = 256
+sb_output_activate_function = false
+norm_type = "offline_laplace_norm"
+shared_weights = true
+bn = true
+
+[model_d.args]
+
+[train_dataset.args]
+root = "/datasets/datasets_fullband/training_set/"
+limit = false
+offset = 0
+
+[train_dataset.dataloader]
+batch_size = 24
+num_workers = 12
+drop_last = true
+pin_memory = true
+
+[test_dataset.args]
+root = "/datasets/datasets_fullband/validation_set/"
+train = false
+
+[test_dataset.dataloader]
+batch_size = 6
+num_workers = 6

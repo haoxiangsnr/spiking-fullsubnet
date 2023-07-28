@@ -347,7 +347,7 @@ def compute_synops(fb_all_layer_outputs, sb_all_layer_outputs):
                     + sb_all_layer_outputs[i][j].size(-1)
                 )
             )
-    return {"synops": synops}
+    return synops.item()
 
 
 def compute_neuronops(fb_all_layer_outputs, sb_all_layer_outputs):
@@ -357,4 +357,4 @@ def compute_neuronops(fb_all_layer_outputs, sb_all_layer_outputs):
     for i in range(len(sb_all_layer_outputs)):
         for j in range(len(sb_all_layer_outputs[i])):
             neuronops += sb_all_layer_outputs[i][j].size(-1)
-    return {"neuronops": neuronops}
+    return neuronops

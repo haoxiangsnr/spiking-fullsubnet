@@ -12,7 +12,7 @@ save_max_score = true
 save_ckpt_interval = 1
 patience = 20
 plot_norm = true
-validation_interval = 10
+validation_interval = 4
 max_num_checkpoints = 9999
 
 [loss_function]
@@ -22,7 +22,7 @@ path = "torch.nn.MSELoss"
 [optimizer_g]
 path = "torch.optim.AdamW"
 [optimizer_g.args]
-lr = 1e-3
+lr = 5e-4
 
 [optimizer_d_sig]
 path = "torch.optim.AdamW"
