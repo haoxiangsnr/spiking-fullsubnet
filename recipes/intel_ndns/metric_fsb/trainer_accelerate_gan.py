@@ -1,9 +1,12 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
 from accelerate.logging import get_logger
 
+from audiozen.acoustics.audio_feature import save_wav
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
 from audiozen.trainer.base_trainer_gan_accelerate import BaseTrainer
 
@@ -134,3 +137,46 @@ class Trainer(BaseTrainer):
                 )
 
         return score
+
+    def test_step(self, batch, batch_idx, dataloader_idx=0):
+        noisy_y, clean_y, noisy_fpath = batch
+        noisy_y = noisy_y.to(self.accelerator.device)
+        clean_y = clean_y.to(self.accelerator.device)
+
+        enhanced_y, enhanced_mag = self.model_g(noisy_y)
+
+        # save enhanced audio
+        stem = Path(noisy_fpath[0]).stem
+        enhanced_dir = self.enhanced_dir / f"dataloader_{dataloader_idx}"
+        enhanced_dir.mkdir(exist_ok=True, parents=True)
+        enhanced_fpath = enhanced_dir / f"{stem}.wav"
+        save_wav(enhanced_y, enhanced_fpath.as_posix(), self.sr)
+        return noisy_y, clean_y, enhanced_y
+
+    def compute_test_metrics(self, dataloader_idx, step_out):
+        noisy, clean, enhanced = step_out
+        si_sdr = self.si_sdr(enhanced, clean)
+        stoi = self.stoi(enhanced, clean)
+        pesq_wb = self.pesq_wb(enhanced, clean)
+        pesq_nb = self.pesq_nb(enhanced, clean)
+        dns_mos = self.dns_mos(enhanced)
+        return stoi | pesq_wb | pesq_nb | si_sdr | dns_mos
+
+    def test_epoch_end(self, outputs):
+        score = 0.0
+
+        for dataloader_idx, dataloader_outputs in enumerate(outputs):
+            logger.info(
+                f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}..."
+            )
+
+            rows = []
+            for step_out in dataloader_outputs:
+                rows.append(self.compute_test_metrics(dataloader_idx, step_out))
+
+            df_metrics = pd.DataFrame(rows)
+
+            df_metrics_mean = df_metrics.mean(numeric_only=True)
+            df_metrics_mean_df = df_metrics_mean.to_frame().T
+
+            logger.info(f"\n{df_metrics_mean_df.to_markdown()}")

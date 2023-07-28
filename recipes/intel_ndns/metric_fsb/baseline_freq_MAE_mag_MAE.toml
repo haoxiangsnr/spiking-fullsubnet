@@ -88,3 +88,10 @@ path = "dataloader.DNSAudio"
 [validate_dataset.args]
 root = "/datasets/datasets_fullband/validation_set/"
 limit = false
+
+
+[test_dataset]
+path = "dataloader.DNSAudio"
+[test_dataset.args]
+root = "/datasets/datasets_fullband/validation_set/"
+limit = false

@@ -360,7 +360,7 @@ class BaseTrainer:
             test_dataloaders: the dataloader(s) to test.
             ckpt_path: the checkpoint path to load the model weights from.
         """
-        if self.rank == 0:
+        if self.accelerator.is_local_main_process:
             logger.info(f"Begin testing...")
             self.model_g.eval()
             self.model_d.eval()

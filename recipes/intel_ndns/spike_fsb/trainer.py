@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import torch
@@ -5,6 +7,7 @@ import torch.nn.functional as F
 from accelerate.logging import get_logger
 from tqdm import tqdm
 
+from audiozen.acoustics.audio_feature import save_wav
 from audiozen.loss import SISNRLoss, freq_MAE, mag_MAE
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI, compute_neuronops, compute_synops
 from audiozen.trainer.base_trainer_gan_accelerate_ddp_validate import BaseTrainer
@@ -98,11 +101,18 @@ class Trainer(BaseTrainer):
                 )
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
-        noisy_y, clean_y, filename = batch
+        noisy_y, clean_y, noisy_file = batch
         noisy_y = noisy_y.to(self.accelerator.device)
         clean_y = clean_y.to(self.accelerator.device)
 
         enhanced_y, enhanced_mag, fb_out, sb_out = self.model_g(noisy_y)
+
+        # save enhanced audio
+        stem = Path(noisy_file[0]).stem
+        enhanced_dir = self.enhanced_dir / f"dataloader_{dataloader_idx}"
+        enhanced_dir.mkdir(exist_ok=True, parents=True)
+        enhanced_fpath = enhanced_dir / f"{stem}.wav"
+        save_wav(enhanced_y, enhanced_fpath.as_posix(), self.sr)
 
         # detach and move to cpu
         synops = compute_synops(fb_out, sb_out)

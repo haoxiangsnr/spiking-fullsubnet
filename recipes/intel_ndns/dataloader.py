@@ -102,7 +102,7 @@ class DNSAudio(Dataset):
                 start_position=start_position,
             )
 
-        return noisy_audio, clean_audio, noise_audio
+        return noisy_audio, clean_audio, noisy_file
 
     def __len__(self) -> int:
         """Length of the dataset."""

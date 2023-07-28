@@ -92,7 +92,7 @@ def run(config, resume):
             )
 
     if "test" in args.mode:
-        if not isinstance(["test_dataset"], list):
+        if not isinstance(config["test_dataset"], list):
             config["test_dataset"] = [config["test_dataset"]]
 
         test_dataloaders = []

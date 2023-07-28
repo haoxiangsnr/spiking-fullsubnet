@@ -10,7 +10,7 @@ from audiozen.acoustics.audio_feature import subsample
 
 
 class DNSAudio(Dataset):
-    def __init__(self, root="./", limit=None, offset=0, train=True) -> None:
+    def __init__(self, root="./", limit=None, offset=0, train=False) -> None:
         """Audio dataset loader for DNS.
 
         Args:
@@ -102,7 +102,7 @@ class DNSAudio(Dataset):
                 start_position=start_position,
             )
 
-        return noisy_audio, clean_audio, "placeholder"
+        return noisy_audio, clean_audio, noisy_file
 
     def __len__(self) -> int:
         """Length of the dataset."""
