@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Running an experiment using HuggingFace Accelerate &mdash; audiozen  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            audiozen
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project_structure.html">Project Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running_an_experiment.html">Running an experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logging_and_visualization.html">Logging and Visualization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Concepts</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../concepts/experiment_arguments.html">Experiment arguments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../concepts/trainer.html">Trainer</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reference/FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/conduct.html">Code of Conduct</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">audiozen</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Running an experiment using HuggingFace Accelerate</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/haoxiangsnr/audiozen/blob/main/docs/source/getting_started/running_an_experiment_accelerate.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="running-an-experiment-using-huggingface-accelerate">
+<h1>Running an experiment using HuggingFace Accelerate<a class="headerlink" href="#running-an-experiment-using-huggingface-accelerate" title="Permalink to this heading"></a></h1>
+<p>As mentioned in the previous section, AudioZEN adopts a <code class="docutils literal notranslate"><span class="pre">recipes/&lt;dataset&gt;/&lt;model&gt;</span></code> directory structure.
+To run an experiment of a model, we first go to a dataset directory, which will include an entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code> and some dataloaders dedicated to this dataset. For example, let us entry to the directory <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/</span></code>. The corresponding dataset is the Intel Neuromorphic DNS Challenge dataset.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>recipes/intel_ndns/
+</pre></div>
+</div>
+<section id="entry-file-run-py">
+<h2>Entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code><a class="headerlink" href="#entry-file-run-py" title="Permalink to this heading"></a></h2>
+<p>In each <code class="docutils literal notranslate"><span class="pre">&lt;dataset&gt;</span></code> directory, we have an entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code>, dataloaders, and some model directories. We call the <code class="docutils literal notranslate"><span class="pre">run.py</span></code> script to run an experiment.
+For example, we can use the following command to train the <code class="docutils literal notranslate"><span class="pre">sdnn_delays</span></code> model using configurations in <code class="docutils literal notranslate"><span class="pre">baseline.toml</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
+<span class="w">    </span>--standalone
+<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>run.py
+<span class="w">    </span>-C<span class="w"> </span>sdnn_delays/baseline.toml
+<span class="w">    </span>-M<span class="w"> </span>train
+</pre></div>
+</div>
+<p>Here, we use <code class="docutils literal notranslate"><span class="pre">torchrun</span></code> to start the experiment.
+<code class="docutils literal notranslate"><span class="pre">torchrun</span></code> isn’t magic. It is a superset of <code class="docutils literal notranslate"><span class="pre">torch.distributed.launch</span></code> and is provided by PyTorch officials, helping us to start multi-GPU training conveniently. Its just a python <code class="docutils literal notranslate"><span class="pre">console_entrypoint</span></code> added for convenience (check <a class="reference external" href="https://pytorch.org/docs/stable/elastic/run.html">torchrun versus python -m torch.distributed.run</a>). Check <a class="reference external" href="https://pytorch.org/docs/stable/elastic/run.html">Torchrun (Elastic Training)</a> for more details.</p>
+<p><code class="docutils literal notranslate"><span class="pre">run.py</span></code> supports the following parameters:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-C</span></code> / <code class="docutils literal notranslate"><span class="pre">--configuration</span></code></p></td>
+<td><p>The configuration file (<code class="docutils literal notranslate"><span class="pre">*.toml</span></code>) for the experiment.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">-M</span></code> / <code class="docutils literal notranslate"><span class="pre">--mode</span></code></p></td>
+<td><p>The mode of the experiment. It can be <code class="docutils literal notranslate"><span class="pre">train</span></code>, <code class="docutils literal notranslate"><span class="pre">validate</span></code>, <code class="docutils literal notranslate"><span class="pre">test</span></code>, <code class="docutils literal notranslate"><span class="pre">predict</span></code>, or <code class="docutils literal notranslate"><span class="pre">finetune</span></code> or a combination of them.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">train</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">-R</span></code> / <code class="docutils literal notranslate"><span class="pre">--resume</span></code></p></td>
+<td><p>Resume the experiment from the latest checkpoint.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--ckpt_path</span></code></p></td>
+<td><p>The checkpoint path for test. It can be <code class="docutils literal notranslate"><span class="pre">best</span></code>, <code class="docutils literal notranslate"><span class="pre">latest</span></code>, or a path to a checkpoint file.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">latest</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>See more details in <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/run.py</span></code> and <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/sdnn_delays/baseline.toml</span></code>.</p>
+</section>
+<section id="single-machine-multi-gpu-training">
+<h2>Single-machine multi-GPU training<a class="headerlink" href="#single-machine-multi-gpu-training" title="Permalink to this heading"></a></h2>
+<p>In most cases, we want to start an experiment on a single machine with multiple GPUs. Here, we show some examples for how to.</p>
+<p>First, let us use <code class="docutils literal notranslate"><span class="pre">baseline.toml</span></code> to train <code class="docutils literal notranslate"><span class="pre">sdnn_delays</span></code> with two GPUs on a single machine:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
+<span class="w">    </span>--standalone
+<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>run.py
+<span class="w">    </span>--configuration<span class="w"> </span>sdnn_delays/baseline.toml
+<span class="w">    </span>--mode<span class="w"> </span>train
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">--nnodes=1</span></code> means that we will start the experiment on a single machine. <code class="docutils literal notranslate"><span class="pre">--nproc_per_node=2</span></code> means that we will use two GPUs on the single machine.</p>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>The model <code class="docutils literal notranslate"><span class="pre">sdnn_delays</span></code> based on Lava-dl package, which actually does not support multi-GPU training. Here, we just use it as an example to show how to start an experiment on a single machine with multiple GPUs using <code class="docutils literal notranslate"><span class="pre">torchrun</span></code>.</p>
+</div>
+<p>After a suspended experiment, we can resume training (using <code class="docutils literal notranslate"><span class="pre">-R</span></code> or <code class="docutils literal notranslate"><span class="pre">--resume</span></code>) from the last checkpoint:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
+<span class="w">    </span>--standalone
+<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>run.py
+<span class="w">    </span>--C<span class="w"> </span>sdnn_delays/baseline.toml
+<span class="w">    </span>--M<span class="w"> </span>train
+<span class="w">    </span>-R
+</pre></div>
+</div>
+<p>In the case of running multiple experiments on a single machine, since the first experiment has occupied the default <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> (DDP) listening port <code class="docutils literal notranslate"><span class="pre">29500</span></code>, we need to make sure that each instance (job) is setup on different ports to avoid port conflicts. Or you may directly use <code class="docutils literal notranslate"><span class="pre">rdzv_endpoint=localhost:0</span></code>, meaning to select a random unused port:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
+<span class="w">    </span>--rdzv_backend<span class="o">=</span>c10d
+<span class="w">    </span>--rdzv_endpoint<span class="o">=</span>localhost:0
+<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>run.py
+<span class="w">    </span>-C<span class="w"> </span>sdnn_delays/baseline.toml
+<span class="w">    </span>-M<span class="w"> </span>train
+</pre></div>
+</div>
+<p>Using “best” epoch to test the model performance on the test dataset:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
+<span class="w">    </span>--standalone
+<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>run.py
+<span class="w">    </span>-C<span class="w"> </span>sdnn_delays/baseline.toml
+<span class="w">    </span>-M<span class="w"> </span><span class="nb">test</span>
+<span class="w">    </span>--ckpt_path<span class="w"> </span>best
+</pre></div>
+</div>
+<p>First to train the model on the training dataset. Then test the model performance on the test dataset:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
+<span class="w">    </span>--standalone
+<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
+<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
+<span class="w">    </span>run.py
+<span class="w">    </span>-C<span class="w"> </span>sdnn_delays/baseline.toml
+<span class="w">    </span>-M<span class="w"> </span>train<span class="w"> </span><span class="nb">test</span>
+<span class="w">    </span>--ckpt_path<span class="w"> </span>best
+</pre></div>
+</div>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>Before use <code class="docutils literal notranslate"><span class="pre">torchrun</span></code>, don’t forget to use a environment variable <code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES</span></code> to control the GPU usage. For example, the following command will use the first and second GPUs:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CUDA_VISIABLE_DEVICES</span><span class="o">=</span><span class="m">0</span>,1
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, HAO Xiang.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
