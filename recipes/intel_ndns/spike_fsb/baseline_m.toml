@@ -88,20 +88,38 @@ drop_last = true
 # pin_memory = true
 
 
-[validate_dataset]
+[[validate_dataset]]
 path = "dataloader.DNSAudio"
 [validate_dataset.args]
 root = "/datasets/datasets_fullband/validation_set/"
 train = false
 [validate_dataset.dataloader]
-batch_size = 6
-num_workers = 6
+batch_size = 16
+num_workers = 8
 
-[test_dataset]
+[[validate_dataset]]
+path = "dataloader.DNSAudio"
+[validate_dataset.args]
+root = "/datasets/datasets_fullband/validation_set_20230730/"
+train = false
+[validate_dataset.dataloader]
+batch_size = 16
+num_workers = 8
+
+[[test_dataset]]
 path = "dataloader.DNSAudio"
 [test_dataset.args]
 root = "/datasets/datasets_fullband/validation_set/"
 train = false
 [test_dataset.dataloader]
-batch_size = 6
-num_workers = 6
+batch_size = 16
+num_workers = 8
+
+[[test_dataset]]
+path = "dataloader.DNSAudio"
+[test_dataset.args]
+root = "/datasets/datasets_fullband/validation_set_20230730/"
+train = false
+[test_dataset.dataloader]
+batch_size = 16
+num_workers = 8

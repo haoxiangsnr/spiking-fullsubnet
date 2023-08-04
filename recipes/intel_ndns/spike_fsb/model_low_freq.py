@@ -3,7 +3,7 @@ from functools import partial
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from efficient_spiking_neuron import LSTMState, efficient_spiking_neuron
+from efficient_spiking_neuron import MemoryState, efficient_spiking_neuron
 from einops import rearrange
 from torch import nn
 from torch.nn import functional
@@ -50,7 +50,7 @@ class SequenceModel(nn.Module):
         hidden_size,
         num_layers,
         bidirectional,
-        sequence_model="GRU",
+        sequence_model="GSU",
         output_activate_function="Tanh",
         num_groups=4,
         mogrify_steps=5,
@@ -59,23 +59,7 @@ class SequenceModel(nn.Module):
         bn=False,
     ):
         super().__init__()
-        if sequence_model == "LSTM":
-            self.sequence_model = nn.LSTM(
-                input_size=input_size,
-                hidden_size=hidden_size,
-                num_layers=num_layers,
-                bidirectional=bidirectional,
-                dropout=dropout,
-            )
-        elif sequence_model == "GRU":
-            self.sequence_model = nn.GRU(
-                input_size=input_size,
-                hidden_size=hidden_size,
-                num_layers=num_layers,
-                bidirectional=bidirectional,
-                dropout=dropout,
-            )
-        elif sequence_model == "GSU":
+        if sequence_model == "GSU":
             # print(f"input_size: {input_size}, hidden_size: {hidden_size}, num_layers: {num_layers}, output_size: {output_size}")
             self.sequence_model = efficient_spiking_neuron(
                 input_size=input_size,
@@ -114,7 +98,6 @@ class SequenceModel(nn.Module):
         self.output_activate_function = output_activate_function
         self.output_size = output_size
 
-        # only for custom_lstm and are needed to clean up
         self.sequence_model_name = sequence_model
         self.hidden_size = hidden_size
         self.num_layers = num_layers
@@ -129,17 +112,9 @@ class SequenceModel(nn.Module):
         assert x.dim() == 3, f"Shape is {x.shape}."
         batch_size, _, _ = x.shape
 
-        if self.sequence_model_name == "LayerNormLSTM":
+        if self.sequence_model_name == "GSU":
             states = [
-                (
-                    torch.zeros(batch_size, self.hidden_size, device=x.device),
-                    torch.zeros(batch_size, self.hidden_size, device=x.device),
-                )
-                for _ in range(self.num_layers)
-            ]
-        elif self.sequence_model_name == "GSU":
-            states = [
-                LSTMState(
+                MemoryState(
                     torch.zeros(batch_size, self.hidden_size, device=x.device),
                     torch.zeros(batch_size, self.hidden_size, device=x.device),
                 )
@@ -149,11 +124,7 @@ class SequenceModel(nn.Module):
             states = None
 
         x = x.permute(2, 0, 1).contiguous()  # [B, F, T] => [T, B, F]
-        if (
-            self.sequence_model_name == "LSTM"
-            or self.sequence_model_name == "GRU"
-            or self.sequence_model_name == "GSU"
-        ):
+        if self.sequence_model_name == "GSU":
             assert self.sequence_model_name == "GSU"
             if self.sequence_model_name == "GSU":
                 o, _, all_layer_outputs = self.sequence_model(x, states)

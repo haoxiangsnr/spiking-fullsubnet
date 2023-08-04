@@ -1,3 +1,4 @@
+import logging
 import shutil
 import time
 from functools import partial
@@ -170,6 +171,8 @@ class BaseTrainer:
             raise FileNotFoundError(f"Checkpoint {ckpt_path.as_posix()} not found.")
 
         self.accelerator.load_state(ckpt_path)
+
+        logger.info(f"Checkpoint on epoch {self.start_epoch.value} is loaded.")
 
     def _save_checkpoint(self, epoch, is_best_epoch):
         """Save checkpoint.

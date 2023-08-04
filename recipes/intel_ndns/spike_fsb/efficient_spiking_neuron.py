@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from torch.nn import Parameter
 
-LSTMState = namedtuple("LSTMState", ["hx", "cx"])
+MemoryState = namedtuple("MemoryState", ["hx", "cx"])
 
 
 def efficient_spiking_neuron(
@@ -31,20 +31,20 @@ def efficient_spiking_neuron(
     # assert shared_weights
     # assert bn
 
-    return StackedLSTM(
+    return StackedGSU(
         num_layers,
-        LSTMLayer,
-        first_layer_args=[LSTMCell, input_size, hidden_size, shared_weights, bn],
-        other_layer_args=[LSTMCell, hidden_size, hidden_size, shared_weights, bn],
+        GSULayer,
+        first_layer_args=[GSUCell, input_size, hidden_size, shared_weights, bn],
+        other_layer_args=[GSUCell, hidden_size, hidden_size, shared_weights, bn],
     )
 
 
-class StackedLSTM(nn.Module):
+class StackedGSU(nn.Module):
     # __constants__ = ["layers"]  # Necessary for iterating through self.layers
 
     def __init__(self, num_layers, layer, first_layer_args, other_layer_args):
-        super(StackedLSTM, self).__init__()
-        self.layers = init_stacked_lstm(
+        super(StackedGSU, self).__init__()
+        self.layers = init_stacked_gsu(
             num_layers, layer, first_layer_args, other_layer_args
         )
 
@@ -63,16 +63,16 @@ class StackedLSTM(nn.Module):
         return output, output_states, all_layer_output
 
 
-def init_stacked_lstm(num_layers, layer, first_layer_args, other_layer_args):
+def init_stacked_gsu(num_layers, layer, first_layer_args, other_layer_args):
     layers = [layer(*first_layer_args)] + [
         layer(*other_layer_args) for _ in range(num_layers - 1)
     ]
     return nn.ModuleList(layers)
 
 
-class LSTMLayer(nn.Module):
+class GSULayer(nn.Module):
     def __init__(self, cell, *cell_args):
-        super(LSTMLayer, self).__init__()
+        super(GSULayer, self).__init__()
         self.cell = cell(*cell_args)
 
     def forward(self, input, state):
@@ -104,9 +104,9 @@ class Triangle(torch.autograd.Function):
         return grad_input, None
 
 
-class LSTMCell(nn.Module):
+class GSUCell(nn.Module):
     def __init__(self, input_size, hidden_size, shared_weights=False, bn=False):
-        super(LSTMCell, self).__init__()
+        super(GSUCell, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.shared_weights = shared_weights
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     )
 
     states = [
-        LSTMState(
+        MemoryState(
             torch.zeros(batch_size, hidden_size, device=x.device),
             torch.zeros(batch_size, hidden_size, device=x.device),
         )

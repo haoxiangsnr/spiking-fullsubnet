@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import torch
@@ -7,7 +5,6 @@ import torch.nn.functional as F
 from accelerate.logging import get_logger
 from tqdm import tqdm
 
-from audiozen.acoustics.audio_feature import save_wav
 from audiozen.loss import SISNRLoss, freq_MAE, mag_MAE
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI, compute_neuronops, compute_synops
 from audiozen.trainer.base_trainer_gan_accelerate_ddp_validate import BaseTrainer
@@ -46,6 +43,12 @@ class Trainer(BaseTrainer):
 
         batch_size, *_ = noisy_y.shape
 
+        # Check data stats (for debugging)
+        # logger.info(
+        #     f"[Noisy Audio] device: {self.accelerator.device}, shape: {noisy_y.shape}, mean: {noisy_y.mean()}, std: {noisy_y.std()}",
+        #     main_process_only=False,
+        # )
+
         one_labels = torch.ones(batch_size, 1, device=self.accelerator.device).float()
         clean_mag, *_ = self.torch_stft(clean_y)
 
@@ -53,6 +56,12 @@ class Trainer(BaseTrainer):
         self.optimizer_g.zero_grad()
 
         enhanced_y, enhanced_mag, *_ = self.model_g(noisy_y)
+
+        # check data stats (for debugging)
+        # logger.info(
+        #     f"[Enhanced Audio] device: {self.accelerator.device}, shape: {enhanced_y.shape}, mean: {enhanced_y.mean()}, std: {enhanced_y.std()}",
+        #     main_process_only=False,
+        # )
 
         pred_fake = self.model_d(clean_mag, enhanced_mag)  # [B, 1]
         loss_g_fake = 0.05 * F.mse_loss(pred_fake, one_labels)
