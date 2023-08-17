@@ -165,6 +165,8 @@ class BaseTrainer:
 
         self.accelerator.load_state(ckpt_path)
 
+        logger.info(f"Checkpoint on epoch {self.start_epoch.value} is loaded.")
+
     def _save_checkpoint(self, epoch, is_best_epoch):
         """Save checkpoint.
 
@@ -267,63 +269,48 @@ class BaseTrainer:
             )
 
             for batch_idx, batch in enumerate(dataloader_bar):
-                # clear gradients
-                self.optimizer.zero_grad()
-
-                loss = self.training_step(batch, batch_idx)
-
-                # backward
-                self.accelerator.backward(loss)
-
-                if self.clip_grad_norm_value != -1:
-                    self.total_norm = self.accelerator.clip_grad_norm_(
-                        self.model.parameters(), self.clip_grad_norm_value
-                    )
-
-                # update parameters
-                self.optimizer.step()
-
-                training_epoch_output.append(loss.item())
+                loss_dict = self.training_step(batch, batch_idx)
+                training_epoch_output.append(loss_dict)
 
                 if self.accelerator.is_local_main_process:
-                    dataloader_bar.set_description(
-                        f"Loss: {loss.item():.4f}, lr: {self.lr_scheduler.get_last_lr()[-1]:.6f}"
-                    )
+                    bar_desc = ""
+                    for k, v in loss_dict.items():
+                        bar_desc += f"{k}: {v:.4f}, "
+                    bar_desc += f"lr: {self.lr_scheduler.get_last_lr()[-1]:.6f}, "
+                    dataloader_bar.set_description(bar_desc)
 
-                    self.writer.add_scalar(
-                        f"Loss/Train_Step",
-                        loss.item(),
-                        (epoch - 1) * len(train_dataloader) + batch_idx,
-                    )
-
-                    if self.plot_norm:
-                        self.writer.add_scalars(
-                            f"Norm",
-                            {
-                                "total_norm": self.total_norm,
-                                "max_norm": self.clip_grad_norm_value,
-                            },
-                            (epoch - 1) * len(train_dataloader) + batch_idx,
-                        )
+                    # Log to tensorboard
+                    # for key, value in loss_dict.items():
+                    #     self.writer.add_scalar(
+                    #         f"Train_Step/{key}",
+                    #         value,
+                    #         (epoch - 1) * len(train_dataloader) + batch_idx,
+                    #     )
 
             self.training_epoch_end(training_epoch_output)
 
-            if self.accelerator.is_local_main_process:
-                if epoch % self.save_ckpt_interval == 0:
-                    self._save_checkpoint(epoch, is_best_epoch=False)
+            if (
+                self.accelerator.is_local_main_process
+                and epoch % self.save_ckpt_interval == 0
+            ):
+                self._save_checkpoint(epoch, is_best_epoch=False)
 
-                if epoch % self.validation_interval == 0:
-                    with torch.no_grad():
-                        logger.info(f"Training finished, begin validation...")
-                        score = self.validate(validation_dataloaders)
+            if epoch % self.validation_interval == 0:
+                with torch.no_grad():
+                    logger.info(f"Training finished, begin validation...")
+                    score = self.validate(validation_dataloaders)
+
+                    if self.accelerator.is_local_main_process:
                         should_stop = self._run_early_stop_check(score, epoch)
-
                         if should_stop:
                             early_stop_mark += 1
 
-                        logger.info(f"Validation finished.")
+                    logger.info(f"Validation finished.")
 
-            self.lr_scheduler.step()
+            if not self.accelerator.optimizer_step_was_skipped:
+                # For mixed precision training,
+                # `optimizer_step_was_skipped` will be True if the gradients are `nan` or `inf`.
+                self.lr_scheduler.step()
             self.accelerator.wait_for_everyone()
 
             # Reduces the `early_stop_mark` data across all processes in such a way that all get the final result.
@@ -347,19 +334,33 @@ class BaseTrainer:
             for batch_idx, batch in enumerate(
                 tqdm(
                     dataloader,
-                    desc=f"Inferring on dataloader {dataloader_idx}",
+                    desc=f"Inference on dataloader {dataloader_idx}",
                     bar_format="{l_bar}{r_bar}",
                     dynamic_ncols=True,
+                    disable=not self.accelerator.is_local_main_process,
                 )
             ):
                 step_output = self.validation_step(batch, batch_idx, dataloader_idx)
-                dataloader_output.append(step_output)
+
+                # Note that the first dimension of the result is num_processes multiplied
+                # by the first dimension of the input tensors.
+                # =================================================
+                # [noisy,       clean_y, ...]
+                # [[4, 480000], [4, 480000], ...]
+                # =================================================
+                gathered_step_output = self.accelerator.gather_for_metrics(step_output)
+                dataloader_output.append(gathered_step_output)
+
             validation_output.append(dataloader_output)
 
         logger.info(f"Validation inference finished, begin validation epoch end...")
-        score = self.validation_epoch_end(validation_output)
 
-        return score
+        if self.accelerator.is_local_main_process:
+            # only the main process will run validation_epoch_end
+            score = self.validation_epoch_end(validation_output)
+            return score
+        else:
+            return None
 
     @torch.no_grad()
     def test(self, dataloaders, ckpt_path="best"):
@@ -369,30 +370,42 @@ class BaseTrainer:
             test_dataloaders: the dataloader(s) to test.
             ckpt_path: the checkpoint path to load the model weights from.
         """
-        if self.rank == 0:
-            logger.info(f"Begin testing...")
-            self.model.eval()
+        logger.info(f"Begin testing...")
+        self.model.eval()
 
-            if not isinstance(dataloaders, list):
-                dataloaders = [dataloaders]
+        if not isinstance(dataloaders, list):
+            dataloaders = [dataloaders]
 
-            self._load_checkpoint(ckpt_path)
+        self._load_checkpoint(ckpt_path)
 
-            test_output = []
-            for dataloader_idx, dataloader in enumerate(dataloaders):
-                step_outputs = []
-                for batch_idx, batch in enumerate(
-                    tqdm(
-                        dataloader,
-                        desc=f"Inference on dataloader {dataloader_idx}",
-                        bar_format="{l_bar}{r_bar}",
-                    )
-                ):
-                    step_output = self.test_step(batch, batch_idx, dataloader_idx)
-                    step_outputs.append(step_output)
+        test_output = []
+        for dataloader_idx, dataloader in enumerate(dataloaders):
+            dataloader_out = []
+            for batch_idx, batch in enumerate(
+                tqdm(
+                    dataloader,
+                    desc=f"Inference on dataloader {dataloader_idx}",
+                    bar_format="{l_bar}{r_bar}",
+                    dynamic_ncols=True,
+                    disable=not self.accelerator.is_local_main_process,
+                )
+            ):
+                step_output = self.test_step(batch, batch_idx, dataloader_idx)
 
-                test_output.append(step_outputs)
+                # Note that the first dimension of the result is num_processes multiplied
+                # by the first dimension of the input tensors.
+                # =================================================
+                # [noisy,       clean_y, ...]
+                # [[4, 480000], [4, 480000], ...]
+                # =================================================
+                gathered_step_output = self.accelerator.gather_for_metrics(step_output)
+                dataloader_out.append(gathered_step_output)
 
+            test_output.append(dataloader_out)
+
+        logger.info(f"Testing inference finished, begin testing epoch end...")
+        if self.accelerator.is_local_main_process:
+            # only the main process will run test_epoch_end
             self.test_epoch_end(test_output)
 
     @torch.no_grad()
