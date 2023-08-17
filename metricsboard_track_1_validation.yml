@@ -4,30 +4,32 @@
   SI-SNR: 12.5
   SI-SNRi_data: 4.88
   SI-SNRi_enc+dec: 4.88
-  MOS_ovrl: 0.2599999999999998
-  MOS_sig: 0.020000000000000018
-  MOS_bak: 0.7399999999999998
+  MOS_ovrl: 2.71
+  MOS_sig: 3.21
+  MOS_bak: 3.46
   latency_enc+dec_ms: 0.036
   latency_total_ms: 8.036
   power_proxy_Ops/s: 11590000.0
   PDP_proxy_Ops: 90000.0
   params: 525000
   size_kilobytes: 465
+  model_path: ./baseline_solution/sdnn_delays/Trained/network.pt
 - team: Intel Neuromorphic Computing Lab
   model: Intel proprietary DNS
   date: '2023-02-28'
   SI-SNR: 12.71
   SI-SNRi_data: 5.090000000000001
   SI-SNRi_enc+dec: 5.090000000000001
-  MOS_ovrl: 0.6399999999999997
-  MOS_sig: 0.16000000000000014
-  MOS_bak: 1.3599999999999999
+  MOS_ovrl: 3.09
+  MOS_sig: 3.35
+  MOS_bak: 4.08
   latency_enc+dec_ms: 0.036
   latency_total_ms: 8.036
   power_proxy_Ops/s: null
   PDP_proxy_Ops: null
   params: 1901000
   size_kilobytes: 3802
+  model_path: null
 - team: Clairaudience
   model: ALIF
   date: '2023-07-26'
@@ -43,6 +45,7 @@
   PDP_proxy_Ops: 229554
   params: 1580000
   size_kilobytes: 6320
+  model_path: model_zoo/intel_ndns/spike_fsb/ALIF/checkpoints/best.tar
 - team: Clairaudience
   model: model_S
   date: '2023-07-25'
@@ -58,6 +61,7 @@
   PDP_proxy_Ops: 234815
   params: 512000
   size_kilobytes: 2048
+  model_path: model_zoo/intel_ndns/spike_fsb/baseline_s/checkpoints/best
 - team: Clairaudience
   model: model_M
   date: '2023-07-26'
@@ -73,6 +77,7 @@
   PDP_proxy_Ops: 431000
   params: 954000
   size_kilobytes: 3816
+  model_path: model_zoo/intel_ndns/spike_fsb/baseline_m/checkpoints/best
 - team: Clairaudience
   model: model_L
   date: '2023-07-27'
@@ -88,18 +93,20 @@
   PDP_proxy_Ops: 595475
   params: 1289000
   size_kilobytes: 5156
+  model_path: model_zoo/intel_ndns/spike_fsb/baseline_l/checkpoints/best
 - team: Clairaudience
-  model: model_M_dualGAN
+  model: model_XL
   date: '2023-07-27'
-  SI-SNR: 12.72
-  SI-SNRi_data: 5.830000000000001
-  SI-SNRi_enc+dec: 5.830000000000001
-  MOS_ovrl: 0.4900000000000002
-  MOS_sig: 0.1499999999999999
-  MOS_bak: 1.15
+  SI-SNR: 14.93
+  SI-SNRi_data: 8.04
+  SI-SNRi_enc+dec: 8.04
+  MOS_ovrl: 0.6499999999999999
+  MOS_sig: 0.25
+  MOS_bak: 1.3199999999999998
   latency_enc+dec_ms: 0.036
   latency_total_ms: 8.036
-  power_proxy_Ops/s: 55500000.0
-  PDP_proxy_Ops: 445000
-  params: 954000
-  size_kilobytes: 3816
+  power_proxy_Ops/s: 55911500
+  PDP_proxy_Ops: 449305
+  params: 1798000
+  size_kilobytes: 7192
+  model_path: model_zoo/intel_ndns/spike_fsb/baseline_xl/checkpoints/best
