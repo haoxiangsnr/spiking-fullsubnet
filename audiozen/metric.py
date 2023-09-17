@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Union
 
 import librosa
 import numpy as np
@@ -61,6 +62,59 @@ class PESQ:
         pesq_val = pesq_backend(self.sr, ref, est, self.mode)
 
         return {f"pesq_{self.mode}": pesq_val}
+
+
+class IntelSISNR:
+    def __init__(self) -> None:
+        super().__init__()
+
+    def __call__(
+        self,
+        estimate: Union[torch.tensor, np.ndarray],
+        target: Union[torch.tensor, np.ndarray],
+    ) -> torch.tensor:
+        """Calculates SI-SNR estiamte from target audio and estiamte audio. The
+        audio sequene is expected to be a tensor/array of dimension more than 1.
+        The last dimension is interpreted as time.
+
+        The implementation is based on the example here:
+        https://www.tutorialexample.com/wp-content/uploads/2021/12/SI-SNR-definition.png
+
+        Parameters
+        ----------
+        target : Union[torch.tensor, np.ndarray]
+            Target audio waveform.
+        estimate : Union[torch.tensor, np.ndarray]
+            Estimate audio waveform.
+
+        Returns
+        -------
+        torch.tensor
+            SI-SNR of each target and estimate pair.
+        """
+        EPS = 1e-8
+        if not torch.is_tensor(target):
+            target: torch.tensor = torch.tensor(target)
+        if not torch.is_tensor(estimate):
+            estimate: torch.tensor = torch.tensor(estimate)
+
+        # zero mean to ensure scale invariance
+        s_target = target - torch.mean(target, dim=-1, keepdim=True)
+        s_estimate = estimate - torch.mean(estimate, dim=-1, keepdim=True)
+
+        # <s, s'> / ||s||**2 * s
+        pair_wise_dot = torch.sum(s_target * s_estimate, dim=-1, keepdim=True)
+        s_target_norm = torch.sum(s_target**2, dim=-1, keepdim=True)
+        pair_wise_proj = pair_wise_dot * s_target / s_target_norm
+
+        e_noise = s_estimate - pair_wise_proj
+
+        pair_wise_sdr = torch.sum(pair_wise_proj**2, dim=-1) / (
+            torch.sum(e_noise**2, dim=-1) + EPS
+        )
+        val = 10 * torch.log10(pair_wise_sdr + EPS)
+
+        return {"intel_si_snr": val.item()}
 
 
 class SISDR:

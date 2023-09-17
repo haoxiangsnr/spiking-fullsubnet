@@ -412,6 +412,12 @@ class BaseTrainer:
                 # [[4, 480000], [4, 480000], ...]
                 # =================================================
                 gathered_step_output = self.accelerator.gather_for_metrics(step_output)
+
+                # Convert the gathered cuda tensors to cpu tensors
+                gathered_step_output = [
+                    tensor.detach().cpu() for tensor in gathered_step_output
+                ]
+
                 dataloader_out.append(gathered_step_output)
 
             test_output.append(dataloader_out)

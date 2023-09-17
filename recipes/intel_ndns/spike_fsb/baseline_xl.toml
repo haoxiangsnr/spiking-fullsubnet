@@ -106,20 +106,11 @@ train = false
 batch_size = 16
 num_workers = 8
 
-[[test_dataset]]
+[test_dataset]
 path = "dataloader.DNSAudio"
 [test_dataset.args]
-root = "/datasets/datasets_fullband/validation_set/"
+root = "/datasets/IntelNeuromorphicDNSChallenge-latest/data/MicrosoftDNS_4_ICASSP/test_set_1/"
 train = false
 [test_dataset.dataloader]
-batch_size = 16
-num_workers = 8
-
-[[test_dataset]]
-path = "dataloader.DNSAudio"
-[test_dataset.args]
-root = "/datasets/datasets_fullband/validation_set_20230730/"
-train = false
-[test_dataset.dataloader]
-batch_size = 16
+batch_size = 64
 num_workers = 8

@@ -7,7 +7,7 @@ import pandas as pd
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
+from audiozen.metric import DNSMOS, PESQ, SISDR, STOI, IntelSISNR
 
 """
 Steps:
@@ -23,6 +23,7 @@ class MetricComputer:
         self.pesq_wb = PESQ(sr=sr, mode="wb")
         self.pesq_nb = PESQ(sr=sr, mode="nb")
         self.si_sdr = SISDR()
+        self.intel_si_snr = IntelSISNR()
         self.sr = sr
 
     def compute_per_item(self, ref_wav_path, est_wav_path):
@@ -36,13 +37,14 @@ class MetricComputer:
                 f"{ref_wav_path} and {est_wav_path} are not in the same length."
             )
 
-        pesq_wb = self.pesq_wb(est, ref)
-        pesq_nb = self.pesq_nb(est, ref)
-        stoi = self.stoi(est, ref)
+        # pesq_wb = self.pesq_wb(est, ref)
+        # pesq_nb = self.pesq_nb(est, ref)
+        # stoi = self.stoi(est, ref)
         si_sdr = self.si_sdr(est, ref)
+        intel_si_snr = self.intel_si_snr(est, ref)
         dns_mos = self.dns_mos(est)
 
-        return {"name": basename} | dns_mos | si_sdr  # | pesq_wb | pesq_nb | stoi
+        return {"name": basename} | dns_mos | si_sdr | intel_si_snr
 
     def compute(self, reference_wav_paths, estimated_wav_paths, n_jobs=40):
         rows = Parallel(n_jobs=n_jobs, prefer="threads")(
