@@ -1,19 +1,19 @@
-- team: Clairaudience
-  model: Noisy
-  date: "2023-07-25"
-  SI-SNR: 7.37
-  SI-SNRi_data: 7.37
-  SI-SNRi_enc+dec: 7.37
-  MOS_ovrl: 2.4360453928657417
-  MOS_sig: 3.163788245485056
-  MOS_bak: 2.6949790321576534
-  latency_enc+dec_ms: 0.03
-  latency_total_ms: 32.03
-  power_proxy_Ops/s: ""
-  PDP_proxy_Ops: ""
-  params: ""
-  size_kilobytes: ""
-  model_path: ""
+# - team: Clairaudience
+#   model: Noisy
+#   date: "2023-07-25"
+#   SI-SNR: 7.37
+#   SI-SNRi_data: 7.37
+#   SI-SNRi_enc+dec: 7.37
+#   MOS_ovrl: 2.4360453928657417
+#   MOS_sig: 3.163788245485056
+#   MOS_bak: 2.6949790321576534
+#   latency_enc+dec_ms: 0.03
+#   latency_total_ms: 32.03
+#   power_proxy_Ops/s: ""
+#   PDP_proxy_Ops: ""
+#   params: ""
+#   size_kilobytes: ""
+#   model_path: ""
 - team: Clairaudience
   model: model_S
   date: "2023-07-25"
