@@ -552,6 +552,7 @@ class Separator(BaseModel):
             activate_function=sb_output_activate_function,
             shared_weights=shared_weights,
             bn=bn,
+            norm_type=norm_type,
         )
 
         self.stft = partial(
