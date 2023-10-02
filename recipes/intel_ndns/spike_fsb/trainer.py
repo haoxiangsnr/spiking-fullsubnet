@@ -136,7 +136,11 @@ class Trainer(BaseTrainer):
         # save_wav(enhanced_y, enhanced_fpath.as_posix(), self.sr)
 
         # detach and move to cpu
-        synops = compute_synops(fb_out, sb_out)
+        synops = compute_synops(
+            fb_out,
+            sb_out,
+            shared_weights=self.config["model_g"]["args"]["shared_weights"],
+        )
         neuron_ops = compute_neuronops(fb_out, sb_out)
 
         # to tensor
@@ -231,7 +235,11 @@ class Trainer(BaseTrainer):
             save_wav(enhanced_y_i, enhanced_fpath.as_posix(), self.sr)
 
         # detach and move to cpu
-        synops = compute_synops(fb_out, sb_out)
+        synops = compute_synops(
+            fb_out,
+            sb_out,
+            shared_weights=self.config["model_g"]["args"]["shared_weights"],
+        )
         neuron_ops = compute_neuronops(fb_out, sb_out)
 
         # to tensor

@@ -382,7 +382,7 @@ class DNSMOS:
         return clip_dict
 
 
-def compute_synops(fb_all_layer_outputs, sb_all_layer_outputs):
+def compute_synops(fb_all_layer_outputs, sb_all_layer_outputs, shared_weights=True):
     synops = 0.0
     for i in range(1, len(fb_all_layer_outputs) - 1):
         synops += (
@@ -401,7 +401,11 @@ def compute_synops(fb_all_layer_outputs, sb_all_layer_outputs):
                     + sb_all_layer_outputs[i][j].size(-1)
                 )
             )
-    return synops.item()
+
+    if shared_weights:
+        return synops.item()
+    else:
+        return 2 * synops.item()
 
 
 def compute_neuronops(fb_all_layer_outputs, sb_all_layer_outputs):

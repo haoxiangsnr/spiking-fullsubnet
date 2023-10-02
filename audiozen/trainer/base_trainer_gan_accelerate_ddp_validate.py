@@ -36,6 +36,7 @@ class BaseTrainer:
         loss_function,
     ) -> None:
         """Create an instance of BaseTrainer for training, validation, and testing."""
+        self.config = config
         # Setup directories
         self._initialize_exp_dirs_and_paths(config)
 
