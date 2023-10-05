@@ -60,7 +60,7 @@ fb_num_center_freqs = [2, 4, 32, 64]
 fb_num_neighbor_freqs = [0, 0, 0, 0]
 sb_hidden_size = 256
 sb_output_activate_function = false
-norm_type = "offline_laplace_norm"
+norm_type = "cumulative_laplace_norm"
 shared_weights = true
 bn = true
 

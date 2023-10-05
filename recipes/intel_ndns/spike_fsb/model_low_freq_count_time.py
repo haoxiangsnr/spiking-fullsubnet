@@ -1,3 +1,4 @@
+import time
 from functools import partial
 
 import torch
@@ -183,8 +184,9 @@ class BaseModel(nn.Module):
         Returns:
 
         """
-        batch_size, num_channels, num_freqs, num_frames = input.size()
-        input = input.reshape(batch_size * num_channels, num_freqs, num_frames)
+        shape = input.shape
+        *_, num_freqs, num_frames = input.shape
+        input = input.reshape(-1, num_freqs, num_frames)
 
         step_sum = torch.sum(input, dim=1)  # [B * C, F, T] => [B, T]
         cumulative_sum = torch.cumsum(step_sum, dim=-1)  # [B, T]
@@ -200,13 +202,11 @@ class BaseModel(nn.Module):
         entry_count = entry_count.expand_as(cumulative_sum)  # [1, T] => [B, T]
 
         cumulative_mean = cumulative_sum / entry_count  # B, T
-        cumulative_mean = cumulative_mean.reshape(
-            batch_size * num_channels, 1, num_frames
-        )
+        cumulative_mean = cumulative_mean.reshape(-1, 1, num_frames)
 
         normed = input / (cumulative_mean + EPSILON)
 
-        return normed.reshape(batch_size, num_channels, num_freqs, num_frames)
+        return normed.reshape(*shape[:-2], num_freqs, num_frames)
 
     @staticmethod
     def offline_gaussian_norm(input):
@@ -453,6 +453,8 @@ class SubbandModel(BaseModel):
         subband_output = []
         subband_all_layer_outputs = []
         for sb_idx, sb_model in enumerate(self.sb_models):
+            start_sb = time.time()
+
             if sb_idx == 0:
                 lower_cutoff_freq = 0
                 upper_cutoff_freq = self.freq_cutoffs[0]
@@ -484,9 +486,16 @@ class SubbandModel(BaseModel):
 
             sb_model_input = torch.cat([noisy_subband, fb_subband], dim=-2)
             sb_model_input = self.norm(sb_model_input)
+
+            after_sb_norm = time.time()
+
             sb_model_output, sb_all_layer_outputs = sb_model(sb_model_input)
             subband_output.append(sb_model_output)
             subband_all_layer_outputs.append(sb_all_layer_outputs)
+
+            print(
+                f"bottleneck_{sb_idx}: {(after_sb_norm - start_sb) / (16000 / 128) * 1000}ms"
+            )
 
         # [B, C, F, T]
         # output = torch.cat(subband_output, dim=-2)
@@ -579,6 +588,7 @@ class Separator(BaseModel):
             ), "Input must be 2D (B, T) or 3D tensor (B, 1, T)"
             noisy_y = noisy_y.squeeze(1)
 
+        start = time.time()
         noisy_mag, _, noisy_real, noisy_imag = self.stft(noisy_y)
         complex_stft = torch.complex(noisy_real, noisy_imag)  # [B, F, T]
         complex_stft = complex_stft.unsqueeze(1)
@@ -590,13 +600,22 @@ class Separator(BaseModel):
         fb_input = noisy_mag[..., : self.fb_freqs, :]
         fb_input = self.norm(fb_input)
         fb_input = rearrange(fb_input, "b c f t -> b (c f) t")
+
+        after_norm = time.time()
+        print(f"encoder time: {(after_norm - start) / (16000 / 128) * 1000}ms")
+
         fb_output, fb_all_layer_outputs = self.fb_model(fb_input)  # [B, F, T]
         fb_output = rearrange(fb_output, "b f t -> b 1 f t")
         fb_output = fb_output.repeat(1, 1, self.num_repeats, 1)
 
+        after_fb = time.time()
+        print(f"(fb + linear) time: {(after_fb - after_norm) / (16000 / 128) * 1000}ms")
+
         # ================== Subband ==================
         # list [[B, df, F_1, T, 2], [B, df, F_2, T, 2], ...]
         df_coefs_list, sb_all_layer_outputs = self.sb_model(noisy_mag, fb_output)
+
+        after_sb = time.time()
 
         # ================== Iterative Masking ==================
         num_filtered = 0
@@ -632,6 +651,11 @@ class Separator(BaseModel):
             window=torch.hann_window(self.win_length, device=noisy_y.device),
             length=noisy_y.size(-1),
         )
+
+        after_istft = time.time()
+
+        print(f"decoder time: {(after_istft - after_sb) / (16000 / 128) * 1000}ms")
+
         return enhanced_y, enhanced_mag, fb_all_layer_outputs, sb_all_layer_outputs
 
 
@@ -647,9 +671,10 @@ if __name__ == "__main__":
         # "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_l.toml"
     )
     model_args = config["model_g"]["args"]
+    model_args.update({"bn": False})
 
     model = Separator(**model_args)
-    input = torch.rand(2, 160000)
+    input = torch.rand(1, 16000)
     y, mag, fb, sb = model(input)
     synops = compute_synops(fb, sb)
     neuron_ops = compute_neuronops(fb, sb)
