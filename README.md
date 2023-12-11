@@ -1,5 +1,11 @@
 # Spiking-FullSubNet: Intel N-DNS Challenge Track 1 Winner
 
+<a href="https://github.com/haoxiangsnr/spiking-fullsubnet"><img src="https://img.shields.io/badge/Platform-linux-lightgrey" alt="version"></a>
+<a href="https://github.com/haoxiangsnr/spiking-fullsubnet"><img src="https://img.shields.io/github/stars/haoxiangsnr/spiking-fullsubnet?color=yellow&amp;label=FullSubNet&amp;logo=github" alt="Generic badge"></a>
+<a href="https://github.com/haoxiangsnr/spiking-fullsubnet/"><img src="https://img.shields.io/badge/Python-3.10-orange" alt="version"></a>
+<a href="https://github.com/haoxiangsnr/spiking-fullsubnet/"><img src="https://img.shields.io/badge/PyTorch-2.1.1-brightgreen" alt="python"></a>
+<a href="https://github.com/haoxiangsnr/spiking-fullsubnet/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="mit"></a>
+
 ![Spiking-FullSubNet](./project_image.png)
 
 We are proud to announce that Spiking-FullSubNet has emerged as the [winner of Intel N-DNS Challenge Track 1 (Algorithmic)](https://intel-ncl.atlassian.net/wiki/spaces/INRC/blog/2023/12/01/2027225099/INRC+Forum+12+12+2023.+Clairaudience+Intel+N-DNS+Challenge+Track+1+Algorithmic+Winner.). Please refer to our [brief write-up here](./Spiking-FullSubNet.pdf) for more details. This repository serves as the official home of the Spiking-FullSubNet implementation. Here, you will find:
@@ -8,7 +14,7 @@ We are proud to announce that Spiking-FullSubNet has emerged as the [winner of I
 - Scripts for training the model and evaluating its performance.
 - The pre-trained models in the `model_zoo` directory, ready to be further fine-tuned on the other datasets.
 
-We are actively working on improving the documentation and fixing bugs. Please feel free to raise an issue or submit a pull request if you have suggestions for enhancements.
+We are actively working on improving the documentation, fixing bugs and removing redundancies. Please feel free to raise an issue or submit a pull request if you have suggestions for enhancements.
 
 ## Upcoming Detailed Paper
 
