@@ -1,27 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Project Structure &mdash; audiozen  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9d25a2f2" />
+
+  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Running an experiment" href="running_an_experiment.html" />
+    <link rel="next" title="Running an experiment using HuggingFace Accelerate" href="running_an_experiment_accelerate.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
@@ -48,7 +49,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Project Structure</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running_an_experiment.html">Running an experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running_an_experiment_accelerate.html">Running an experiment using HuggingFace Accelerate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging_and_visualization.html">Logging and Visualization</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Concepts</span></p>
@@ -89,11 +90,12 @@
            <div itemprop="articleBody">
              
   <section id="project-structure">
-<h1>Project Structure<a class="headerlink" href="#project-structure" title="Permalink to this heading"></a></h1>
+<h1>Project Structure<a class="headerlink" href="#project-structure" title="Link to this heading"></a></h1>
 <p>Before going into details, let’s take a look at the overall structure of the project.
-You may familiar with this project structure (<code class="docutils literal notranslate"><span class="pre">recipes/&lt;dataset&gt;/&lt;model&gt;</span></code>) if you have used <a class="reference external" href="https://github.com/espnet/espnet">ESPNet</a> and <a class="reference external" href="https://github.com/speechbrain/speechbrain">SpeechBrain</a>.
-AudioZEN is inspired by them, but it is more flexible and simpler.</p>
-<p>AudioZEN includes a core package and a series of recipes. The core package is named <code class="docutils literal notranslate"><span class="pre">audiozen</span></code>, which provides common audio signal processing tools and deep learning trainers. As we have installed <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> in editable mode, we can call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package everywhere in the code. In addition, we can modify the source code of <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package directly. Any changes to the original package would reflect directly in your environment. For example, we can call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in <code class="docutils literal notranslate"><span class="pre">recipes</span></code> folder to train models on specific datasets and call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in <code class="docutils literal notranslate"><span class="pre">tools</span></code> folder to preprocess data. The recipes in the <code class="docutils literal notranslate"><span class="pre">recipes</span></code> folder are used to research the audio/speech signal processing. The recipe concept was introduced by <a class="reference external" href="https://kaldi-asr.org/doc/about.html">Kaldi</a> first, providing a convenient and reproducible way to organize and save the deep learning training pipelines.</p>
+You may familiar with this project structure (<code class="docutils literal notranslate"><span class="pre">recipes/&lt;dataset&gt;/&lt;model&gt;</span></code>) if you have used <a class="reference external" href="https://github.com/espnet/espnet">ESPNet</a> and <a class="reference external" href="https://github.com/speechbrain/speechbrain">SpeechBrain</a> before.
+AudioZEN is inspired by them, but it is more simpler.</p>
+<p>AudioZEN includes a core package (<code class="docutils literal notranslate"><span class="pre">/audiozen</span></code>) and a series of training recipes (<code class="docutils literal notranslate"><span class="pre">/recipes</span></code>).
+The core package is named <code class="docutils literal notranslate"><span class="pre">audiozen</span></code>, which provides common audio signal processing tools and deep learning trainers. As we have installed <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> in editable mode, we can call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package everywhere in the code. In addition, we can modify the source code of <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package directly. Any changes to the original package would reflect directly in your environment. For example, we can call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in <code class="docutils literal notranslate"><span class="pre">recipes</span></code> folder to train models on specific datasets and call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in <code class="docutils literal notranslate"><span class="pre">tools</span></code> folder to preprocess data. The recipes in the <code class="docutils literal notranslate"><span class="pre">recipes</span></code> folder are used to research the audio/speech signal processing. The recipe concept was introduced by <a class="reference external" href="https://kaldi-asr.org/doc/about.html">Kaldi</a> first, providing a convenient and reproducible way to organize and save the deep learning training pipelines.</p>
 <p>The directory structure is as follows:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>├──<span class="w"> </span>audiozen/
 │<span class="w">   </span>├──<span class="w"> </span>acoustics/
@@ -102,10 +104,6 @@ AudioZEN is inspired by them, but it is more flexible and simpler.</p>
 │<span class="w">   </span>│<span class="w">   </span>├──<span class="w"> </span>module/
 │<span class="w">   </span>└──<span class="w"> </span>trainer/
 ├──<span class="w"> </span>docs/
-│<span class="w">   </span>└──<span class="w"> </span>audiozen/
-│<span class="w">       </span>├──<span class="w"> </span>acoustics/
-│<span class="w">       </span>├──<span class="w"> </span>dataset/
-│<span class="w">       </span>└──<span class="w"> </span>trainer/
 ├──<span class="w"> </span>notebooks/
 ├──<span class="w"> </span>recipes/
 │<span class="w">   </span>└──<span class="w"> </span>intel_ndns/
@@ -130,7 +128,7 @@ AudioZEN is inspired by them, but it is more flexible and simpler.</p>
 </ul>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">docs/</span></code>: Contains the project’s documentation. We use <a class="reference external" href="https://www.sphinx-doc.org/en/master/">Sphinx Documentation Generator</a> to build the documentation.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">recipes/</span></code>: Contains the recipes for specific experiments. It follows a <code class="docutils literal notranslate"><span class="pre">&lt;dataset&gt;/&lt;model&gt;</span></code> structure.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">recipes/</span></code>: Contains the recipes for specific experiments. It follows a <code class="docutils literal notranslate"><span class="pre">&lt;dataset_name&gt;/&lt;model_name&gt;</span></code> structure.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tools/</span></code>: Contains the code for additional tools, such as data preprocessing, model conversion, etc.</p></li>
 </ul>
 <p>In the <code class="docutils literal notranslate"><span class="pre">recipes</span></code> folder, we name the subdirectory after the dataset. create a subdirectory for the dataset named after the model.
@@ -145,7 +143,7 @@ For example, <code class="docutils literal notranslate"><span class="pre">recipe
 <li><p><code class="docutils literal notranslate"><span class="pre">&lt;exp_id&gt;.toml</span></code>: The training configuration file for this model.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">trainer.py</span></code>: The trainer for this model, which contains the operations and operations to be executed in each training, validation and test round.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">model.py</span></code>: The structure of the current model.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">run.py</span></code> (optional): The entry of the current model, which can be used to train the current model. If this file is not present, the <code class="docutils literal notranslate"><span class="pre">run.py</span></code> file in the <code class="docutils literal notranslate"><span class="pre">recipes/dns_icassp_2020</span></code> directory will be used.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">run.py</span></code> (optional): The entry of the current model, which can be used to train the current model. If this file is not present, the <code class="docutils literal notranslate"><span class="pre">run.py</span></code> file in the <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns</span></code> directory will be used.</p></li>
 </ul>
 </section>
 
@@ -154,7 +152,7 @@ For example, <code class="docutils literal notranslate"><span class="pre">recipe
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="running_an_experiment.html" class="btn btn-neutral float-right" title="Running an experiment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="running_an_experiment_accelerate.html" class="btn btn-neutral float-right" title="Running an experiment using HuggingFace Accelerate" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

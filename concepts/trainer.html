@@ -1,23 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trainer &mdash; audiozen  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9d25a2f2" />
+
+  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -48,7 +49,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/project_structure.html">Project Structure</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started/running_an_experiment.html">Running an experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/running_an_experiment_accelerate.html">Running an experiment using HuggingFace Accelerate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/logging_and_visualization.html">Logging and Visualization</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Concepts</span></p>
@@ -89,7 +90,7 @@
            <div itemprop="articleBody">
              
   <section id="trainer">
-<h1>Trainer<a class="headerlink" href="#trainer" title="Permalink to this heading"></a></h1>
+<h1>Trainer<a class="headerlink" href="#trainer" title="Link to this heading"></a></h1>
 <p>For each experiment, we need to define a custom trainer to train the model. The custom trainer must inherit from <code class="docutils literal notranslate"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer</span></code> and implement the following methods:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">training_step</span></code>: The training step. It contains the operations to be executed in each training iteration.</p></li>
@@ -101,7 +102,7 @@
 </ul>
 <dl class="py function">
 <dt class="sig sig-object py" id="audiozen.trainer.base_trainer.BaseTrainer.training_step">
-<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">training_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.training_step" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">training_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.training_step" title="Link to this definition"></a></dt>
 <dd><p>Implement a training step.</p>
 <p>Implement your own training step here.
 The input batch is from a training dataloader and the output of this function should be a loss tensor.
@@ -145,7 +146,7 @@ Here is the persuade code for training a model:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="audiozen.trainer.base_trainer.BaseTrainer.training_epoch_end">
-<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">training_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_epoch_output</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.training_epoch_end" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">training_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_epoch_output</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.training_epoch_end" title="Link to this definition"></a></dt>
 <dd><p>Implement the logic of the end of a training epoch.</p>
 <p>When the training epoch ends, this function will be called.
 The input is a list of the loss value of each batch in the training epoch.
@@ -180,7 +181,7 @@ You may want to log the epoch-level training loss here.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="audiozen.trainer.base_trainer.BaseTrainer.validation_step">
-<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">validation_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.validation_step" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">validation_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.validation_step" title="Link to this definition"></a></dt>
 <dd><p>Implement a validation step.</p>
 <p>This function defines the validation step. The input batch is from a validation dataloader.
 Here is the persuade code for validating a model:</p>
@@ -213,7 +214,7 @@ Here is the persuade code for validating a model:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="audiozen.trainer.base_trainer.BaseTrainer.validation_epoch_end">
-<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">validation_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_epoch_output</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.validation_epoch_end" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">validation_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">validation_epoch_output</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.validation_epoch_end" title="Link to this definition"></a></dt>
 <dd><p>Validation epoch end.</p>
 <p>The input <cite>validation_epoch_output</cite> will be a list of list. For example, if you have two dataloaders, the <cite>validation_epoch_output</cite> will be:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">validation_epoch_output</span> <span class="o">=</span> <span class="p">[</span>
@@ -249,7 +250,7 @@ Here is the persuade code for validating a model:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="audiozen.trainer.base_trainer.BaseTrainer.test_step">
-<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">test_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.test_step" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">test_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.test_step" title="Link to this definition"></a></dt>
 <dd><p>Similar to validation_step, but for testing.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">ckpt_path</span><span class="p">)</span>
 <span class="linenos"> 2</span>
@@ -267,7 +268,7 @@ Here is the persuade code for validating a model:</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="audiozen.trainer.base_trainer.BaseTrainer.test_epoch_end">
-<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">test_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_epoch_output</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.test_epoch_end" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">audiozen.trainer.base_trainer.BaseTrainer.</span></span><span class="sig-name descname"><span class="pre">test_epoch_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_epoch_output</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#audiozen.trainer.base_trainer.BaseTrainer.test_epoch_end" title="Link to this definition"></a></dt>
 <dd><p>Similar to validation_epoch_end, but for testing.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">ckpt_path</span><span class="p">)</span>
 <span class="linenos"> 2</span>

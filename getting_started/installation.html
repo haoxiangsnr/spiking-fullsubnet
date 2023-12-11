@@ -1,23 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Installation &mdash; audiozen  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9d25a2f2" />
+
+  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -48,7 +49,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="project_structure.html">Project Structure</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running_an_experiment.html">Running an experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running_an_experiment_accelerate.html">Running an experiment using HuggingFace Accelerate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging_and_visualization.html">Logging and Visualization</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Concepts</span></p>
@@ -89,27 +90,30 @@
            <div itemprop="articleBody">
              
   <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h1>
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
 <section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
 <p>AudioZEN package is built on top of PyTorch and provides standard audio signal processing and deep learning tools.
-To install the PyTorch binaries, you will need to use at least one of two supported package managers: <a class="reference external" href="https://www.anaconda.com/">Anaconda</a> (or <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a>) and pip. Anaconda (or Miniconda) is the recommended package manager as it will provide you all of the PyTorch dependencies in one, sandboxed install, including Python and pip. For GPU parallel training, CUDA (version 10.2 or higher) and the corresponding CuDNN acceleration library must be installed.</p>
+To install the PyTorch binaries, you must at least one of two supported package managers: <a class="reference external" href="https://www.anaconda.com/">Anaconda</a> (or <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a>) and pip. Anaconda (or Miniconda) is the recommended package manager as it will provide you all of the PyTorch dependencies in one, sandboxed install, including Python and pip. For GPU parallel training, CUDA (version 10.2 or higher) and the corresponding CuDNN acceleration library must be installed.</p>
 </section>
 <section id="id1">
-<h2>Installation<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
+<h2>Installation<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
 <section id="create-virtual-environment">
-<h3>Create virtual environment<a class="headerlink" href="#create-virtual-environment" title="Permalink to this heading"></a></h3>
-<p>First, create a Conda virtual environment with Python. Here, <code class="docutils literal notranslate"><span class="pre">python=3.10</span></code> is tested, but you may also use other versions.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>audiozen<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10
+<h3>Create virtual environment<a class="headerlink" href="#create-virtual-environment" title="Link to this heading"></a></h3>
+<p>First, create a Conda virtual environment with Python. Here, <code class="docutils literal notranslate"><span class="pre">python=3.10</span></code> is tested.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a virtual environment named &quot;audiozen&quot;</span>
+conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>audiozen<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10
+
+<span class="c1"># Activate the environment</span>
 conda<span class="w"> </span>activate<span class="w"> </span>audiozen
 </pre></div>
 </div>
 <p>The following steps will assume you have activated the <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> environment.</p>
 </section>
 <section id="install-conda-dependencies">
-<h3>Install Conda dependencies<a class="headerlink" href="#install-conda-dependencies" title="Permalink to this heading"></a></h3>
-<p>Some dependencies of AudioZEN, like PyTorch, Lava, and Tensorboard, are recommended to be installed using Conda instead of PyPI. First, we install a CUDA-capable PyTorch. Although <code class="docutils literal notranslate"><span class="pre">pytorch=1.12.1</span></code> has been tested, you may also <a class="reference external" href="https://pytorch.org/get-started/previous-versions/">use other versions</a>. We use <code class="docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">11.6</span></code> as an example:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span><span class="nv">pytorch</span><span class="o">==</span><span class="m">1</span>.12.1<span class="w"> </span><span class="nv">torchvision</span><span class="o">==</span><span class="m">0</span>.13.1<span class="w"> </span><span class="nv">torchaudio</span><span class="o">==</span><span class="m">0</span>.12.1<span class="w"> </span><span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.6<span class="w"> </span>-c<span class="w"> </span>pytorch<span class="w"> </span>-c<span class="w"> </span>conda-forge
+<h3>Install Conda dependencies<a class="headerlink" href="#install-conda-dependencies" title="Link to this heading"></a></h3>
+<p>Some dependencies of AudioZEN, e.g., PyTorch and Tensorboard, are recommended to be installed using Conda instead of PyPI. First, we install a CUDA-capable PyTorch. Although <code class="docutils literal notranslate"><span class="pre">pytorch=2.1.1</span></code> has been tested, you may also <a class="reference external" href="https://pytorch.org/get-started/previous-versions/">use other versions</a>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>install<span class="w"> </span>pytorch<span class="w"> </span>torchvision<span class="w"> </span>torchaudio<span class="w"> </span>pytorch-cuda<span class="o">=</span><span class="m">11</span>.8<span class="w"> </span>-c<span class="w"> </span>pytorch<span class="w"> </span>-c<span class="w"> </span>nvidia
 </pre></div>
 </div>
 <p>Install Lava and Lava-dl, which are used for neuromorphic computing.
@@ -120,13 +124,13 @@ Check <a class="reference external" href="https://github.com/lava-nc/lava">Lava<
 <p>Install other Conda dependencies:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>tensorboard<span class="w"> </span>joblib<span class="w"> </span>matplotlib
 
-<span class="c1"># (Optional) If you have &quot;mp3&quot; format data in your dataset, install ffmpeg first.</span>
-conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>ffmpeg
+<span class="c1"># (Optional) If you have &quot;mp3&quot; format audio data in your dataset, install ffmpeg first.</span>
+conda<span class="w"> </span>install<span class="w"> </span>ffmpeg<span class="w"> </span>-c<span class="w"> </span>conda-forge
 </pre></div>
 </div>
 </section>
 <section id="install-pypi-dependencies">
-<h3>Install PyPI dependencies<a class="headerlink" href="#install-pypi-dependencies" title="Permalink to this heading"></a></h3>
+<h3>Install PyPI dependencies<a class="headerlink" href="#install-pypi-dependencies" title="Link to this heading"></a></h3>
 <p>Clone the repository and install PyPI dependencies via <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code>. Check <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> for more details.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:haoxiangsnr/audiozen.git
 
@@ -138,19 +142,19 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
 </section>
 </section>
 <section id="install-audiozen-package-in-editable-mode">
-<h2>Install AudioZEN package in editable mode<a class="headerlink" href="#install-audiozen-package-in-editable-mode" title="Permalink to this heading"></a></h2>
-<p>Finally, we will install the AudioZEN package in editable mode (a.k.a. development mode). By installing in editable mode, we can call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in everywhere of code, e.g, in <code class="docutils literal notranslate"><span class="pre">recipes</span></code> and <code class="docutils literal notranslate"><span class="pre">tools</span></code> folders. In addition, we can modify the source code of <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package directly. Any changes to the original package would reflect directly in your python environment.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--editable<span class="w"> </span>.
+<h2>Install AudioZEN package in editable mode<a class="headerlink" href="#install-audiozen-package-in-editable-mode" title="Link to this heading"></a></h2>
+<p>Finally, we will install the AudioZEN package in editable mode (a.k.a. development mode). By installing in editable mode, we can call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in everywhere of code, e.g, in <code class="docutils literal notranslate"><span class="pre">recipes</span></code> and <code class="docutils literal notranslate"><span class="pre">tools</span></code> folders. In addition, we are able to modify the source code of <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package directly. Any changes to the original package would reflect directly in your conda environment.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--editable<span class="w"> </span>.<span class="w"> </span><span class="c1"># or for short: pip install -e .</span>
 </pre></div>
 </div>
 <p>Ok, all installations have done.</p>
 </section>
 <section id="references">
-<h2>References<a class="headerlink" href="#references" title="Permalink to this heading"></a></h2>
+<h2>References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p><a class="reference external" href="https://pythonspeed.com/articles/faster-conda-install/">Speed up your Conda installs with Mamba</a></p></li>
 <li><p>Use the <a class="reference external" href="https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/">THU Anaconda mirror site</a> to speed up the Conda installation.</p></li>
-<li><p>Use the <a class="reference external" href="https://mirrors.tuna.tsinghua.edu.cn/help/pypi/">THU PyPi mirror site</a> to install PyPI dependencies.</p></li>
+<li><p>Use the <a class="reference external" href="https://mirrors.tuna.tsinghua.edu.cn/help/pypi/">THU PyPi mirror site</a> to speed up the PyPI installation.</p></li>
 </ul>
 </section>
 </section>

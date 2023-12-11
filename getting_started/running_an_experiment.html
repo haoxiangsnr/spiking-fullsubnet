@@ -1,28 +1,27 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Running an experiment &mdash; audiozen  documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9d25a2f2" />
+
+  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Logging and Visualization" href="logging_and_visualization.html" />
-    <link rel="prev" title="Project Structure" href="project_structure.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -45,10 +44,10 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="project_structure.html">Project Structure</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Running an experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running_an_experiment_accelerate.html">Running an experiment using HuggingFace Accelerate</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging_and_visualization.html">Logging and Visualization</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Concepts</span></p>
@@ -89,14 +88,14 @@
            <div itemprop="articleBody">
              
   <section id="running-an-experiment">
-<h1>Running an experiment<a class="headerlink" href="#running-an-experiment" title="Permalink to this heading"></a></h1>
+<h1>Running an experiment<a class="headerlink" href="#running-an-experiment" title="Link to this heading"></a></h1>
 <p>As mentioned in the previous section, AudioZEN adopts a <code class="docutils literal notranslate"><span class="pre">recipes/&lt;dataset&gt;/&lt;model&gt;</span></code> directory structure.
 To run an experiment of a model, we first go to a dataset directory, which will include an entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code> and some dataloaders dedicated to this dataset. For example, let us entry to the directory <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/</span></code>. The corresponding dataset is the Intel Neuromorphic DNS Challenge dataset.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>recipes/intel_ndns/
 </pre></div>
 </div>
 <section id="entry-file-run-py">
-<h2>Entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code><a class="headerlink" href="#entry-file-run-py" title="Permalink to this heading"></a></h2>
+<h2>Entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code><a class="headerlink" href="#entry-file-run-py" title="Link to this heading"></a></h2>
 <p>In each <code class="docutils literal notranslate"><span class="pre">&lt;dataset&gt;</span></code> directory, we have an entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code>, dataloaders, and some model directories. We call the <code class="docutils literal notranslate"><span class="pre">run.py</span></code> script to run an experiment.
 For example, we can use the following command to train the <code class="docutils literal notranslate"><span class="pre">sdnn_delays</span></code> model using configurations in <code class="docutils literal notranslate"><span class="pre">baseline.toml</span></code>:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
@@ -140,7 +139,7 @@ For example, we can use the following command to train the <code class="docutils
 <p>See more details in <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/run.py</span></code> and <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/sdnn_delays/baseline.toml</span></code>.</p>
 </section>
 <section id="single-machine-multi-gpu-training">
-<h2>Single-machine multi-GPU training<a class="headerlink" href="#single-machine-multi-gpu-training" title="Permalink to this heading"></a></h2>
+<h2>Single-machine multi-GPU training<a class="headerlink" href="#single-machine-multi-gpu-training" title="Link to this heading"></a></h2>
 <p>In most cases, we want to start an experiment on a single machine with multiple GPUs. Here, we show some examples for how to.</p>
 <p>First, let us use <code class="docutils literal notranslate"><span class="pre">baseline.toml</span></code> to train <code class="docutils literal notranslate"><span class="pre">sdnn_delays</span></code> with two GPUs on a single machine:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
@@ -214,10 +213,7 @@ For example, we can use the following command to train the <code class="docutils
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="project_structure.html" class="btn btn-neutral float-left" title="Project Structure" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="logging_and_visualization.html" class="btn btn-neutral float-right" title="Logging and Visualization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+          <footer>
 
   <hr/>
 
