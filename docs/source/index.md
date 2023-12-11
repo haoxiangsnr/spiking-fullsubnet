@@ -1,7 +1,8 @@
-# Welcome to AudioZEN
+# Welcome to Spiking-FullSubNet
 
-Welcome to AudioZEN's documentation! AudioZEN is a deep learning toolkit used to conduct the research on the neuromorphic audio/speech signal processing.
-Check the Getting Started section for more details.
+Welcome to Spiking-FullSubNet's documentation! Check the Getting Started section for more details.
+Our team is actively working to improve the documentation and we welcome any feedback or contributions from the community. Please feel free to raise an issue or submit a pull request if you have suggestions for enhancements.
+
 
 ```{toctree}
 :caption: Getting Started

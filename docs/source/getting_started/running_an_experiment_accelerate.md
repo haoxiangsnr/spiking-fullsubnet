@@ -1,4 +1,4 @@
-# Running an experiment using HuggingFace Accelerate
+# Running an experiment
 
 As mentioned in the previous section, AudioZEN adopts a `recipes/<dataset>/<model>` directory structure.
 For example, let us entry to the directory `recipes/intel_ndns/`. The corresponding dataset is the Intel Neuromorphic DNS Challenge dataset. Please refer to [Intel Neuromorphic DNS Challenge Datasets](https://github.com/IntelLabs/IntelNeuromorphicDNSChallenge#dataset) for preparing the dataset.
