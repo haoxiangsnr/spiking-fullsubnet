@@ -21,3 +21,4 @@ tabulate
 toml
 torchinfo
 tqdm
+accelerate
