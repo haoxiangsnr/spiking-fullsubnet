@@ -2,16 +2,13 @@
 
 ![Spiking-FullSubNet](./project_image.png)
 
-We are proud to announce that Spiking-FullSubNet has emerged as the [winner of Intel N-DNS Challenge Track 1 (Algorithmic)](https://intel-ncl.atlassian.net/wiki/spaces/INRC/blog/2023/12/01/2027225099/INRC+Forum+12+12+2023.+Clairaudience+Intel+N-DNS+Challenge+Track+1+Algorithmic+Winner.). Please refer to our [brief write-up here](./Spiking-FullSubNet.pdf) for more details.
-
-## About This Repository
-
-This repository serves as the official home of the Spiking-FullSubNet implementation. Here, you will find:
+We are proud to announce that Spiking-FullSubNet has emerged as the [winner of Intel N-DNS Challenge Track 1 (Algorithmic)](https://intel-ncl.atlassian.net/wiki/spaces/INRC/blog/2023/12/01/2027225099/INRC+Forum+12+12+2023.+Clairaudience+Intel+N-DNS+Challenge+Track+1+Algorithmic+Winner.). Please refer to our [brief write-up here](./Spiking-FullSubNet.pdf) for more details. This repository serves as the official home of the Spiking-FullSubNet implementation. Here, you will find:
 
 - A PyTorch-based implementation of the Spiking-FullSubNet model.
 - Scripts for training the model and evaluating its performance.
-- The pre-trained models in the `model_zoo` directory, ready to be further fine-tuned on the [Intel N-DNS dataset](https://github.com/IntelLabs/IntelNeuromorphicDNSChallenge#dataset).
+- The pre-trained models in the `model_zoo` directory, ready to be further fine-tuned on the other datasets.
 
+We are actively working on improving the documentation and fixing bugs. Please feel free to raise an issue or submit a pull request if you have suggestions for enhancements.
 
 ## Upcoming Detailed Paper
 
