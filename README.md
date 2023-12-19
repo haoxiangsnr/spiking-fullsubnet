@@ -1,10 +1,37 @@
-# Spiking-FullSubNet: Intel N-DNS Challenge Track 1 Winner
+<!-- PROJECT SHIELDS -->
+<!--
+*** I'm using markdown "reference style" links for readability.
+*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
+*** See the bottom of this document for the declaration of the reference variables
+*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
+*** https://www.markdownguide.org/basic-syntax/#reference-style-links
+-->
+[![Stargazers][stars-shield]][stars-url]
+[![Forks][forks-shield]][forks-url]
+[![Contributors][contributors-shield]][contributors-url]
+[![Issues][issues-shield]][issues-url]
+[![MIT License][license-shield]][license-url]
 
-<a href="https://github.com/haoxiangsnr/spiking-fullsubnet"><img src="https://img.shields.io/badge/Platform-linux-lightgrey" alt="version"></a>
-<a href="https://github.com/haoxiangsnr/spiking-fullsubnet"><img src="https://img.shields.io/github/stars/haoxiangsnr/spiking-fullsubnet?color=yellow&amp;label=FullSubNet&amp;logo=github" alt="Generic badge"></a>
-<a href="https://github.com/haoxiangsnr/spiking-fullsubnet/"><img src="https://img.shields.io/badge/Python-3.10-orange" alt="version"></a>
-<a href="https://github.com/haoxiangsnr/spiking-fullsubnet/"><img src="https://img.shields.io/badge/PyTorch-2.1.1-brightgreen" alt="python"></a>
-<a href="https://github.com/haoxiangsnr/spiking-fullsubnet/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="mit"></a>
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <h3 align="center">Spiking-FullSubNet</h3>
+
+  <p align="center">
+    Intel N-DNS Challenge Algorithmic Track Winner
+    <br />
+    <a href="https://haoxiangsnr.github.io/spiking-fullsubnet/"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/haoxiangsnr/spiking-fullsubnet/">View Demo</a>
+    ·
+    <a href="https://github.com/haoxiangsnr/spiking-fullsubnet/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/haoxiangsnr/spiking-fullsubnet/issues">Request Feature</a>
+  </p>
+</div>
+
+
 
 ![Spiking-FullSubNet](./project_image.png)
 
@@ -27,3 +54,17 @@ See the [Documentation](https://haoxiangsnr.github.io/spiking-fullsubnet/) for i
 ## License
 
 All the code in this repository is released under the [MIT License](https://opensource.org/licenses/MIT), for more details see the [LICENSE](LICENSE) file.
+
+
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[contributors-shield]: https://img.shields.io/github/contributors/haoxiangsnr/spiking-fullsubnet.svg?style=for-the-badge
+[contributors-url]: https://github.com/haoxiangsnr/spiking-fullsubnet/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/haoxiangsnr/spiking-fullsubnet.svg?style=for-the-badge
+[forks-url]: https://github.com/haoxiangsnr/spiking-fullsubnet/network/members
+[stars-shield]: https://img.shields.io/github/stars/haoxiangsnr/spiking-fullsubnet.svg?style=for-the-badge
+[stars-url]: https://github.com/haoxiangsnr/spiking-fullsubnet/stargazers
+[issues-shield]: https://img.shields.io/github/issues/haoxiangsnr/spiking-fullsubnet.svg?style=for-the-badge
+[issues-url]: https://github.com/haoxiangsnr/spiking-fullsubnet/issues
+[license-shield]: https://img.shields.io/github/license/haoxiangsnr/spiking-fullsubnet.svg?style=for-the-badge
+[license-url]: https://github.com/haoxiangsnr/spiking-fullsubnet/blob/master/LICENSE.txt
