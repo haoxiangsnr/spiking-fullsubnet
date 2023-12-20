@@ -234,20 +234,21 @@ def mag_phase(complex_valued_tensor: Tensor) -> tuple[Tensor, Tensor]:
 
 
 def stft(
-    y: Tensor,
-    n_fft: int,
-    hop_length: int,
-    win_length: int,
+    y,
+    n_fft,
+    hop_length,
+    win_length,
     output_type: Literal["mag_phase", "real_imag", "complex"] | None = None,
-) -> Union[Tensor, tuple[Tensor, ...]]:
+):
     """Wrapper of the official ``torch.stft`` for single-channel and multichannel signals.
 
     Args:
-        y: single-/multichannel signals with shape of [B, C, T] or [B, T].
+        y (`torch.Tensor` of shape `(batch_size, num_channels, num_samples) or `(batch_size, num_samples)`):
+            single-/multichannel signals.
         n_fft: num of FFT.
         hop_length: hop length.
         win_length: hanning window size.
-        output_type: "mag_phase", "real_imag", "complex", or None.
+        output_type: "mag_phase", "real_imag", "complex", or None. Defaults to None.
 
     Returns:
         If the input is single-channel, return the spectrogram with shape of [B, F, T], otherwise [B, C, F, T].
@@ -255,49 +256,31 @@ def stft(
         If output_type is "real_imag", return a list of real and imag spectrogram.
         If output_type is None, return a list of magnitude, phase, real, and imag spectrogram.
     """
-    ndim = y.dim()
-    assert ndim in [2, 3], f"Only support single-/multi-channel signals. {ndim=}."
+    if y.ndim not in [2, 3]:
+        raise ValueError(f"Only support single-/multi-channel signals. Received {y.ndim=}.")
 
     batch_size, *_, num_samples = y.shape
 
     # Compatible with multi-channel signals
-    if ndim == 3:
+    if y.ndim == 3:
         y = y.reshape(-1, num_samples)
 
-    complex_valued_stft = torch.stft(
-        y,
-        n_fft,
-        hop_length,
-        win_length,
-        window=torch.hann_window(n_fft, device=y.device),
-        return_complex=True,
-    )
+    window = torch.hann_window(n_fft, device=y.device)
+    complex_stft = torch.stft(y, n_fft, hop_length, win_length, window=window, return_complex=True)
 
-    _, num_freqs, num_frames = complex_valued_stft.shape
+    # Reshape back to original if the input is multi-channel
+    if y.ndim == 3:
+        complex_stft = complex_stft.reshape(batch_size, -1, *complex_stft.shape[-2:])
 
-    if ndim == 3:
-        complex_valued_stft = complex_valued_stft.reshape(
-            batch_size, -1, num_freqs, num_frames
-        )
-
-    if output_type:
-        match output_type:
-            case "mag_phase":
-                return mag_phase(complex_valued_stft)
-            case "real_imag":
-                return complex_valued_stft.real, complex_valued_stft.imag
-            case "complex":
-                return complex_valued_stft
-            case _:
-                raise NotImplementedError(
-                    "Only 'mag_phase', 'real_imag', and 'complex' are supported"
-                )
+    if output_type == "mag_phase":
+        return mag_phase(complex_stft)
+    elif output_type == "real_imag":
+        return complex_stft.real, complex_stft.imag
+    elif output_type == "complex":
+        return complex_stft
     else:
-        return (
-            *mag_phase(complex_valued_stft),
-            complex_valued_stft.real,
-            complex_valued_stft.imag,
-        )
+        mag, phase = mag_phase(complex_stft)
+        return mag, phase, complex_stft.real, complex_stft.imag
 
 
 def istft(
@@ -311,47 +294,43 @@ def istft(
     """Wrapper of the official ``torch.istft`` for single-channel signals.
 
     Args:
-        features: single-channel spectrogram with shape of [B, F, T] for input_type="complex" or ([B, F, T], [B, F, T]) for input_type="real_imag" and "mag_phase".
+        features (`torch.Tensor` of shape `(batch_size, num_channels, num_freqs, num_frames)` or list/tuple of tensors):
+            single-channel spectrogram(s).
         n_fft: num of FFT.
         hop_length: hop length.
         win_length: hanning window size.
         length: expected length of istft.
-        input_type: "real_image", "complex", or "mag_phase".
+        input_type: "real_image", "complex", or "mag_phase". Defaults to "mag_phase".
 
     Returns:
         Single-channel singal with the shape shape of [B, T].
-
-    Notes:
-        Only support single-channel input with shape of [B, F, T] or ([B, F, T], [B, F, T])
     """
-    if input_type == "real_imag":
-        assert isinstance(feature, tuple) or isinstance(
-            feature, list
-        )  # (real, imag) or [real, imag]
-        real, imag = feature
-        complex_valued_features = torch.complex(real=real, imag=imag)
-    elif input_type == "complex":
-        assert isinstance(feature, Tensor) and torch.is_complex(feature)
-        complex_valued_features = feature
-    elif input_type == "mag_phase":
-        assert isinstance(feature, tuple) or isinstance(
-            feature, list
-        )  # (mag, phase) or [mag, phase]
-        mag, phase = feature
-        complex_valued_features = torch.complex(
-            mag * torch.cos(phase), mag * torch.sin(phase)
-        )
-    else:
-        raise NotImplementedError(
-            "Only 'real_imag', 'complex', and 'mag_phase' are supported now."
-        )
+    # Compatible with multiple inputs
+    match input_type:
+        case "real_imag":
+            if not ((isinstance(feature, tuple) or isinstance(feature, list)) and len(feature) != 2):
+                raise ValueError(f"Only support tuple or list. Received {type(feature)} with {len(feature)} elements.")
+            real, imag = feature
+            complex_valued_features = torch.complex(real=real, imag=imag)
+        case "complex":
+            if not (isinstance(feature, Tensor) and torch.is_complex(feature)):
+                raise ValueError(f"Only support complex-valued tensor. Received {type(feature)}")
+            complex_valued_features = feature
+        case "mag_phase":
+            if not ((isinstance(feature, tuple) or isinstance(feature, list)) and len(feature) != 2):
+                raise ValueError(f"Only support tuple or list. Received {type(feature)} with {len(feature)} elements.")
+            mag, phase = feature
+            complex_valued_features = torch.polar(mag, phase)
+        case _:
+            raise ValueError(f"Only support 'real_imag', 'complex', and 'mag_phase'. Received {input_type=}")
 
+    window = torch.hann_window(n_fft, device=complex_valued_features.device)
     return torch.istft(
         complex_valued_features,
         n_fft,
         hop_length,
         win_length,
-        window=torch.hann_window(n_fft, device=complex_valued_features.device),
+        window=window,
         length=length,
     )
 
@@ -426,9 +405,7 @@ def tune_dB_FS(y, target_dB_FS=-26, eps=EPSILON):
         return y, rms, scalar
 
 
-def activity_detector(
-    audio, fs=16000, activity_threshold=0.13, target_level=-25, eps=EPSILON
-):
+def activity_detector(audio, fs=16000, activity_threshold=0.13, target_level=-25, eps=EPSILON):
     """Return the percentage of the time the audio signal is above an energy threshold.
 
     Args:
@@ -461,13 +438,9 @@ def activity_detector(
         frame_energy_prob = 1.0 / (1 + np.exp(-(a + b * frame_rms)))
 
         if frame_energy_prob > prev_energy_prob:
-            smoothed_energy_prob = frame_energy_prob * alpha_att + prev_energy_prob * (
-                1 - alpha_att
-            )
+            smoothed_energy_prob = frame_energy_prob * alpha_att + prev_energy_prob * (1 - alpha_att)
         else:
-            smoothed_energy_prob = frame_energy_prob * alpha_rel + prev_energy_prob * (
-                1 - alpha_rel
-            )
+            smoothed_energy_prob = frame_energy_prob * alpha_rel + prev_energy_prob * (1 - alpha_rel)
 
         if smoothed_energy_prob > activity_threshold:
             active_frames += 1
@@ -479,9 +452,7 @@ def activity_detector(
     return perc_active
 
 
-def build_complex_ideal_ratio_mask(
-    noisy_real, noisy_imag, clean_real, clean_imag
-) -> torch.Tensor:
+def build_complex_ideal_ratio_mask(noisy_real, noisy_imag, clean_real, clean_imag) -> torch.Tensor:
     """Build the complex ratio mask.
 
     Args:
@@ -530,11 +501,7 @@ def decompress_cIRM(mask, K=10, limit=9.9):
     References:
         https://ieeexplore.ieee.org/document/7364200
     """
-    mask = (
-        limit * (mask >= limit)
-        - limit * (mask <= -limit)
-        + mask * (torch.abs(mask) < limit)
-    )
+    mask = limit * (mask >= limit) - limit * (mask <= -limit) + mask * (torch.abs(mask) < limit)
     mask = -K * torch.log((K - mask) / (K + mask))
     return mask
 
@@ -612,17 +579,11 @@ def drop_band(input, num_groups=2):
 
     output = []
     for group_idx in range(num_groups):
-        samples_indices = torch.arange(
-            group_idx, batch_size, num_groups, device=input.device
-        )
-        freqs_indices = torch.arange(
-            group_idx, num_freqs, num_groups, device=input.device
-        )
+        samples_indices = torch.arange(group_idx, batch_size, num_groups, device=input.device)
+        freqs_indices = torch.arange(group_idx, num_freqs, num_groups, device=input.device)
 
         selected_samples = torch.index_select(input, dim=0, index=samples_indices)
-        selected = torch.index_select(
-            selected_samples, dim=2, index=freqs_indices
-        )  # [B, C, F // num_groups, T]
+        selected = torch.index_select(selected_samples, dim=2, index=freqs_indices)  # [B, C, F // num_groups, T]
 
         output.append(selected)
 
