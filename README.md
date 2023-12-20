@@ -32,6 +32,8 @@
 </div>
 
 
+<!-- ABOUT THE PROJECT -->
+## About The Project
 
 ![Spiking-FullSubNet](./project_image.png)
 
