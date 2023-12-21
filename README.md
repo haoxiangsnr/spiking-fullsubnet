@@ -35,7 +35,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-![Spiking-FullSubNet](./project_image.png)
+![Spiking-FullSubNet](./docs/source/images/project_image.png)
 
 We are proud to announce that Spiking-FullSubNet has emerged as the [winner of Intel N-DNS Challenge Track 1 (Algorithmic)](https://intel-ncl.atlassian.net/wiki/spaces/INRC/blog/2023/12/01/2027225099/INRC+Forum+12+12+2023.+Clairaudience+Intel+N-DNS+Challenge+Track+1+Algorithmic+Winner.). Please refer to our [brief write-up here](./Spiking-FullSubNet.pdf) for more details. This repository serves as the official home of the Spiking-FullSubNet implementation. Here, you will find:
 
