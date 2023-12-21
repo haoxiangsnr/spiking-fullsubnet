@@ -30,26 +30,6 @@ path = "torch.optim.AdamW"
 [optimizer.args]
 lr = 1e-3
 
-[optimizer_g]
-path = "torch.optim.AdamW"
-[optimizer_g.args]
-lr = 1e-3
-
-[optimizer_d]
-path = "torch.optim.AdamW"
-[optimizer_d.args]
-lr = 1e-3
-
-[lr_scheduler_g]
-path = "torch.optim.lr_scheduler.ExponentialLR"
-[lr_scheduler_g.args]
-gamma = 0.99
-
-[lr_scheduler_d]
-path = "torch.optim.lr_scheduler.ExponentialLR"
-[lr_scheduler_d.args]
-gamma = 0.99
-
 [model]
 path = "model.SpikingFullSubNet"
 [model.args]
@@ -74,10 +54,6 @@ bn = true
 shared_weights = true
 sequence_model = "GSN"
 
-[model_d]
-path = "discriminator.Discriminator"
-[model_d.args]
-
 [acoustics]
 n_fft = 512
 hop_length = 128
@@ -95,22 +71,12 @@ offset = 0
 batch_size = 64
 num_workers = 8
 drop_last = true
-# pin_memory = true
+pin_memory = true
 
-
-[[validate_dataset]]
+[validate_dataset]
 path = "dataloader.DNSAudio"
 [validate_dataset.args]
 root = "/datasets/datasets_fullband/validation_set/"
-train = false
-[validate_dataset.dataloader]
-batch_size = 16
-num_workers = 8
-
-[[validate_dataset]]
-path = "dataloader.DNSAudio"
-[validate_dataset.args]
-root = "/datasets/datasets_fullband/validation_set_20230730/"
 train = false
 [validate_dataset.dataloader]
 batch_size = 16

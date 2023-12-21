@@ -85,17 +85,6 @@ class Trainer(BaseTrainer):
 
         return noisy_y, clean_y, enhanced_y  # , synops, neuron_ops
 
-    def validation_step(self, batch, batch_idx, dataloader_idx=0):
-        mixture, target, prompts, enroll, meta_info = batch
-
-        with autocast(dtype=torch.bfloat16):
-            enh = self.model(mixture, prompts, enroll, meta_info)  # [B, C, T]
-
-        enh = enh.float()
-        enh = clamp_inf_value(enh)
-
-        return mixture, target, enh
-
     def compute_metrics(self, dataloader_idx, step_out):
         noisy, clean, enhanced = step_out
 
