@@ -43,16 +43,14 @@ class SequenceModel(nn.Module):
         else:
             self.proj = nn.Identity()
 
-        if output_activate_function is None:
-            self.output_activate_function = nn.Identity()
-        elif output_activate_function == "tanh":
+        if output_activate_function == "tanh":
             self.output_activate_function = nn.Tanh()
         elif output_activate_function == "sigmoid":
             self.output_activate_function = nn.Sigmoid()
         elif output_activate_function == "relu":
             self.output_activate_function = nn.ReLU()
         else:
-            raise NotImplementedError(f"Output activate function {output_activate_function} not implemented.")
+            self.output_activate_function = nn.Identity()
 
         self.hidden_size = hidden_size
         self.num_layers = num_layers

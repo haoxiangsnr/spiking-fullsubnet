@@ -1,0 +1,126 @@
+[meta]
+save_dir = "exp"
+description = "Train a model using Generative Adversarial Networks (GANs)"
+seed = 20220815
+
+[trainer]
+path = "trainer_v2.Trainer"
+[trainer.args]
+debug = false
+max_steps = 0
+max_epochs = 200
+max_grad_norm = 10
+save_max_score = true
+save_ckpt_interval = 1
+max_patience = 20
+plot_norm = true
+validation_interval = 1
+max_num_checkpoints = 20
+scheduler_name = "constant_schedule_with_warmup"
+warmup_steps = 0
+warmup_ratio = 0.00
+gradient_accumulation_steps = 1
+
+[loss_function]
+path = "torch.nn.MSELoss"
+[loss_function.args]
+
+[optimizer]
+path = "torch.optim.AdamW"
+[optimizer.args]
+lr = 1e-3
+
+[optimizer_g]
+path = "torch.optim.AdamW"
+[optimizer_g.args]
+lr = 1e-3
+
+[optimizer_d]
+path = "torch.optim.AdamW"
+[optimizer_d.args]
+lr = 1e-3
+
+[lr_scheduler_g]
+path = "torch.optim.lr_scheduler.ExponentialLR"
+[lr_scheduler_g.args]
+gamma = 0.99
+
+[lr_scheduler_d]
+path = "torch.optim.lr_scheduler.ExponentialLR"
+[lr_scheduler_d.args]
+gamma = 0.99
+
+[model]
+path = "model.SpikingFullSubNet"
+[model.args]
+n_fft = 512
+hop_length = 128
+win_length = 512
+fdrc = 0.5
+fb_input_size = 64
+fb_hidden_size = 256
+fb_num_layers = 2
+fb_proj_size = 64
+fb_output_activate_function = false
+sb_hidden_size = 128
+sb_num_layers = 2
+freq_cutoffs = [0, 32, 128, 256]
+df_orders = [5, 3, 1]
+center_freq_sizes = [4, 32, 64]
+neighbor_freq_sizes = [15, 15, 15]
+use_pre_layer_norm_fb = true
+use_pre_layer_norm_sb = true
+bn = true
+shared_weights = true
+sequence_model = "GSN"
+
+[model_d]
+path = "discriminator.Discriminator"
+[model_d.args]
+
+[acoustics]
+n_fft = 512
+hop_length = 128
+win_length = 512
+sr = 16000
+
+[train_dataset]
+path = "dataloader.DNSAudio"
+[train_dataset.args]
+root = "/datasets/datasets_fullband/training_set/"
+limit = false
+offset = 0
+
+[train_dataset.dataloader]
+batch_size = 64
+num_workers = 8
+drop_last = true
+# pin_memory = true
+
+
+[[validate_dataset]]
+path = "dataloader.DNSAudio"
+[validate_dataset.args]
+root = "/datasets/datasets_fullband/validation_set/"
+train = false
+[validate_dataset.dataloader]
+batch_size = 16
+num_workers = 8
+
+[[validate_dataset]]
+path = "dataloader.DNSAudio"
+[validate_dataset.args]
+root = "/datasets/datasets_fullband/validation_set_20230730/"
+train = false
+[validate_dataset.dataloader]
+batch_size = 16
+num_workers = 8
+
+[test_dataset]
+path = "dataloader.DNSAudio"
+[test_dataset.args]
+root = "/datasets/IntelNeuromorphicDNSChallenge-latest/data/MicrosoftDNS_4_ICASSP/test_set_1/"
+train = false
+[test_dataset.dataloader]
+batch_size = 24
+num_workers = 8

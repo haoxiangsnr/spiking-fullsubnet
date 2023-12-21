@@ -1,4 +1,5 @@
 from functools import partial
+from operator import is_
 
 import torch
 import torch.nn as nn
@@ -174,11 +175,16 @@ class BaseModel(nn.Module):
         """Normalize the input with the cumulative mean
 
         Args:
-            input: [B, C, F, T]
+            input: [B, C, F, T] or [B, N, C, F, T]
 
         Returns:
-
+            [B, C, F, T] or [B, N, C, F, T]
         """
+        is_5d = input.dim() == 5
+        if is_5d:
+            assert input.shape[2] == 1, "Only mono audio is supported."
+            input = input.squeeze(2)  # [B, N, C, F, T] => [B, N, F, T]
+
         batch_size, num_channels, num_freqs, num_frames = input.size()
         input = input.reshape(batch_size * num_channels, num_freqs, num_frames)
 
@@ -200,7 +206,12 @@ class BaseModel(nn.Module):
 
         normed = input / (cumulative_mean + EPSILON)
 
-        return normed.reshape(batch_size, num_channels, num_freqs, num_frames)
+        normed = normed.reshape(batch_size, num_channels, num_freqs, num_frames)
+
+        if is_5d:
+            normed = normed.unsqueeze(2)
+
+        return normed
 
     @staticmethod
     def offline_gaussian_norm(input):
@@ -231,64 +242,6 @@ class BaseModel(nn.Module):
                 "e.g. offline_laplace_norm, cumulative_laplace_norm, forgetting_norm, etc."
             )
         return norm
-
-
-class SubBandSequenceWrapper(SequenceModel):
-    def __init__(self, df_order, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.df_order = df_order
-
-    def forward(self, subband_input):
-        """Forward pass.
-
-        Args:
-            subband_input: the input of shape [B, N, C, F_subband, T]
-
-        Returns:
-            output: the output of shape [B, df_order, N * F_subband_out, T, 2]
-        """
-
-        (
-            batch_size,
-            num_subband_units,
-            num_channels,
-            num_subband_freqs,
-            num_frames,
-        ) = subband_input.shape
-        assert num_channels == 1
-
-        output = rearrange(subband_input, "b n c fs t -> (b n) (c fs) t")
-        output, all_layer_outputs = super().forward(output)
-        output = rearrange(
-            output,
-            "(b n) (c fc df) t -> b df (n fc) t c",
-            b=batch_size,
-            c=num_channels * 2,
-            df=self.df_order,
-        )
-
-        # e.g., [B, 3, 20, T, 2]
-
-        return output, all_layer_outputs
-
-        # for deep filter
-        # [B, df_order, F, T, C]
-
-        # output = subband_input.reshape(
-        #     batch_size * num_subband_units, num_subband_freqs, num_frames
-        # )
-        # output = super().forward(output)
-
-        # # [B, N, C, 2, center, T]
-        # output = output.reshape(batch_size, num_subband_units, 2, -1, num_frames)
-
-        # # [B, 2, N, center, T]
-        # output = output.permute(0, 2, 1, 3, 4).contiguous()
-
-        # # [B, C, N * F_subband_out, T]
-        # output = output.reshape(batch_size, 2, -1, num_frames)
-
-        # return output
 
 
 class SubbandModel(BaseModel):
@@ -626,8 +579,8 @@ if __name__ == "__main__":
     from audiozen.metric import compute_synops
 
     config = toml.load(
-        "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_s.toml"
-        # "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_m_cumulative_laplace_norm.toml"
+        # "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_s.toml"
+        "/home/xhao/proj/spiking-fullsubnet/recipes/intel_ndns/spiking_fullsubnet/baseline_m_cumulative_laplace_norm.toml"
         # "/home/xianghao/proj/audiozen/recipes/intel_ndns/spike_fsb/baseline_l.toml"
     )
     model_args = config["model_g"]["args"]

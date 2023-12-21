@@ -13,7 +13,7 @@ from audiozen.utils import instantiate
 def run(config, resume):
     init_logging_logger(config)
 
-    ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=False)
+    ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
     accelerator = Accelerator(
         gradient_accumulation_steps=config["trainer"]["args"]["gradient_accumulation_steps"],
         kwargs_handlers=[ddp_kwargs],
@@ -21,11 +21,17 @@ def run(config, resume):
 
     set_seed(config["meta"]["seed"], device_specific=True)
 
-    model = instantiate(config["model"]["path"], args=config["model"]["args"])
+    model_g = instantiate(config["model_g"]["path"], args=config["model_g"]["args"])
+    model_d = instantiate(config["model_d"]["path"], args=config["model_d"]["args"])
 
-    optimizer = instantiate(
-        config["optimizer"]["path"],
-        args={"params": model.parameters()} | config["optimizer"]["args"],
+    optimizer_g = instantiate(
+        config["optimizer_g"]["path"],
+        args={"params": model_g.parameters()} | config["optimizer_g"]["args"],
+    )
+
+    optimizer_d = instantiate(
+        config["optimizer_d"]["path"],
+        args={"params": model_d.parameters()} | config["optimizer_d"]["args"],
     )
 
     loss_function = instantiate(
@@ -33,13 +39,44 @@ def run(config, resume):
         args=config["loss_function"]["args"],
     )
 
-    (model, optimizer) = accelerator.prepare(model, optimizer)
+    scheduler_g = instantiate(
+        config["lr_scheduler_g"]["path"],
+        args={"optimizer": optimizer_g} | config["lr_scheduler_g"]["args"],
+    )
+
+    scheduler_d = instantiate(
+        config["lr_scheduler_d"]["path"],
+        args={"optimizer": optimizer_d} | config["lr_scheduler_d"]["args"],
+    )
+
+    (
+        model_g,
+        optimizer_g,
+        scheduler_g,
+        model_d,
+        optimizer_d,
+        scheduler_d,
+    ) = accelerator.prepare(
+        model_g,
+        optimizer_g,
+        scheduler_g,
+        model_d,
+        optimizer_d,
+        scheduler_d,
+    )
 
     if "train" in args.mode:
-        train_dataset = instantiate(config["train_dataset"]["path"], args=config["train_dataset"]["args"])
-        train_dataloader = DataLoader(
-            dataset=train_dataset, collate_fn=None, shuffle=True, **config["train_dataset"]["dataloader"]
+        train_dataset = instantiate(
+            config["train_dataset"]["path"],
+            args=config["train_dataset"]["args"],
         )
+        train_dataloader = DataLoader(
+            dataset=train_dataset,
+            collate_fn=None,
+            shuffle=True,
+            **config["train_dataset"]["dataloader"],
+        )
+
         train_dataloader = accelerator.prepare(train_dataloader)
 
     if "train" in args.mode or "validate" in args.mode:
@@ -80,8 +117,12 @@ def run(config, resume):
         accelerator=accelerator,
         config=config,
         resume=resume,
-        model=model,
-        optimizer=optimizer,
+        model_g=model_g,
+        optimizer_g=optimizer_g,
+        lr_scheduler_g=scheduler_g,
+        model_d=model_d,
+        optimizer_d=optimizer_d,
+        lr_scheduler_d=scheduler_d,
         loss_function=loss_function,
     )
 
