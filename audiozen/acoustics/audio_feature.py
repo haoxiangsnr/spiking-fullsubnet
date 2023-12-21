@@ -289,7 +289,7 @@ def istft(
     hop_length: int,
     win_length: int,
     length: Optional[int] = None,
-    input_type: Literal["mag_phase", "real_imag", "complex"] = "mag_phase",
+    input_type: Literal["mag_phase", "real_imag", "complex"] = "complex",
 ) -> Tensor:
     """Wrapper of the official ``torch.istft`` for single-channel signals.
 
