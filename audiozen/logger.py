@@ -33,10 +33,7 @@ def init_logging_logger(config):
         >>> logger.info("info message")
     """
     # Parse log_fpath
-    log_dir: Path = (
-        Path(config["meta"]["save_dir"]).expanduser().absolute()
-        / config["meta"]["exp_id"]
-    )
+    log_dir: Path = Path(config["meta"]["save_dir"]).expanduser().absolute() / config["meta"]["exp_id"]
     log_dir.mkdir(parents=True, exist_ok=True)
 
     # disable logging for libraries that use standard logging module
@@ -57,9 +54,7 @@ def init_logging_logger(config):
     console_handler.setLevel(level=log_level)
 
     # Create a file handler and set the logger level to debug
-    file_handler = logging.FileHandler(
-        (log_dir / f"{config['meta']['exp_id']}.log").as_posix()
-    )
+    file_handler = logging.FileHandler((log_dir / f"{config['meta']['exp_id']}.log").as_posix())
     file_handler.setLevel(level=log_level)
 
     # Create formatters (file logger have more info)

@@ -136,12 +136,18 @@ def prepare_empty_dir(dirs, resume=False):
     """
     for dir_path in dirs:
         if resume:
-            assert (
-                dir_path.exists()
-            ), "In resume mode, you must have an old experiment dir."
+            assert dir_path.exists(), "In resume mode, you must have an old experiment dir."
         else:
             dir_path.mkdir(parents=True, exist_ok=True)
 
 
 def expand_path(path):
     return os.path.abspath(os.path.expanduser(path))
+
+
+def clamp_inf_value(tensor):
+    """Clamp inf value to a large number."""
+    max_dtype = torch.finfo(tensor.dtype).max
+    clamp_value = torch.where(torch.isinf(tensor).any(), max_dtype - 1000, tensor)
+    tensor = torch.clamp(tensor, min=-clamp_value, max=clamp_value)
+    return tensor
