@@ -158,6 +158,10 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>accelerate<span class="w"> </span>config
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you don’t want to use the CLI tool, you may use explicit arguments to specify the GPU usage (https://huggingface.co/docs/accelerate/package_reference/cli#accelerate-env). For example: <code class="docutils literal notranslate"><span class="pre">accelerate</span> <span class="pre">launch</span> <span class="pre">--multi_gpu</span> <span class="pre">--num_processes=6</span> <span class="pre">--gpu_ids</span> <span class="pre">0,1,2,3,4,5</span> <span class="pre">--main_process_port</span> <span class="pre">46524</span> <span class="pre">--main_process_ip</span> <span class="pre">127.0.0.1</span> <span class="pre">run.py</span> <span class="pre">-C</span> <span class="pre">config.toml</span></code></p>
+</div>
 <p>Then, we can use the following command to train the <code class="docutils literal notranslate"><span class="pre">spiking_fullsubnet</span></code> model using configurations in <code class="docutils literal notranslate"><span class="pre">baseline_m_cumulative_laplace_norm.toml</span></code>:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>accelerate<span class="w"> </span>launch<span class="w"> </span>run.py<span class="w"> </span>-C<span class="w"> </span>baseline_m_cumulative_laplace_norm.toml<span class="w"> </span>-M<span class="w"> </span>train
 </pre></div>
