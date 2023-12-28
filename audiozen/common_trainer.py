@@ -315,14 +315,14 @@ class Trainer:
         return bar_desc
 
     def train(self, train_dataloader: DataLoader, validation_dataloaders):
-        """Train the model.
+        """Train loop entry point.
 
         Args:
             train_dataloader: the dataloader to train.
             validation_dataloaders: the dataloader(s) to validate.
 
         Notes:
-            You are responsible for calling `.backward()`, `.step()`, and `.zero_grad()` in your implementation
+            You are responsible for calling ``.backward()``, ``.step()``, and ``.zero_grad()`` in your implementation
             of `training_step()`. Accelerate will automatically handle the gradient accumulation for you.
             It means that in gradient accumulation, the step() of optimizer and scheduler is called only when gradient_accumulation_steps is reached.
 

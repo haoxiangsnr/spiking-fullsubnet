@@ -1,7 +1,6 @@
 # Project Structure
 
-Before going into details, let's take a look at the overall structure of the project.
-You may familiar with this project structure (`recipes/<dataset>/<model>`) if you have used [ESPNet](https://github.com/espnet/espnet) and [SpeechBrain](https://github.com/speechbrain/speechbrain) before.
+Let's take a look at the overall structure of the project. You may familiar with this project structure (`recipes/<dataset>/<model>`) if you have used [ESPNet](https://github.com/espnet/espnet) and [SpeechBrain](https://github.com/speechbrain/speechbrain) before.
 AudioZEN is inspired by them, but it is more simpler.
 
 AudioZEN includes a core package (`/audiozen`) and a series of training recipes (`/recipes`).

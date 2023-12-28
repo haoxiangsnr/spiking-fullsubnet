@@ -1,4 +1,4 @@
-# Running an experiment
+# Running an Experiment
 
 In Spiking-FullSubNet, we adopt a `recipes/<dataset>/<model>` directory structure. For example, let us entry to the directory `recipes/intel_ndns/`. The corresponding dataset is the Intel Neuromorphic DNS Challenge dataset. Please refer to [Intel Neuromorphic DNS Challenge Datasets](https://github.com/IntelLabs/IntelNeuromorphicDNSChallenge#dataset) for preparing the dataset.
 
@@ -23,13 +23,16 @@ accelerate launch run.py -C baseline_m.toml -M train
 ```
 
 ```{note}
-Alternatively, if you don't want to use the CLI tool, you may use explicit arguments to specify the GPU usage (https://huggingface.co/docs/accelerate/package_reference/cli#accelerate-env). For example: `accelerate launch --multi_gpu --num_processes=6 --gpu_ids 0,1,2,3,4,5 --main_process_port 46524 --main_process_ip 127.0.0.1 run.py -C baseline_m.toml`
+Alternatively, if you don't want to use the CLI tool, you may use explicit arguments to [specify the GPU usage](https://huggingface.co/docs/accelerate/package_reference/cli#accelerate-env). For example: `accelerate launch --multi_gpu --num_processes=6 --gpu_ids 0,1,2,3,4,5 --main_process_port 46524 --main_process_ip 127.0.0.1 run.py -C baseline_m.toml`
 ```
 
+You've initiated an experiment. Please note that the following sections, as well as additional pages, may not be optimally structured at the moment, resembling more closely the format of API documentation. This might require some technical proficiency to navigate effectively. Don't worry, we will provide more examples later.
 
 ## Entry file `run.py`
 
-In this `<model>` directory, we have an entry file `run.py`, dataloaders, and some model directories. We use HuggingFace Accelerate to start an experiment. Please refer to [HuggingFace Accelerate](https://huggingface.co/docs/accelerate/) for more details.
+If you are interested in inference and resume training, you may want to know how to use the entry file `run.py`. In this section, we will introduce the usage of `run.py`.
+
+In each `<model>` directory, we have an entry file `run.py`, dataloaders, and some model directories. We use HuggingFace Accelerate to start an experiment. Please refer to [HuggingFace Accelerate](https://huggingface.co/docs/accelerate/) for more details.
 
 `run.py` supports the following parameters:
 
