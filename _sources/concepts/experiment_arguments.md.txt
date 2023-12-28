@@ -1,6 +1,6 @@
 # Experiment arguments
 
-AudioZEN uses TOML configuration files (`*.toml`) to configure and manage experiments.
+Spiking-FullSubNet uses TOML configuration files (`*.toml`) to configure and manage experiments.
 Each experiment is configured by a `*.toml` file, which contains the experiment meta information, trainer, loss function, learning rate scheduler, optimizer, model, dataset, and acoustic features. the basename of the `*.toml` file is used as the experiment ID or identifier.
 You can track configuration changes using version control and reproduce experiments by using the same configuration file. For more information on TOML syntax, visit the [TOML website](https://toml.io/en/).
 
@@ -92,16 +92,22 @@ clip_grad_norm_value = 5
 In this example, AudioZEN will load a custom `Trainer` class from `trainer.py` in the python search path and initialize it with the arguments in the `[trainer.args]` section. You are able to use multiple ways to specify the `path` argument. See the next section for more details.
 In AudioZEN, `Trainer` class must be a subclass of `audiozen.trainer.base_trainer.BaseTrainer`. It supports the following arguments at least:
 
-| Item                   | Default | Description                                                                                          |
-| ---------------------- | ------- | ---------------------------------------------------------------------------------------------------- |
-| `max_epochs`           | `9999`  | The maximum number of epochs to train.                                                               |
-| `clip_grad_norm_value` | `-1`    | The maximum norm of the gradients used for clipping. "-1" means no clipping.                         |
-| `save_max_score`       | `true`  | Whether to find the best model by the maximum score.                                                 |
-| `save_ckpt_interval`   | `1`     | The interval of saving checkpoints.                                                                  |
-| `patience`             | `10`    | The number of epochs with no improvement after which the training will be stopped.                   |
-| `plot_norm`            | `true`  | Whether to plot the norm of the gradients.                                                           |
-| `validation_interval`  | `1`     | The interval of validation.                                                                          |
-| `max_num_checkpoints`  | `10`    | The maximum number of checkpoints to keep. Saving too many checkpoints causes disk space to run out. |
+| Item                          | Default                           | Description                                                                                          |
+| ----------------------------- | --------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `debug`                       | `false`                           | Whether to enable debug mode. If it is true, we will collect the happening time of NaN and Inf.      |
+| `max_steps`                   | `999999999`                       | The maximum number of steps to train.                                                                |
+| `max_epochs`                  | `9999`                            | The maximum number of epochs to train. If `max_steps` is set, `max_epochs` will be ignored.          |
+| `max_grad_norm`               | `-1`                              | The maximum norm of the gradients used for clipping. "-1" means no clipping.                         |
+| `save_max_score`              | `true`                            | Whether to find the best model by the maximum score.                                                 |
+| `save_ckpt_interval`          | `1`                               | The interval of saving checkpoints.                                                                  |
+| `max_patience`                | `10`                              | The number of epochs with no improvement after which the training will be stopped.                   |
+| `plot_norm`                   | `true`                            | Whether to plot the norm of the gradients.                                                           |
+| `validation_interval`         | `1`                               | The interval of validation.                                                                          |
+| `max_num_checkpoints`         | `10`                              | The maximum number of checkpoints to keep. Saving too many checkpoints causes disk space to run out. |
+| `scheduler_name`              | `"constant_schedule_with_warmup"` | The name of the scheduler.                                                                           |
+| `warmup_steps`                | `0`                               | The number of warmup steps.                                                                          |
+| `warmup_ratio`                | `0.0`                             | The ratio of warmup steps. If `warmup_steps` is set, `warmup_ratio` will be ignored.                 |
+| `gradient_accumulation_steps` | `1`                               | The number of gradient accumulation steps. It is used to simulate a larger batch size.               |
 
 #### Loading a module by `path` argument
 

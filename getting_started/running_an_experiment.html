@@ -21,7 +21,9 @@
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Logging and Visualization" href="logging_and_visualization.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,11 +46,11 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="project_structure.html">Project Structure</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running_an_experiment_accelerate.html">Running an experiment</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Running an experiment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging_and_visualization.html">Logging and Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project_structure.html">Project Structure</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Concepts</span></p>
 <ul>
@@ -89,26 +91,27 @@
              
   <section id="running-an-experiment">
 <h1>Running an experiment<a class="headerlink" href="#running-an-experiment" title="Link to this heading"></a></h1>
-<p>As mentioned in the previous section, AudioZEN adopts a <code class="docutils literal notranslate"><span class="pre">recipes/&lt;dataset&gt;/&lt;model&gt;</span></code> directory structure.
-To run an experiment of a model, we first go to a dataset directory, which will include an entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code> and some dataloaders dedicated to this dataset. For example, let us entry to the directory <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/</span></code>. The corresponding dataset is the Intel Neuromorphic DNS Challenge dataset.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>recipes/intel_ndns/
+<p>In Spiking-FullSubNet, we adopt a <code class="docutils literal notranslate"><span class="pre">recipes/&lt;dataset&gt;/&lt;model&gt;</span></code> directory structure. For example, let us entry to the directory <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/</span></code>. The corresponding dataset is the Intel Neuromorphic DNS Challenge dataset. Please refer to <a class="reference external" href="https://github.com/IntelLabs/IntelNeuromorphicDNSChallenge#dataset">Intel Neuromorphic DNS Challenge Datasets</a> for preparing the dataset.</p>
+<p>To run an experiment of a model, we first go to a model directory. For example, we can entry to the directory <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/spiking_fullsubnet/</span></code> to run an experiment of the <code class="docutils literal notranslate"><span class="pre">spiking_fullsubnet</span></code> model.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>recipes/intel_ndns/spiking_fullsubnet/
 </pre></div>
+</div>
+<p>In this <code class="docutils literal notranslate"><span class="pre">&lt;model&gt;</span></code> directory, we have an entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code>, dataloaders, and some model directories. We use HugoingFace Accelerate to start an experiment. Don’t worry if you are not familiar with Accelerate. It will help you to run an parallel experiment easily. Please refer to <a class="reference external" href="https://huggingface.co/docs/accelerate/">HuggingFace Accelerate</a> for more details.</p>
+<p>First, we need to configuration the GPU usage. Accelerate provides a CLI tool that unifies all launchers, so you only have to remember one command. To use it, run a quick configuration setup first on your machine and answer the questions:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>accelerate<span class="w"> </span>config
+</pre></div>
+</div>
+<p>Then, we can use the following command to train the <code class="docutils literal notranslate"><span class="pre">spiking_fullsubnet</span></code> model using configurations in <code class="docutils literal notranslate"><span class="pre">baseline_m.toml</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>accelerate<span class="w"> </span>launch<span class="w"> </span>run.py<span class="w"> </span>-C<span class="w"> </span>baseline_m.toml<span class="w"> </span>-M<span class="w"> </span>train
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Alternatively, if you don’t want to use the CLI tool, you may use explicit arguments to specify the GPU usage (https://huggingface.co/docs/accelerate/package_reference/cli#accelerate-env). For example: <code class="docutils literal notranslate"><span class="pre">accelerate</span> <span class="pre">launch</span> <span class="pre">--multi_gpu</span> <span class="pre">--num_processes=6</span> <span class="pre">--gpu_ids</span> <span class="pre">0,1,2,3,4,5</span> <span class="pre">--main_process_port</span> <span class="pre">46524</span> <span class="pre">--main_process_ip</span> <span class="pre">127.0.0.1</span> <span class="pre">run.py</span> <span class="pre">-C</span> <span class="pre">baseline_m.toml</span></code></p>
 </div>
 <section id="entry-file-run-py">
 <h2>Entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code><a class="headerlink" href="#entry-file-run-py" title="Link to this heading"></a></h2>
-<p>In each <code class="docutils literal notranslate"><span class="pre">&lt;dataset&gt;</span></code> directory, we have an entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code>, dataloaders, and some model directories. We call the <code class="docutils literal notranslate"><span class="pre">run.py</span></code> script to run an experiment.
-For example, we can use the following command to train the <code class="docutils literal notranslate"><span class="pre">sdnn_delays</span></code> model using configurations in <code class="docutils literal notranslate"><span class="pre">baseline.toml</span></code>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
-<span class="w">    </span>--standalone
-<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
-<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">1</span>
-<span class="w">    </span>run.py
-<span class="w">    </span>-C<span class="w"> </span>sdnn_delays/baseline.toml
-<span class="w">    </span>-M<span class="w"> </span>train
-</pre></div>
-</div>
-<p>Here, we use <code class="docutils literal notranslate"><span class="pre">torchrun</span></code> to start the experiment.
-<code class="docutils literal notranslate"><span class="pre">torchrun</span></code> isn’t magic. It is a superset of <code class="docutils literal notranslate"><span class="pre">torch.distributed.launch</span></code> and is provided by PyTorch officials, helping us to start multi-GPU training conveniently. Its just a python <code class="docutils literal notranslate"><span class="pre">console_entrypoint</span></code> added for convenience (check <a class="reference external" href="https://pytorch.org/docs/stable/elastic/run.html">torchrun versus python -m torch.distributed.run</a>). Check <a class="reference external" href="https://pytorch.org/docs/stable/elastic/run.html">Torchrun (Elastic Training)</a> for more details.</p>
+<p>In this <code class="docutils literal notranslate"><span class="pre">&lt;model&gt;</span></code> directory, we have an entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code>, dataloaders, and some model directories. We use HuggingFace Accelerate to start an experiment. Please refer to <a class="reference external" href="https://huggingface.co/docs/accelerate/">HuggingFace Accelerate</a> for more details.</p>
 <p><code class="docutils literal notranslate"><span class="pre">run.py</span></code> supports the following parameters:</p>
 <table class="docutils align-default">
 <thead>
@@ -136,76 +139,20 @@ For example, we can use the following command to train the <code class="docutils
 </tr>
 </tbody>
 </table>
-<p>See more details in <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/run.py</span></code> and <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/sdnn_delays/baseline.toml</span></code>.</p>
-</section>
-<section id="single-machine-multi-gpu-training">
-<h2>Single-machine multi-GPU training<a class="headerlink" href="#single-machine-multi-gpu-training" title="Link to this heading"></a></h2>
-<p>In most cases, we want to start an experiment on a single machine with multiple GPUs. Here, we show some examples for how to.</p>
-<p>First, let us use <code class="docutils literal notranslate"><span class="pre">baseline.toml</span></code> to train <code class="docutils literal notranslate"><span class="pre">sdnn_delays</span></code> with two GPUs on a single machine:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
-<span class="w">    </span>--standalone
-<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
-<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
-<span class="w">    </span>run.py
-<span class="w">    </span>--configuration<span class="w"> </span>sdnn_delays/baseline.toml
-<span class="w">    </span>--mode<span class="w"> </span>train
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">--nnodes=1</span></code> means that we will start the experiment on a single machine. <code class="docutils literal notranslate"><span class="pre">--nproc_per_node=2</span></code> means that we will use two GPUs on the single machine.</p>
-<div class="admonition attention">
-<p class="admonition-title">Attention</p>
-<p>The model <code class="docutils literal notranslate"><span class="pre">sdnn_delays</span></code> based on Lava-dl package, which actually does not support multi-GPU training. Here, we just use it as an example to show how to start an experiment on a single machine with multiple GPUs using <code class="docutils literal notranslate"><span class="pre">torchrun</span></code>.</p>
-</div>
+<p>See more details in <code class="docutils literal notranslate"><span class="pre">recipes/intel_ndns/spiking_fullsubnet/run.py</span></code>.</p>
 <p>After a suspended experiment, we can resume training (using <code class="docutils literal notranslate"><span class="pre">-R</span></code> or <code class="docutils literal notranslate"><span class="pre">--resume</span></code>) from the last checkpoint:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
-<span class="w">    </span>--standalone
-<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
-<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
-<span class="w">    </span>run.py
-<span class="w">    </span>--C<span class="w"> </span>sdnn_delays/baseline.toml
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>accelerate<span class="w"> </span>launch<span class="w"> </span>run.py
+<span class="w">    </span>-C<span class="w"> </span>baseline_m_cumulative_laplace_norm.toml
 <span class="w">    </span>--M<span class="w"> </span>train
 <span class="w">    </span>-R
 </pre></div>
 </div>
-<p>In the case of running multiple experiments on a single machine, since the first experiment has occupied the default <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> (DDP) listening port <code class="docutils literal notranslate"><span class="pre">29500</span></code>, we need to make sure that each instance (job) is setup on different ports to avoid port conflicts. Or you may directly use <code class="docutils literal notranslate"><span class="pre">rdzv_endpoint=localhost:0</span></code>, meaning to select a random unused port:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
-<span class="w">    </span>--rdzv_backend<span class="o">=</span>c10d
-<span class="w">    </span>--rdzv_endpoint<span class="o">=</span>localhost:0
-<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
-<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
-<span class="w">    </span>run.py
-<span class="w">    </span>-C<span class="w"> </span>sdnn_delays/baseline.toml
-<span class="w">    </span>-M<span class="w"> </span>train
-</pre></div>
-</div>
 <p>Using “best” epoch to test the model performance on the test dataset:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
-<span class="w">    </span>--standalone
-<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
-<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
-<span class="w">    </span>run.py
-<span class="w">    </span>-C<span class="w"> </span>sdnn_delays/baseline.toml
-<span class="w">    </span>-M<span class="w"> </span><span class="nb">test</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>accelerate<span class="w"> </span>launch<span class="w"> </span>run.py
+<span class="w">    </span>-C<span class="w"> </span>baseline_m_cumulative_laplace_norm.toml
+<span class="w">    </span>--M<span class="w"> </span><span class="nb">test</span>
 <span class="w">    </span>--ckpt_path<span class="w"> </span>best
 </pre></div>
-</div>
-<p>First to train the model on the training dataset. Then test the model performance on the test dataset:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>torchrun
-<span class="w">    </span>--standalone
-<span class="w">    </span>--nnodes<span class="o">=</span><span class="m">1</span>
-<span class="w">    </span>--nproc_per_node<span class="o">=</span><span class="m">2</span>
-<span class="w">    </span>run.py
-<span class="w">    </span>-C<span class="w"> </span>sdnn_delays/baseline.toml
-<span class="w">    </span>-M<span class="w"> </span>train<span class="w"> </span><span class="nb">test</span>
-<span class="w">    </span>--ckpt_path<span class="w"> </span>best
-</pre></div>
-</div>
-<div class="admonition attention">
-<p class="admonition-title">Attention</p>
-<p>Before use <code class="docutils literal notranslate"><span class="pre">torchrun</span></code>, don’t forget to use a environment variable <code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES</span></code> to control the GPU usage. For example, the following command will use the first and second GPUs:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">CUDA_VISIABLE_DEVICES</span><span class="o">=</span><span class="m">0</span>,1
-</pre></div>
-</div>
 </div>
 </section>
 </section>
@@ -213,7 +160,10 @@ For example, we can use the following command to train the <code class="docutils
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="logging_and_visualization.html" class="btn btn-neutral float-right" title="Logging and Visualization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

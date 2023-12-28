@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Trainer" href="trainer.html" />
-    <link rel="prev" title="Logging and Visualization" href="../getting_started/logging_and_visualization.html" /> 
+    <link rel="prev" title="Project Structure" href="../getting_started/project_structure.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,10 +47,10 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started/installation.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started/project_structure.html">Project Structure</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started/running_an_experiment_accelerate.html">Running an experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/running_an_experiment.html">Running an experiment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/logging_and_visualization.html">Logging and Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/project_structure.html">Project Structure</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Concepts</span></p>
 <ul class="current">
@@ -91,7 +91,7 @@
              
   <section id="experiment-arguments">
 <h1>Experiment arguments<a class="headerlink" href="#experiment-arguments" title="Link to this heading"></a></h1>
-<p>AudioZEN uses TOML configuration files (<code class="docutils literal notranslate"><span class="pre">*.toml</span></code>) to configure and manage experiments.
+<p>Spiking-FullSubNet uses TOML configuration files (<code class="docutils literal notranslate"><span class="pre">*.toml</span></code>) to configure and manage experiments.
 Each experiment is configured by a <code class="docutils literal notranslate"><span class="pre">*.toml</span></code> file, which contains the experiment meta information, trainer, loss function, learning rate scheduler, optimizer, model, dataset, and acoustic features. the basename of the <code class="docutils literal notranslate"><span class="pre">*.toml</span></code> file is used as the experiment ID or identifier.
 You can track configuration changes using version control and reproduce experiments by using the same configuration file. For more information on TOML syntax, visit the <a class="reference external" href="https://toml.io/en/">TOML website</a>.</p>
 <section id="sample-toml-file">
@@ -198,11 +198,19 @@ In AudioZEN, <code class="docutils literal notranslate"><span class="pre">Traine
 </tr>
 </thead>
 <tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">debug</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Whether to enable debug mode. If it is true, we will collect the happening time of NaN and Inf.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_steps</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">999999999</span></code></p></td>
+<td><p>The maximum number of steps to train.</p></td>
+</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_epochs</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">9999</span></code></p></td>
-<td><p>The maximum number of epochs to train.</p></td>
+<td><p>The maximum number of epochs to train. If <code class="docutils literal notranslate"><span class="pre">max_steps</span></code> is set, <code class="docutils literal notranslate"><span class="pre">max_epochs</span></code> will be ignored.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">clip_grad_norm_value</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_grad_norm</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p></td>
 <td><p>The maximum norm of the gradients used for clipping. “-1” means no clipping.</p></td>
 </tr>
@@ -214,7 +222,7 @@ In AudioZEN, <code class="docutils literal notranslate"><span class="pre">Traine
 <td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
 <td><p>The interval of saving checkpoints.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">patience</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_patience</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
 <td><p>The number of epochs with no improvement after which the training will be stopped.</p></td>
 </tr>
@@ -229,6 +237,22 @@ In AudioZEN, <code class="docutils literal notranslate"><span class="pre">Traine
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_num_checkpoints</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
 <td><p>The maximum number of checkpoints to keep. Saving too many checkpoints causes disk space to run out.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">scheduler_name</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;constant_schedule_with_warmup&quot;</span></code></p></td>
+<td><p>The name of the scheduler.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">warmup_steps</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>The number of warmup steps.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">warmup_ratio</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.0</span></code></p></td>
+<td><p>The ratio of warmup steps. If <code class="docutils literal notranslate"><span class="pre">warmup_steps</span></code> is set, <code class="docutils literal notranslate"><span class="pre">warmup_ratio</span></code> will be ignored.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gradient_accumulation_steps</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>The number of gradient accumulation steps. It is used to simulate a larger batch size.</p></td>
 </tr>
 </tbody>
 </table>
@@ -333,7 +357,7 @@ You are able to call them in any place of the custom<code class="docutils litera
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../getting_started/logging_and_visualization.html" class="btn btn-neutral float-left" title="Logging and Visualization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../getting_started/project_structure.html" class="btn btn-neutral float-left" title="Project Structure" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="trainer.html" class="btn btn-neutral float-right" title="Trainer" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

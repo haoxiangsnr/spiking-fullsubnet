@@ -9,9 +9,9 @@ Our team is actively working to improve the documentation and we welcome any fee
 :titlesonly:
 
 getting_started/installation.md
-getting_started/project_structure.md
-getting_started/running_an_experiment_accelerate.md
+getting_started/running_an_experiment.md
 getting_started/logging_and_visualization.md
+getting_started/project_structure.md
 ```
 
 ```{toctree}
