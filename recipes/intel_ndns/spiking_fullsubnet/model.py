@@ -417,10 +417,11 @@ class SpikingFullSubNet(nn.Module):
         enh_stft = noisy_cmp.clone()
         enh_stft[..., :-1, :] = enh_freqs
         enh_stft = rearrange(enh_stft, "b 1 f t -> b f t")
+        enh_mag = torch.abs(enh_stft)  # For computing DNSMOS loss
 
         enh_y = self.istft(enh_stft, length=sequence_length)
 
-        return enh_y, fb_all_layer_outputs, sb_all_layer_outputs
+        return enh_y, enh_mag, fb_all_layer_outputs, sb_all_layer_outputs
 
 
 if __name__ == "__main__":
