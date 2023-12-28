@@ -20,7 +20,7 @@ from audiozen.debug_utils import DebugUnderflowOverflow
 from audiozen.logger import TensorboardLogger
 from audiozen.optimization import get_constant_schedule_with_warmup, get_linear_schedule_with_warmup
 from audiozen.trainer_utils import TrainerState
-from audiozen.utils import prepare_empty_dir
+from audiozen.utils import prepare_empty_dir, print_env
 
 logger = get_logger(__name__)
 
@@ -105,6 +105,8 @@ class Trainer:
             toml.dump(config, handle)
 
         logger.info(f"Configuration file is saved to {self.config_path.as_posix()}.")
+
+        logger.info(f"Environment information:\n{print_env()}")
 
         # Backup of project code
         # shutil.copytree(src=self.source_code_dir.as_posix(), dst=self.source_code_backup_dir.as_posix())

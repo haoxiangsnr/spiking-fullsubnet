@@ -69,6 +69,10 @@ First, we need to configuration the GPU usage. Accelerate provides a CLI tool th
 accelerate config
 ```
 
+```{note}
+If you don't want to use the CLI tool, you may use explicit arguments to specify the GPU usage (https://huggingface.co/docs/accelerate/package_reference/cli#accelerate-env). For example: `accelerate launch --multi_gpu --num_processes=6 --gpu_ids 0,1,2,3,4,5 --main_process_port 46524 --main_process_ip 127.0.0.1 run.py -C config.toml`
+```
+
 Then, we can use the following command to train the `spiking_fullsubnet` model using configurations in `baseline_m_cumulative_laplace_norm.toml`:
 
 ```shell

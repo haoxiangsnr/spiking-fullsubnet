@@ -1,19 +1,41 @@
 import importlib
 import logging
 import os
+import platform
 import random
 import time
 from datetime import timedelta
 from typing import Optional
 
 import numpy as np
+import psutil
 import torch
 import torch.distributed as dist
+from accelerate import __version__ as version
 from torch import Tensor
 
-from audiozen.acoustics.audio_feature import loudness_rms_norm
-
 logger = logging.getLogger(__name__)
+
+
+def print_env():
+    pt_version = torch.__version__
+    pt_cuda_available = torch.cuda.is_available()
+
+    info = {
+        "`Accelerate` version": version,
+        "Platform": platform.platform(),
+        "Python version": platform.python_version(),
+        "Numpy version": np.__version__,
+        "PyTorch version (GPU?)": f"{pt_version} ({pt_cuda_available})",
+        "System RAM": f"{psutil.virtual_memory().total / 1024 ** 3:.2f} GB",
+        "GPU Available": f"{pt_cuda_available}",
+        "GPU IDs": f"{torch.cuda.device_count()}",
+    }
+
+    if pt_cuda_available:
+        info["GPU type"] = torch.cuda.get_device_name()
+
+    return "\n".join([f"- {prop}: {val}" for prop, val in info.items()])
 
 
 def check_same_shape(est: Tensor, ref: Tensor) -> None:
