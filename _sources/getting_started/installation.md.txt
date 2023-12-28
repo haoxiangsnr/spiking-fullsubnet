@@ -1,8 +1,11 @@
-# Installation
+# Prerequisites and Installation
+
+## Prerequisites
 
 Spiking-FullSubNet is built on top of PyTorch and provides standard audio signal processing and deep learning tools.
 To install the PyTorch binaries, we recommend [Anaconda](https://www.anaconda.com/products/individual) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) as a Python distribution.
 
+## Installation
 
 1. First, create a Conda virtual environment with Python. In our project, `python=3.10` is tested.
     ```shell
@@ -35,7 +38,7 @@ To install the PyTorch binaries, we recommend [Anaconda](https://www.anaconda.co
     pip install -r requirements.txt
     ```
 
-4. We integrated all the audio signal processing tools into a package named `audiozen`. We will install the `audiozen` package in the following steps. First, we will install the `audiozen` package in editable mode. By installing in editable mode, we can call `audiozen` package in everywhere of code, e.g, in `recipes` and `tools` folders. In addition, we are able to modify the source code of `audiozen` package directly. Any changes to the original package would reflect directly in your conda environment.
+4. We integrated all the audio signal processing tools into a package named `audiozen`. We will install the `audiozen` package in editable mode. By installing in editable mode, we can call `audiozen` package in everywhere of code, e.g, in `recipes` and `tools` folders. In addition, we are able to modify the source code of `audiozen` package directly. Any changes to the original package would reflect directly in your conda environment.
     ```shell
     cd audiozen
 

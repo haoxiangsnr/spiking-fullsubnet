@@ -47,8 +47,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running_an_experiment.html">Running an experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Prerequisites and Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running_an_experiment.html">Running an Experiment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="logging_and_visualization.html">Logging and Visualization</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Project Structure</a></li>
 </ul>
@@ -91,8 +91,7 @@
              
   <section id="project-structure">
 <h1>Project Structure<a class="headerlink" href="#project-structure" title="Link to this heading"></a></h1>
-<p>Before going into details, let’s take a look at the overall structure of the project.
-You may familiar with this project structure (<code class="docutils literal notranslate"><span class="pre">recipes/&lt;dataset&gt;/&lt;model&gt;</span></code>) if you have used <a class="reference external" href="https://github.com/espnet/espnet">ESPNet</a> and <a class="reference external" href="https://github.com/speechbrain/speechbrain">SpeechBrain</a> before.
+<p>Let’s take a look at the overall structure of the project. You may familiar with this project structure (<code class="docutils literal notranslate"><span class="pre">recipes/&lt;dataset&gt;/&lt;model&gt;</span></code>) if you have used <a class="reference external" href="https://github.com/espnet/espnet">ESPNet</a> and <a class="reference external" href="https://github.com/speechbrain/speechbrain">SpeechBrain</a> before.
 AudioZEN is inspired by them, but it is more simpler.</p>
 <p>AudioZEN includes a core package (<code class="docutils literal notranslate"><span class="pre">/audiozen</span></code>) and a series of training recipes (<code class="docutils literal notranslate"><span class="pre">/recipes</span></code>).
 The core package is named <code class="docutils literal notranslate"><span class="pre">audiozen</span></code>, which provides common audio signal processing tools and deep learning trainers. As we have installed <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> in editable mode, we can call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package everywhere in the code. In addition, we can modify the source code of <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package directly. Any changes to the original package would reflect directly in your environment. For example, we can call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in <code class="docutils literal notranslate"><span class="pre">recipes</span></code> folder to train models on specific datasets and call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in <code class="docutils literal notranslate"><span class="pre">tools</span></code> folder to preprocess data. The recipes in the <code class="docutils literal notranslate"><span class="pre">recipes</span></code> folder are used to research the audio/speech signal processing. The recipe concept was introduced by <a class="reference external" href="https://kaldi-asr.org/doc/about.html">Kaldi</a> first, providing a convenient and reproducible way to organize and save the deep learning training pipelines.</p>

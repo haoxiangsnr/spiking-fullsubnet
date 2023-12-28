@@ -47,8 +47,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started/installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../getting_started/running_an_experiment.html">Running an experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/installation.html">Prerequisites and Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started/running_an_experiment.html">Running an Experiment</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/logging_and_visualization.html">Logging and Visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started/project_structure.html">Project Structure</a></li>
 </ul>
@@ -285,13 +285,19 @@ In AudioZEN, <code class="docutils literal notranslate"><span class="pre">Traine
 </div>
 </section>
 </section>
-<section id="loss-function-optimizer-lr-scheduler-model-and-dataset-sections">
-<h3><code class="docutils literal notranslate"><span class="pre">loss_function</span></code>, <code class="docutils literal notranslate"><span class="pre">optimizer</span></code>, <code class="docutils literal notranslate"><span class="pre">lr_scheduler</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, and <code class="docutils literal notranslate"><span class="pre">dataset</span></code> sections<a class="headerlink" href="#loss-function-optimizer-lr-scheduler-model-and-dataset-sections" title="Link to this heading"></a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">loss_function</span></code>, <code class="docutils literal notranslate"><span class="pre">lr_scheduler</span></code>, <code class="docutils literal notranslate"><span class="pre">optimizer</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, <code class="docutils literal notranslate"><span class="pre">dataset</span></code> sections are used to configure the loss function, learning rate scheduler, optimizer, model, and dataset, respectively.
-They have the same logic as the <code class="docutils literal notranslate"><span class="pre">trainer</span></code> section.</p>
-<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[loss_function</span><span class="err">|</span><span class="k">lr_scheduler</span><span class="err">|</span><span class="k">optimizer</span><span class="err">|</span><span class="k">model</span><span class="err">|</span><span class="k">dataset]</span>
+<section id="loss-function-optimizer-model-and-dataset-sections">
+<h3><code class="docutils literal notranslate"><span class="pre">loss_function</span></code>, <code class="docutils literal notranslate"><span class="pre">optimizer</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, and <code class="docutils literal notranslate"><span class="pre">dataset</span></code> sections<a class="headerlink" href="#loss-function-optimizer-model-and-dataset-sections" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">loss_function</span></code>, <code class="docutils literal notranslate"><span class="pre">optimizer</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>, <code class="docutils literal notranslate"><span class="pre">dataset</span></code> sections are used to configure the loss function, optimizer, model, and dataset, respectively. They have the same logic as the <code class="docutils literal notranslate"><span class="pre">trainer</span></code> section.</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[loss_function]</span>
 <span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
-<span class="k">[loss_function</span><span class="err">|</span><span class="k">lr_scheduler</span><span class="err">|</span><span class="k">optimizer</span><span class="err">|</span><span class="k">model</span><span class="err">|</span><span class="k">dataset.args]</span>
+<span class="k">[loss_function.args]</span>
+<span class="p">...</span>
+
+<span class="k">[optimizer]</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
+<span class="k">[optimizer.args]</span>
+<span class="p">...</span>
+
 <span class="p">...</span>
 </pre></div>
 </div>

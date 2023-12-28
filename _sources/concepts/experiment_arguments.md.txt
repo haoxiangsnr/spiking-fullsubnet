@@ -143,15 +143,21 @@ We will call the `CustomTrainer` class in `audiozen/trainer/custom_trainer.py`.
 If you want to get the `Trainer` in `audiozen` package, you must install it in editable way by `pip install -e .` first.
 :::
 
-### `loss_function`, `optimizer`, `lr_scheduler`, `model`, and `dataset` sections
+### `loss_function`, `optimizer`, `model`, and `dataset` sections
 
-`loss_function`, `lr_scheduler`, `optimizer`, `model`, `dataset` sections are used to configure the loss function, learning rate scheduler, optimizer, model, and dataset, respectively.
-They have the same logic as the `trainer` section.
+`loss_function`, `optimizer`, `model`, `dataset` sections are used to configure the loss function, optimizer, model, and dataset, respectively. They have the same logic as the `trainer` section.
 
 ```toml
-[loss_function|lr_scheduler|optimizer|model|dataset]
+[loss_function]
 path = "..."
-[loss_function|lr_scheduler|optimizer|model|dataset.args]
+[loss_function.args]
+...
+
+[optimizer]
+path = "..."
+[optimizer.args]
+...
+
 ...
 ```
 
