@@ -13,7 +13,7 @@ from accelerate import Accelerator
 from accelerate.logging import get_logger
 from torch.utils.data import DataLoader
 from torchinfo import summary
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from audiozen.acoustics.audio_feature import istft, stft
 from audiozen.debug_utils import DebugUnderflowOverflow
@@ -384,6 +384,8 @@ class Trainer:
                 bar_format="{l_bar}{r_bar}",
                 colour="green",
                 disable=not self.accelerator.is_local_main_process,
+                position=0,
+                leave=True,
             )
 
             for batch_idx, batch in enumerate(dataloader_bar):

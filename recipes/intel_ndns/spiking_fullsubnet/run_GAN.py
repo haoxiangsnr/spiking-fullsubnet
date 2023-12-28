@@ -21,17 +21,17 @@ def run(config, resume):
 
     set_seed(config["meta"]["seed"], device_specific=True)
 
-    model_g = instantiate(config["model_g"]["path"], args=config["model_g"]["args"])
-    model_d = instantiate(config["model_d"]["path"], args=config["model_d"]["args"])
+    model = instantiate(config["model"]["path"], args=config["model"]["args"])
+    discriminator = instantiate(config["discriminator"]["path"], args=config["discriminator"]["args"])
 
-    optimizer_g = instantiate(
-        config["optimizer_g"]["path"],
-        args={"params": model_g.parameters()} | config["optimizer_g"]["args"],
+    optimizer = instantiate(
+        config["optimizer"]["path"],
+        args={"params": model.parameters()} | config["optimizer"]["args"],
     )
 
-    optimizer_d = instantiate(
-        config["optimizer_d"]["path"],
-        args={"params": model_d.parameters()} | config["optimizer_d"]["args"],
+    discriminator_optimizer = instantiate(
+        config["discriminator_optimizer"]["path"],
+        args={"params": discriminator.parameters()} | config["discriminator_optimizer"]["args"],
     )
 
     loss_function = instantiate(
@@ -39,44 +39,15 @@ def run(config, resume):
         args=config["loss_function"]["args"],
     )
 
-    scheduler_g = instantiate(
-        config["lr_scheduler_g"]["path"],
-        args={"optimizer": optimizer_g} | config["lr_scheduler_g"]["args"],
-    )
-
-    scheduler_d = instantiate(
-        config["lr_scheduler_d"]["path"],
-        args={"optimizer": optimizer_d} | config["lr_scheduler_d"]["args"],
-    )
-
-    (
-        model_g,
-        optimizer_g,
-        scheduler_g,
-        model_d,
-        optimizer_d,
-        scheduler_d,
-    ) = accelerator.prepare(
-        model_g,
-        optimizer_g,
-        scheduler_g,
-        model_d,
-        optimizer_d,
-        scheduler_d,
+    (model, optimizer, discriminator, discriminator_optimizer) = accelerator.prepare(
+        model, optimizer, discriminator, discriminator_optimizer
     )
 
     if "train" in args.mode:
-        train_dataset = instantiate(
-            config["train_dataset"]["path"],
-            args=config["train_dataset"]["args"],
-        )
+        train_dataset = instantiate(config["train_dataset"]["path"], args=config["train_dataset"]["args"])
         train_dataloader = DataLoader(
-            dataset=train_dataset,
-            collate_fn=None,
-            shuffle=True,
-            **config["train_dataset"]["dataloader"],
+            dataset=train_dataset, collate_fn=None, shuffle=True, **config["train_dataset"]["dataloader"]
         )
-
         train_dataloader = accelerator.prepare(train_dataloader)
 
     if "train" in args.mode or "validate" in args.mode:
@@ -117,12 +88,10 @@ def run(config, resume):
         accelerator=accelerator,
         config=config,
         resume=resume,
-        model_g=model_g,
-        optimizer_g=optimizer_g,
-        lr_scheduler_g=scheduler_g,
-        model_d=model_d,
-        optimizer_d=optimizer_d,
-        lr_scheduler_d=scheduler_d,
+        model=model,
+        optimizer=optimizer,
+        discriminator=discriminator,
+        discriminator_optimizer=discriminator_optimizer,
         loss_function=loss_function,
     )
 

@@ -4,7 +4,7 @@ description = "Train a model using Generative Adversarial Networks (GANs)"
 seed = 20220815
 
 [trainer]
-path = "trainer.Trainer"
+path = "trainer_GAN.Trainer"
 [trainer.args]
 debug = false
 max_steps = 0
@@ -25,9 +25,15 @@ gradient_accumulation_steps = 1
 path = "torch.nn.MSELoss"
 [loss_function.args]
 
+
 [optimizer]
 path = "torch.optim.AdamW"
 [optimizer.args]
+lr = 1e-3
+
+[discriminator_optimizer]
+path = "torch.optim.AdamW"
+[discriminator_optimizer.args]
 lr = 1e-3
 
 [model]
@@ -53,6 +59,10 @@ use_pre_layer_norm_sb = true
 bn = true
 shared_weights = true
 sequence_model = "GSN"
+
+[discriminator]
+path = "discriminator.Discriminator"
+[discriminator.args]
 
 [acoustics]
 n_fft = 512

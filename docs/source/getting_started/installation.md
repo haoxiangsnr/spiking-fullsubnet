@@ -1,11 +1,8 @@
-# Getting Started
-
-## Prerequisites
+# Installation
 
 Spiking-FullSubNet is built on top of PyTorch and provides standard audio signal processing and deep learning tools.
 To install the PyTorch binaries, we recommend [Anaconda](https://www.anaconda.com/products/individual) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) as a Python distribution.
 
-## Installation
 
 1. First, create a Conda virtual environment with Python. In our project, `python=3.10` is tested.
     ```shell
@@ -38,8 +35,10 @@ To install the PyTorch binaries, we recommend [Anaconda](https://www.anaconda.co
     pip install -r requirements.txt
     ```
 
-4. Install Spiking-FullSubNet package in editable mode. Finally, we will install the Spiking-FullSubNet package in editable mode (a.k.a. development mode). By installing in editable mode, we can call `spiking_fullsubnet` package in everywhere of code, e.g, in `recipes` and `tools` folders. In addition, we are able to modify the source code of `spiking_fullsubnet` package directly. Any changes to the original package would reflect directly in your conda environment.
+4. We integrated all the audio signal processing tools into a package named `audiozen`. We will install the `audiozen` package in the following steps. First, we will install the `audiozen` package in editable mode. By installing in editable mode, we can call `audiozen` package in everywhere of code, e.g, in `recipes` and `tools` folders. In addition, we are able to modify the source code of `audiozen` package directly. Any changes to the original package would reflect directly in your conda environment.
     ```shell
+    cd audiozen
+
     pip install --editable . # or for short: pip install -e .
     ```
 
@@ -49,32 +48,4 @@ Ok, all installations have done. You may speed up the installation by the follow
 - [Speed up your Conda installs with Mamba](https://pythonspeed.com/articles/faster-conda-install/)
 - Use the [THU Anaconda mirror site](https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/) to speed up the Conda installation.
 - Use the [THU PyPi mirror site](https://mirrors.tuna.tsinghua.edu.cn/help/pypi/) to speed up the PyPI installation.
-```
-
-## Running an experiment
-
-In Spiking-FullSubNet, we adopt a `recipes/<dataset>/<model>` directory structure. For example, let us entry to the directory `recipes/intel_ndns/`. The corresponding dataset is the Intel Neuromorphic DNS Challenge dataset. Please refer to [Intel Neuromorphic DNS Challenge Datasets](https://github.com/IntelLabs/IntelNeuromorphicDNSChallenge#dataset) for preparing the dataset.
-
-To run an experiment of a model, we first go to a model directory. For example, we can entry to the directory `recipes/intel_ndns/spiking_fullsubnet/` to run an experiment of the `spiking_fullsubnet` model.
-
-```shell
-cd recipes/intel_ndns/spiking_fullsubnet/
-```
-
-In this `<model>` directory, we have an entry file `run.py`, dataloaders, and some model directories. We use HugoingFace Accelerate to start an experiment. Don't worry if you are not familiar with Accelerate. It will help you to run an parallel experiment easily. Please refer to [HuggingFace Accelerate](https://huggingface.co/docs/accelerate/) for more details.
-
-First, we need to configuration the GPU usage. Accelerate provides a CLI tool that unifies all launchers, so you only have to remember one command. To use it, run a quick configuration setup first on your machine and answer the questions:
-
-```shell
-accelerate config
-```
-
-```{note}
-If you don't want to use the CLI tool, you may use explicit arguments to specify the GPU usage (https://huggingface.co/docs/accelerate/package_reference/cli#accelerate-env). For example: `accelerate launch --multi_gpu --num_processes=6 --gpu_ids 0,1,2,3,4,5 --main_process_port 46524 --main_process_ip 127.0.0.1 run.py -C config.toml`
-```
-
-Then, we can use the following command to train the `spiking_fullsubnet` model using configurations in `baseline_m_cumulative_laplace_norm.toml`:
-
-```shell
-accelerate launch run.py -C baseline_m_cumulative_laplace_norm.toml -M train
 ```
