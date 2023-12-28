@@ -39,6 +39,7 @@ class Trainer(BaseTrainer):
         loss = loss_freq_mae + loss_mag_mae + loss_sdr_norm  # + loss_g_fake
 
         self.accelerator.backward(loss)
+        self.optimizer.step()
 
         return {
             "loss": loss,
