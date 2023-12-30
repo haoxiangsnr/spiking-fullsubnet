@@ -433,10 +433,10 @@ class SpikingFullSubNet(nn.Module):
             num_filtered_freqs += num_freqs
 
         enh_freqs = torch.cat(enh_freqs_list, dim=-2)  # [B, c, s, F, T]、
-        enh_stft = noisy_cmp.clone()
-        enh_stft = repeat(enh_stft, "b 1 f t -> b 1 s f t", s=self.num_spks)
+        enh_stft = repeat(noisy_cmp, "b 1 f t -> b 1 s f t", s=self.num_spks).clone()
 
         if self.num_spks > 1:
+            enh_stft[..., :-1, :] = enh_freqs
             enh_stft = rearrange(enh_stft, "b 1 s f t -> (b s) f t")
             enh_y = self.istft(enh_stft, length=sequence_length)
             enh_y = rearrange(enh_y, "(b s) t -> b s t", s=self.num_spks)
