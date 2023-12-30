@@ -12,8 +12,9 @@ from audiozen.constant import EPSILON
 
 
 class SISNRLoss(nn.Module):
-    def __init__(self):
+    def __init__(self, return_neg=False):
         super().__init__()
+        self.return_neg = return_neg
 
     def forward(self, input, target):
         if isinstance(input, ndarray):
@@ -36,6 +37,8 @@ class SISNRLoss(nn.Module):
 
         pair_wise_sdr = torch.sum(pair_wise_proj**2, dim=-1) / (torch.sum(e_noise**2, dim=-1) + EPSILON)
 
+        if self.return_neg:
+            return -torch.mean(10 * torch.log10(pair_wise_sdr + EPSILON))
         return torch.mean(10 * torch.log10(pair_wise_sdr + EPSILON))
 
 
