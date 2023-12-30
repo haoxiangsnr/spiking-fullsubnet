@@ -72,6 +72,7 @@ class IntelSISNR:
         self,
         estimate: Union[torch.tensor, np.ndarray],
         target: Union[torch.tensor, np.ndarray],
+        reduce_mean: bool = True,
     ) -> torch.tensor:
         """Calculates SI-SNR estiamte from target audio and estiamte audio. The
         audio sequene is expected to be a tensor/array of dimension more than 1.
@@ -109,10 +110,11 @@ class IntelSISNR:
 
         e_noise = s_estimate - pair_wise_proj
 
-        pair_wise_sdr = torch.sum(pair_wise_proj**2, dim=-1) / (
-            torch.sum(e_noise**2, dim=-1) + EPS
-        )
+        pair_wise_sdr = torch.sum(pair_wise_proj**2, dim=-1) / (torch.sum(e_noise**2, dim=-1) + EPS)
         val = 10 * torch.log10(pair_wise_sdr + EPS)
+
+        if reduce_mean:
+            val = torch.mean(val)
 
         return {"intel_si_snr": val.item()}
 
@@ -153,16 +155,12 @@ class SISDR:
             ref = ref - torch.mean(ref, dim=-1, keepdim=True)
             est = est - torch.mean(est, dim=-1, keepdim=True)
 
-        alpha = (torch.sum(est * ref, dim=-1, keepdim=True) + eps) / (
-            torch.sum(ref**2, dim=-1, keepdim=True) + eps
-        )
+        alpha = (torch.sum(est * ref, dim=-1, keepdim=True) + eps) / (torch.sum(ref**2, dim=-1, keepdim=True) + eps)
         ref_scaled = alpha * ref
 
         noise = ref_scaled - est
 
-        val = (torch.sum(ref_scaled**2, dim=-1) + eps) / (
-            torch.sum(noise**2, dim=-1) + eps
-        )
+        val = (torch.sum(ref_scaled**2, dim=-1) + eps) / (torch.sum(noise**2, dim=-1) + eps)
         val = 10 * torch.log10(val)
 
         val = val.item()
@@ -183,9 +181,7 @@ class pDNSMOS:
 
         self.input_sr = input_sr
 
-    def audio_melspec(
-        self, audio, n_mels=120, frame_size=320, hop_length=160, sr=16000, to_db=True
-    ):
+    def audio_melspec(self, audio, n_mels=120, frame_size=320, hop_length=160, sr=16000, to_db=True):
         mel_spec = librosa.feature.melspectrogram(
             y=audio, sr=sr, n_fft=frame_size + 1, hop_length=hop_length, n_mels=n_mels
         )
@@ -236,21 +232,17 @@ class pDNSMOS:
         predicted_p_mos_ovr_seg_raw = []
 
         for idx in range(num_hops):
-            audio_seg = audio[
-                int(idx * hop_len_samples) : int((idx + INPUT_LENGTH) * hop_len_samples)
-            ]
+            audio_seg = audio[int(idx * hop_len_samples) : int((idx + INPUT_LENGTH) * hop_len_samples)]
             if len(audio_seg) < len_samples:
                 continue
 
             input_features = np.array(audio_seg).astype("float32")[np.newaxis, :]
-            p808_input_features = np.array(
-                self.audio_melspec(audio=audio_seg[:-160])
-            ).astype("float32")[np.newaxis, :, :]
+            p808_input_features = np.array(self.audio_melspec(audio=audio_seg[:-160])).astype("float32")[
+                np.newaxis, :, :
+            ]
             oi = {"input_1": input_features}
             p808_oi = {"input_1": p808_input_features}
-            p_mos_sig_raw, p_mos_bak_raw, p_mos_ovr_raw = self.p835_personal_sess.run(
-                None, oi
-            )[0][0]
+            p_mos_sig_raw, p_mos_bak_raw, p_mos_ovr_raw = self.p835_personal_sess.run(None, oi)[0][0]
 
             predicted_p_mos_ovr_seg_raw.append(p_mos_ovr_raw)
             predicted_p_mos_sig_seg_raw.append(p_mos_sig_raw)
@@ -290,9 +282,7 @@ class DNSMOS:
 
         self.input_sr = input_sr
 
-    def audio_melspec(
-        self, audio, n_mels=120, frame_size=320, hop_length=160, sr=16000, to_db=True
-    ):
+    def audio_melspec(self, audio, n_mels=120, frame_size=320, hop_length=160, sr=16000, to_db=True):
         mel_spec = librosa.feature.melspectrogram(
             y=audio, sr=sr, n_fft=frame_size + 1, hop_length=hop_length, n_mels=n_mels
         )
@@ -344,9 +334,7 @@ class DNSMOS:
         predicted_p808_mos = []
 
         for idx in range(num_hops):
-            audio_seg = audio[
-                int(idx * hop_len_samples) : int((idx + INPUT_LENGTH) * hop_len_samples)
-            ]
+            audio_seg = audio[int(idx * hop_len_samples) : int((idx + INPUT_LENGTH) * hop_len_samples)]
             if len(audio_seg) < len_samples:
                 continue
 
@@ -354,17 +342,15 @@ class DNSMOS:
             oi = {"input_1": input_features}
 
             if return_p808:
-                p808_input_features = np.array(
-                    self.audio_melspec(audio=audio_seg[:-160])
-                ).astype("float32")[np.newaxis, :, :]
+                p808_input_features = np.array(self.audio_melspec(audio=audio_seg[:-160])).astype("float32")[
+                    np.newaxis, :, :
+                ]
                 p808_oi = {"input_1": p808_input_features}
                 p808_mos = self.p808_sess.run(None, p808_oi)[0][0][0]
                 predicted_p808_mos.append(p808_mos)
 
             mos_sig_raw, mos_bak_raw, mos_ovr_raw = self.p835_sess.run(None, oi)[0][0]
-            mos_sig, mos_bak, mos_ovr = self.get_polyfit_val(
-                mos_sig_raw, mos_bak_raw, mos_ovr_raw
-            )
+            mos_sig, mos_bak, mos_ovr = self.get_polyfit_val(mos_sig_raw, mos_bak_raw, mos_ovr_raw)
 
             predicted_mos_ovr_seg.append(mos_ovr)
             predicted_mos_sig_seg.append(mos_sig)
@@ -398,10 +384,7 @@ def compute_synops(fb_all_layer_outputs, sb_all_layer_outputs, shared_weights=Tr
             curr_synops = (
                 torch.gt(sb_all_layer_outputs[i][j], 0).float().mean()
                 * sb_all_layer_outputs[i][j].size(-1)
-                * (
-                    sb_all_layer_outputs[i][j + 1].size(-1)
-                    + sb_all_layer_outputs[i][j].size(-1)
-                )
+                * (sb_all_layer_outputs[i][j + 1].size(-1) + sb_all_layer_outputs[i][j].size(-1))
             )
             print(f"i: {i}, j: {j}, synops: {curr_synops}")
             synops += curr_synops
@@ -423,3 +406,10 @@ def compute_neuronops(fb_all_layer_outputs, sb_all_layer_outputs):
             print(f"i:{i} j: {j}, {sb_all_layer_outputs[i][j].size()}")
             neuronops += sb_all_layer_outputs[i][j].size(-1)
     return neuronops
+
+
+if __name__ == "__main__":
+    loss = SISDR()
+    est = torch.randn(2, 2, 16000)
+    ref = torch.randn(2, 2, 16000)
+    print(loss(est, ref))

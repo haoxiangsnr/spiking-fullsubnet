@@ -22,9 +22,7 @@ class SISNRLoss(nn.Module):
             target = torch.from_numpy(target)
 
         if input.shape != target.shape:
-            raise RuntimeError(
-                f"Dimension mismatch when calculating SI-SNR, {input.shape=} vs {target.shape=}"
-            )
+            raise RuntimeError(f"Dimension mismatch when calculating SI-SNR, {input.shape=} vs {target.shape=}")
 
         s_input = input - torch.mean(input, dim=-1, keepdim=True)
         s_target = target - torch.mean(target, dim=-1, keepdim=True)
@@ -36,9 +34,7 @@ class SISNRLoss(nn.Module):
 
         e_noise = s_input - pair_wise_proj
 
-        pair_wise_sdr = torch.sum(pair_wise_proj**2, dim=-1) / (
-            torch.sum(e_noise**2, dim=-1) + EPSILON
-        )
+        pair_wise_sdr = torch.sum(pair_wise_proj**2, dim=-1) / (torch.sum(e_noise**2, dim=-1) + EPSILON)
 
         return torch.mean(10 * torch.log10(pair_wise_sdr + EPSILON))
 
@@ -55,9 +51,7 @@ class angle(Function):
     def backward(ctx, grad: Tensor):
         (x,) = ctx.saved_tensors
         grad_inv = grad / (x.real.square() + x.imag.square()).clamp_min_(EPSILON)
-        return torch.view_as_complex(
-            torch.stack((-x.imag * grad_inv, x.real * grad_inv), dim=-1)
-        )
+        return torch.view_as_complex(torch.stack((-x.imag * grad_inv, x.real * grad_inv), dim=-1))
 
 
 class MultiResSpecLoss(nn.Module):
@@ -111,10 +105,7 @@ class MultiResSpecLoss(nn.Module):
                 if self.gamma != 1:
                     Y = Y_abs * torch.exp(1j * angle.apply(Y))
                     S = S_abs * torch.exp(1j * angle.apply(S))
-                loss += (
-                    F.mse_loss(torch.view_as_real(Y), torch.view_as_real(S))
-                    * self.factor_complex
-                )
+                loss += F.mse_loss(torch.view_as_real(Y), torch.view_as_real(S)) * self.factor_complex
         return loss
 
 
@@ -158,16 +149,12 @@ def freq_MAE(estimation, target, win=2048, stride=512, srs=None, sudo_sr=None):
     )
 
     if srs is None:
-        return (est_spec.real - est_target.real).abs().mean() + (
-            est_spec.imag - est_target.imag
-        ).abs().mean()
+        return (est_spec.real - est_target.real).abs().mean() + (est_spec.imag - est_target.imag).abs().mean()
     else:
         loss = 0
         for i, sr in enumerate(srs):
             max_freq = int(est_spec.shape[-2] * sr / sudo_sr)
-            loss += (
-                est_spec[i][:max_freq].real - est_target[i][:max_freq].real
-            ).abs().mean() + (
+            loss += (est_spec[i][:max_freq].real - est_target[i][:max_freq].real).abs().mean() + (
                 est_spec[i][:max_freq].imag - est_target[i][:max_freq].imag
             ).abs().mean()
         loss = loss / len(srs)
@@ -195,11 +182,7 @@ def mag_MAE(estimation, target, win=2048, stride=512, srs=None, sudo_sr=None):
         loss = 0
         for i, sr in enumerate(srs):
             max_freq = int(est_spec.shape[-2] * sr / sudo_sr)
-            loss += (
-                (est_spec[i][:max_freq].abs() - est_target[i][:max_freq].abs())
-                .abs()
-                .mean()
-            )
+            loss += (est_spec[i][:max_freq].abs() - est_target[i][:max_freq].abs()).abs().mean()
         loss = loss / len(srs)
     return loss
 
