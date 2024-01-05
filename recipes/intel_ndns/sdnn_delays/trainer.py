@@ -8,7 +8,7 @@ from lava.lib.dl import slayer
 from tqdm import tqdm
 
 from audiozen.metric import DNSMOS, SISDR
-from audiozen.trainer.base_trainer import BaseTrainer
+from audiozen.trainer_backup.base_trainer import BaseTrainer
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +36,7 @@ class Trainer(BaseTrainer):
         clean_mag = slayer.axon.delay(clean_mag, out_delay)
         clean = slayer.axon.delay(clean, self.n_fft // 4 * out_delay)
 
-        clean_rec = self.torch_istft(
-            [enhanced_mag, noisy_phase], length=noisy.shape[-1]
-        )
+        clean_rec = self.torch_istft([enhanced_mag, noisy_phase], length=noisy.shape[-1])
 
         loss = self.loss_function(clean_rec, clean)
 
@@ -83,13 +81,10 @@ class Trainer(BaseTrainer):
     def validation_epoch_end(self, outputs):
         score = 0.0
         for dataloader_idx, dataloader_outputs in enumerate(outputs):
-            logger.info(
-                f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}..."
-            )
+            logger.info(f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}...")
 
             rows = Parallel(n_jobs=40, prefer="threads")(
-                delayed(self.compute_validation_metrics)(step_out)
-                for step_out in tqdm(dataloader_outputs)
+                delayed(self.compute_validation_metrics)(step_out) for step_out in tqdm(dataloader_outputs)
             )
 
             df_metrics = pd.DataFrame(rows)
@@ -102,8 +97,6 @@ class Trainer(BaseTrainer):
             score += df_metrics_mean["OVRL"]
 
             for metric, value in df_metrics_mean.items():
-                self.writer.add_scalar(
-                    f"metrics_{dataloader_idx}/{metric}", value, self.current_epoch
-                )
+                self.writer.add_scalar(f"metrics_{dataloader_idx}/{metric}", value, self.current_epoch)
 
         return score

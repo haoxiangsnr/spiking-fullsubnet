@@ -2,7 +2,7 @@ import logging
 
 import torch
 
-from audiozen.trainer.base_trainer import BaseTrainer
+from audiozen.trainer_backup.base_trainer import BaseTrainer
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +26,7 @@ class EarlyStopTrainer(BaseTrainer):
         """
         if current_score < self.best_score:
             self.wait_count += 1
-            self.logger.info(
-                f"Early stopping counter: {self.wait_count} out of {self.patience}"
-            )
+            self.logger.info(f"Early stopping counter: {self.wait_count} out of {self.patience}")
 
             if self.wait_count >= self.patience:
                 self.logger.info("Early stopping triggered")

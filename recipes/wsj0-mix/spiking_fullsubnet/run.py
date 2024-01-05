@@ -130,7 +130,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ckpt_path",
         type=str,
-        default=None,
+        default="latest",
         help="Checkpoint path for test. It can be 'best', 'latest', or a path to a checkpoint.",
     )
 

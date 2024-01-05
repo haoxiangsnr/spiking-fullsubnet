@@ -1,6 +1,4 @@
-import math
 import shutil
-import sys
 import time
 from functools import partial
 from pathlib import Path
@@ -9,33 +7,33 @@ import librosa
 import pandas as pd
 import toml
 import torch
+import torch.backends.cudnn
 from accelerate import Accelerator
 from accelerate.logging import get_logger
-from torch.utils.data import DataLoader
 from torchinfo import summary
 from tqdm.auto import tqdm
 
 from audiozen.acoustics.audio_feature import istft, stft
-from audiozen.debug_utils import DebugUnderflowOverflow
 from audiozen.logger import TensorboardLogger
-from audiozen.optimization import get_constant_schedule_with_warmup, get_linear_schedule_with_warmup
-from audiozen.trainer_utils import TrainerState
-from audiozen.utils import prepare_empty_dir, print_env
+from audiozen.trainer_backup.utils import BestScoreState, EpochState, WaitCountState
+from audiozen.utils import prepare_empty_dir
 
 logger = get_logger(__name__)
 
 
-class Trainer:
+class BaseTrainer:
     def __init__(
         self,
         accelerator: Accelerator,
         config,
         resume,
         model,
-        optimizer,
         loss_function,
-    ):
-        """Create an instance of BaseTrainer for training, validation, and testing."""
+        optimizer,
+        lr_scheduler,
+    ) -> None:
+        self.args = config
+
         # Setup directories
         self._initialize_exp_dirs_and_paths(config)
 
@@ -47,6 +45,7 @@ class Trainer:
         # Model
         self.model = model
         self.optimizer = optimizer
+        self.lr_scheduler = lr_scheduler
         self.loss_function = loss_function
 
         # Acoustic args
@@ -54,37 +53,34 @@ class Trainer:
 
         # Trainer.train args
         self.trainer_config = config["trainer"]["args"]
-        self.debug = self.trainer_config.get("debug", False)
-        self.max_steps = self.trainer_config.get("max_steps", 0)
-        self.max_epochs = self.trainer_config.get("max_epochs", sys.maxsize)
-        self.max_grad_norm = self.trainer_config.get("max_grad_norm", 0)
+        self.max_epoch = self.trainer_config.get("max_epoch", 9999)
+        self.clip_grad_norm_value = self.trainer_config.get("clip_grad_norm_value", -1)
         self.save_max_score = self.trainer_config.get("save_max_score", True)
         self.save_ckpt_interval = self.trainer_config.get("save_ckpt_interval", 1)
-        self.max_patience = self.trainer_config.get("max_patience", 10)
+        self.patience = self.trainer_config.get("patience", 10)
         self.plot_norm = self.trainer_config.get("plot_norm", True)
         self.validation_interval = self.trainer_config.get("validation_interval", 1)
         self.max_num_checkpoints = self.trainer_config.get("max_num_checkpoints", 10)
-        self.scheduler_name = self.trainer_config.get("scheduler_name", "constant_schedule_with_warmup")
-        self.warmup_steps = self.trainer_config.get("warmup_steps", 0)
-        self.warmup_ratio = self.trainer_config.get("warmup_ratio", 0.0)
-        self.gradient_accumulation_steps = self.trainer_config.get("gradient_accumulation_steps", 1)
+        assert self.validation_interval >= 1, "'validation_interval' should be large than one."
 
-        if self.max_steps > 0:
-            logger.info(f"`max_steps` is set to {self.max_steps}. Ignoring `max_epochs`.")
+        # Count Variables
+        self.total_norm = -1
+        self.start_epoch = EpochState()
+        self.current_epoch = 1  # used in custom training loop
+        self.wait_count = WaitCountState()
+        self.best_score = BestScoreState(save_max_score=self.save_max_score)
 
-        if self.validation_interval < 1:
-            logger.info(f"`validation_interval` is set to {self.validation_interval}. It must be >= 1.")
-
-        # Trainer states
-        self.state = TrainerState(save_max_score=self.save_max_score)
-        self.accelerator.register_for_checkpointing(self.state)  # Register accelerate objects
+        # Register accelerate objects
+        self.accelerator.register_for_checkpointing(self.start_epoch)
+        self.accelerator.register_for_checkpointing(self.wait_count)
+        self.accelerator.register_for_checkpointing(self.best_score)
 
         # Others
         pd.set_option("display.float_format", lambda x: "%.3f" % x)
 
         # Resume
         if resume:
-            self._load_checkpoint(ckpt_path="latest")
+            self._load_checkpoint("latest")
 
         if self.accelerator.is_local_main_process:
             prepare_empty_dir(
@@ -98,62 +94,21 @@ class Trainer:
                 resume=resume,
             )
 
-        self.writer = TensorboardLogger(self.tb_log_dir.as_posix())
-        self.writer.log_config(config)
+            self.writer = TensorboardLogger(self.tb_log_dir.as_posix())
+            self.writer.log_config(config)
 
-        with open(self.config_path.as_posix(), "w") as handle:
-            toml.dump(config, handle)
+            with open(self.config_path.as_posix(), "w") as handle:
+                toml.dump(config, handle)
 
         logger.info(f"Configuration file is saved to {self.config_path.as_posix()}.")
-
-        logger.info(f"Environment information:\n{print_env()}")
 
         # Backup of project code
         # shutil.copytree(src=self.source_code_dir.as_posix(), dst=self.source_code_backup_dir.as_posix())
         # logger.info(f"Project code is backed up to {self.source_code_backup_dir.as_posix()}.")
 
         # Model summary
-        logger.info(f"\n {summary(self.model, verbose=0)}")
-
-    def _run_early_stop_check(self, score: float):
-        should_stop = False
-
-        if self._check_improvement(score, save_max_score=self.save_max_score):
-            self.state.best_score = score
-            self.state.best_score_epoch = self.state.epochs_trained
-            self._save_checkpoint(self.state.epochs_trained, is_best_epoch=True)
-            self.state.patience = 0
-            logger.info(f"Found new best score: {score:.4f}, saving checkpoint...")
-        else:
-            logger.info(
-                f"Score did not improve from {self.state.best_score:.4f} at epoch {self.state.best_score_epoch}."
-            )
-            self.state.patience += 1
-            logger.info(f"Early stopping counter: {self.state.patience} out of {self.max_patience}")
-
-            if self.state.patience >= self.max_patience:
-                logger.info(f"Early stopping triggered, stopping training...")
-                should_stop = True
-
-        return should_stop
-
-    def _setup_acoustic_args(self, acoustic_args):
-        """Setup acoustic arguments."""
-        n_fft = acoustic_args["n_fft"]
-        hop_length = acoustic_args["hop_length"]
-        win_length = acoustic_args["win_length"]
-        sr = acoustic_args["sr"]
-
-        # Support for torch and librosa stft
-        self.torch_stft = partial(stft, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
-        self.torch_istft = partial(istft, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
-        self.librosa_stft = partial(librosa.stft, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
-        self.librosa_istft = partial(librosa.istft, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
-
-        self.n_fft = n_fft
-        self.hop_length = hop_length
-        self.win_length = win_length
-        self.sr = sr
+        model_summary = summary(self.model, verbose=0)  # no output
+        logger.info(f"\n {model_summary}")
 
     @staticmethod
     def _get_time_now():
@@ -188,22 +143,6 @@ class Trainer:
         self.source_code_backup_dir = self.exp_dir / f"source_code__{time_now}"
         self.config_path = self.exp_dir / f"config__{time_now}.toml"
 
-    def _find_latest_ckpt_path(self):
-        """Find the latest checkpoint path."""
-        # Pick up all checkpoints with the format `epoch_*`
-        checkpoints = sorted(self.checkpoints_dir.glob("epoch_" + ("[0-9]" * 4)))
-
-        # Remove files that is not a checkpoint
-        checkpoints = [ckpt for ckpt in checkpoints if ckpt.is_dir()]
-
-        if len(checkpoints) == 0:
-            raise FileNotFoundError(f"No checkpoints found in {self.checkpoints_dir.as_posix()}.")
-
-        # Pick up the latest checkpoint
-        ckpt_path = checkpoints[-1]
-
-        return ckpt_path
-
     def _load_checkpoint(self, ckpt_path):
         """load a checkpoint from the checkpints directory.
 
@@ -213,16 +152,16 @@ class Trainer:
         if ckpt_path == "best":
             ckpt_path = self.checkpoints_dir / "best"
         elif ckpt_path == "latest":
-            ckpt_path = self._find_latest_ckpt_path()
+            ckpt_path = self.checkpoints_dir / "latest"
         else:
             ckpt_path = Path(ckpt_path).expanduser().absolute()
 
         if not ckpt_path.exists():
             raise FileNotFoundError(f"Checkpoint {ckpt_path.as_posix()} not found.")
 
-        self.accelerator.load_state(ckpt_path, map_location="cpu")
+        self.accelerator.load_state(ckpt_path)
 
-        logger.info(f"Checkpoint on epoch {self.state.epochs_trained} is loaded.")
+        logger.info(f"Checkpoint on epoch {self.start_epoch.value} is loaded.")
 
     def _save_checkpoint(self, epoch, is_best_epoch):
         """Save checkpoint.
@@ -231,24 +170,18 @@ class Trainer:
             epoch: the current epoch.
             is_best_epoch: whether the current epoch is the best epoch.
         """
-        # Save checkpoint
+        self.start_epoch.value = epoch
+
         if is_best_epoch:
-            self.accelerator.save_state(self.checkpoints_dir / "best", safe_serialization=False)
+            self.accelerator.save_state(self.checkpoints_dir / "best")
         else:
             # Regular checkpoint
             ckpt_path = self.checkpoints_dir / f"epoch_{str(epoch).zfill(4)}"
-            self.accelerator.save_state(ckpt_path.as_posix(), safe_serialization=False)
+            self.accelerator.save_state(ckpt_path.as_posix())
+            self.accelerator.save_state(self.checkpoints_dir / "latest")
 
         # Find all regular checkpoints and only keep the latest `max_num_checkpoints` regular checkpoints
         checkpoints = sorted(self.checkpoints_dir.glob("epoch_*"))
-
-        if epoch <= len(checkpoints):
-            logger.warning(
-                f"Current epoch is {epoch}, but found {len(checkpoints)} checkpoints. "
-                f"This may be caused by you running the same experiment multiple times. "
-                f"Recommend to run the experiment with a different `exp_id`."
-            )
-
         if len(checkpoints) > self.max_num_checkpoints:
             logger.info(
                 f"Found {len(checkpoints)} checkpoints, only keeping the latest {self.max_num_checkpoints} checkpoints."
@@ -257,177 +190,99 @@ class Trainer:
                 shutil.rmtree(checkpoint_dir.as_posix())
                 logger.info(f"Checkpoint {checkpoint_dir.as_posix()} is removed.")
 
-    @staticmethod
-    def get_warmup_steps(warmup_steps, max_steps, warmup_ratio):
-        if warmup_steps > 0:
-            logger.info(f"warmup_steps={warmup_steps}. warmup_ratio will be ignored.")
-            return warmup_steps
-        else:
-            return math.ceil(max_steps * warmup_ratio)
+    def _setup_acoustic_args(self, acoustic_args):
+        """Setup acoustic arguments."""
+        self.n_fft = acoustic_args["n_fft"]
+        self.hop_length = acoustic_args["hop_length"]
+        self.win_length = acoustic_args["win_length"]
+        self.sr = acoustic_args["sr"]
 
-    def create_warmup_scheduler(self, optimizer, scheduler_name, max_steps: int):
-        num_warmup_steps = self.get_warmup_steps(self.warmup_steps, max_steps, self.warmup_ratio)
-        if scheduler_name == "constant_schedule_with_warmup":
-            return get_constant_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=num_warmup_steps)
-        elif scheduler_name == "linear_schedule_with_warmup":
-            return get_linear_schedule_with_warmup(
-                optimizer=optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=max_steps
-            )
-
-    def create_schedulers(self, max_steps: int):
-        """Create schedulers.
-
-        You can override this method to create your own schedulers. For example, in GAN training, you may want to
-        create two schedulers for the generator and the discriminator.
-
-        Args:
-            max_steps: the maximum number of steps to train.
-        """
-        self.lr_scheduler = self.create_warmup_scheduler(
-            optimizer=self.optimizer, scheduler_name=self.scheduler_name, max_steps=max_steps
+        # Support for torch and librosa stft
+        self.torch_stft = partial(
+            stft,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
+            win_length=self.win_length,
         )
-        self.lr_scheduler = self.accelerator.prepare(self.lr_scheduler)
+        self.torch_istft = partial(
+            istft,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
+            win_length=self.win_length,
+        )
+        self.librosa_stft = partial(
+            librosa.stft,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
+            win_length=self.win_length,
+        )
+        self.librosa_istft = partial(
+            librosa.istft,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length,
+            win_length=self.win_length,
+        )
 
-    def set_models_to_train_mode(self):
-        """Set models to train mode.
+    def _run_early_stop_check(self, score: float, epoch: int):
+        should_stop = False
 
-        You can override this method to set your own models to train mode. For example, in GAN training, you may want to
-        set the generator and the discriminator to train mode.
-        """
-        self.model.train()
-
-    def set_models_to_eval_mode(self):
-        self.model.eval()
-
-    def lr_scheduler_step(self):
-        """Step the lr scheduler.
-
-        You can override this method to step your own lr scheduler. For example, in GAN training, you may want to
-        step the lr scheduler of the generator and the discriminator.
-        """
-        self.lr_scheduler.step(self.state.steps_trained)
-
-    def create_bar_desc(self, loss_dict, norm):
-        bar_desc = ""
-        for k, v in loss_dict.items():
-            bar_desc += f"{k}: {(v):.4f}, "
-        bar_desc += f"norm: {norm:.4f}, " f"lr: {self.lr_scheduler.get_last_lr()[-1]:.10f}"
-        return bar_desc
-
-    def train(self, train_dataloader: DataLoader, validation_dataloaders):
-        """Train loop entry point.
-
-        Args:
-            train_dataloader: the dataloader to train.
-            validation_dataloaders: the dataloader(s) to validate.
-
-        Notes:
-            You are responsible for calling ``.backward()``, ``.step()``, and ``.zero_grad()`` in your implementation
-            of `training_step()`. Accelerate will automatically handle the gradient accumulation for you.
-            It means that in gradient accumulation, the step() of optimizer and scheduler is called only when gradient_accumulation_steps is reached.
-
-            The training step is implemented as follows:
-
-            .. code-block:: python
-
-                    self.optimizer.zero_grad()
-                    loss = training_step(batch, batch_idx)
-                    self.accelerator.backward(loss)
-                    self.optimizer.step()
-
-                    return {
-                        "loss": loss,
-                    }
-        """
-        early_stop_mark = torch.zeros(1, device=self.device)
-
-        if self.debug:
-            logger.info("Debug mode is on")
-            DebugUnderflowOverflow(self.model)
-
-        # Setting up training control variables
-        steps_per_epoch = len(train_dataloader)
-        update_steps_per_epoch = steps_per_epoch // self.gradient_accumulation_steps
-        update_steps_per_epoch = max(update_steps_per_epoch, 1)
-
-        if self.max_steps > 0:
-            max_steps = self.max_steps
-            max_epochs = self.max_steps // update_steps_per_epoch + int(self.max_steps % update_steps_per_epoch > 0)
+        if self._check_improvement(score, save_max_score=self.save_max_score):
+            logger.info(f"Found new best score: {score:.4f}, saving checkpoint...")
+            self._save_checkpoint(epoch, is_best_epoch=True)
+            self.wait_count.value = 0
         else:
-            max_steps = self.max_epochs * update_steps_per_epoch
-            max_epochs = self.max_epochs
+            logger.info(f"Score did not improve from {self.best_score.value:.4f}.")
+            self.wait_count.value += 1
+            logger.info(f"Early stopping counter: {self.wait_count.value} out of {self.patience}")
 
-        logger.info("Training control variables:")
-        logger.info(f"`steps_per_epoch`: {steps_per_epoch}")
-        logger.info(f"Gradient accumulation steps: {self.gradient_accumulation_steps}")
-        logger.info(f"`update_steps_per_epoch`: {update_steps_per_epoch}")
-        logger.info(f"`max_steps`: {max_steps}")
-        logger.info(f"`max_epochs`: {max_epochs}")
+            if self.wait_count.value >= self.patience:
+                logger.info(f"Early stopping triggered, stopping training...")
+                should_stop = True
 
-        # Generator learning rate scheduler
-        self.create_schedulers(max_steps=max_steps)
+        return should_stop
 
-        for epoch in range(self.state.epochs_trained + 1, max_epochs + 1):
-            logger.info(f"{'=' * 9} Epoch {epoch} out of {max_epochs} {'=' * 9}")
+    def train(self, train_dataloader, validation_dataloaders):
+        early_stop_mark = torch.zeros(1, device=self.accelerator.device)
+
+        for epoch in range(self.start_epoch.value, self.max_epoch + 1):
+            self.current_epoch = epoch
+
+            logger.info(f"{'=' * 15} Epoch {epoch} {'=' * 15}")
             logger.info("Begin training...")
 
-            self.set_models_to_train_mode()
+            self.model.train()
 
             training_epoch_output = []
 
-            # the iter number of progress bar increments by 1 by default whether gradient accumulation is used or not.
-            # but we update the description of the progress bar only when the gradients are synchronized across all processes.
             dataloader_bar = tqdm(
                 train_dataloader,
                 desc="",
                 dynamic_ncols=True,
                 bar_format="{l_bar}{r_bar}",
-                colour="green",
                 disable=not self.accelerator.is_local_main_process,
-                position=0,
-                leave=True,
             )
 
             for batch_idx, batch in enumerate(dataloader_bar):
-                # accumulate() will automatically skip synchronization if applicable loss is linearly scaled with the optimizer.grad
-                # accumulate() will automatically divide the loss in backward by the number of gradient accumulation steps
-                # However, it won't return this loss, so we need to manually divide the loss by the number of gradient accumulation steps.
-                with self.accelerator.accumulate(self.model):
-                    # You are responsible for calling `.backward()`, `.step()`, and `.zero_grad()` in your implementation
-                    loss_dict = self.training_step(batch, batch_idx)
+                loss_dict = self.training_step(batch, batch_idx)
+                training_epoch_output.append(loss_dict)
 
-                    # I guess we don't need to divide the loss by the number of gradient accumulation steps here
-                    # for visualization, we just plot the mean of mean of the loss of each batch
-                    training_epoch_output.append(loss_dict)
+                if self.accelerator.is_local_main_process:
+                    bar_desc = ""
+                    for k, v in loss_dict.items():
+                        bar_desc += f"{k}: {v:.4f}, "
+                    bar_desc += f"lr: {self.lr_scheduler.get_last_lr()[-1]:.6f}, "
+                    dataloader_bar.set_description(bar_desc)
 
-                    # If `sync_gradients` is True, the gradients are currently being synced across all processes.
-                    # It means that the current step we have finished the cumulative gradient accumulation.
-                    if self.accelerator.sync_gradients:
-                        # The gradients are added across all processes in this cumulative gradient accumulation step.
-                        if self.max_grad_norm > 0:
-                            norm = self.accelerator.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
+                    # Log to tensorboard
+                    # for key, value in loss_dict.items():
+                    #     self.writer.add_scalar(
+                    #         f"Train_Step/{key}",
+                    #         value,
+                    #         (epoch - 1) * len(train_dataloader) + batch_idx,
+                    #     )
 
-                        if self.accelerator.is_local_main_process:
-                            bar_desc = self.create_bar_desc(loss_dict, norm)
-                            dataloader_bar.set_description_str(bar_desc)
-
-                    if not self.accelerator.optimizer_step_was_skipped:
-                        # We can put the scheduler.step() into the training_step() function. However, it has **too much
-                        # details should be considered**. It's better to put it here and add some comments.
-                        #
-                        # 1. every process lr_scheduler step N times, where N is the number of processes. We need to multiply the number of steps by the number of processes before constructing the
-                        # scheduler to make sure it behaves as we expect it to do. https://github.com/huggingface/accelerate/issues/1398
-                        #
-                        # 2. For AMP, if the gradients are `nan` or `inf` skip the update step, we should call the
-                        # `scheduler.step()` after checking `self.accelerator.optimizer_step_was_skipped`.
-                        # Otherwise, the scheduler.step() will be called even if the optimizer step is skipped.
-                        self.lr_scheduler_step()
-
-                self.state.steps_trained += 1
-            self.state.epochs_trained += 1
             self.training_epoch_end(training_epoch_output)
 
-            # Should save, evaluate, and early stop?
             if self.accelerator.is_local_main_process and epoch % self.save_ckpt_interval == 0:
                 self._save_checkpoint(epoch, is_best_epoch=False)
 
@@ -437,17 +292,20 @@ class Trainer:
                     score = self.validate(validation_dataloaders)
 
                     if self.accelerator.is_local_main_process:
-                        should_stop = self._run_early_stop_check(score)
+                        should_stop = self._run_early_stop_check(score, epoch)
                         if should_stop:
                             early_stop_mark += 1
 
                     logger.info(f"Validation finished.")
 
+            if not self.accelerator.optimizer_step_was_skipped:
+                # For mixed precision training,
+                # `optimizer_step_was_skipped` will be True if the gradients are `nan` or `inf`.
+                self.lr_scheduler.step()
             self.accelerator.wait_for_everyone()
 
-            # Reduces the `early_stop_mark` data across all processes
-            # If `early_stop_mark` is 1 in any process, then `reduce_early_stop_mark` will be 1 in all processes.
-            reduced_early_stop_mark = self.accelerator.reduce(early_stop_mark, reduction="sum")
+            # Reduces the `early_stop_mark` data across all processes in such a way that all get the final result.
+            reduced_early_stop_mark = self.accelerator.reduce(early_stop_mark)
 
             # If any process triggers early stopping, stop training
             if reduced_early_stop_mark != 0:
@@ -456,8 +314,7 @@ class Trainer:
     @torch.no_grad()
     def validate(self, dataloaders):
         logger.info(f"Begin validation...")
-
-        self.set_models_to_eval_mode()
+        self.model.eval()
 
         if not isinstance(dataloaders, list):
             dataloaders = [dataloaders]
@@ -505,12 +362,12 @@ class Trainer:
             ckpt_path: the checkpoint path to load the model weights from.
         """
         logger.info(f"Begin testing...")
+        self.model.eval()
+
         if not isinstance(dataloaders, list):
             dataloaders = [dataloaders]
 
         self._load_checkpoint(ckpt_path)
-
-        self.set_models_to_eval_mode()
 
         test_output = []
         for dataloader_idx, dataloader in enumerate(dataloaders):
@@ -555,8 +412,7 @@ class Trainer:
         """
         if self.rank == 0:
             logger.info(f"Begin predicting...")
-
-            self.set_models_to_eval_mode()
+            self.model.eval()
 
             if not isinstance(dataloaders, list):
                 dataloaders = [dataloaders]
@@ -576,12 +432,14 @@ class Trainer:
     def _check_improvement(self, score, save_max_score=True):
         """Check if the current model got the best metric score"""
         if save_max_score:
-            if score > self.state.best_score:
+            if score > self.best_score.value:
+                self.best_score.value = score
                 return True
             else:
                 return False
         else:
-            if score < self.state.best_score:
+            if score < self.best_score.value:
+                self.best_score.value = score
                 return True
             else:
                 return False

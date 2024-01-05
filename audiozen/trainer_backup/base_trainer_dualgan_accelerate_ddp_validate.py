@@ -15,7 +15,7 @@ from tqdm.auto import tqdm
 
 from audiozen.acoustics.audio_feature import istft, stft
 from audiozen.logger import TensorboardLogger
-from audiozen.trainer.utils import BestScoreState, EpochState, WaitCountState
+from audiozen.trainer_backup.utils import BestScoreState, EpochState, WaitCountState
 from audiozen.utils import prepare_empty_dir
 
 logger = get_logger(__name__)
@@ -27,12 +27,18 @@ class BaseTrainer:
         accelerator: Accelerator,
         config,
         resume,
+        # Generator
         model_g,
         optimizer_g,
         lr_scheduler_g,
-        model_d,
-        optimizer_d,
-        lr_scheduler_d,
+        # Discriminator for sig
+        model_d_sig,
+        optimizer_d_sig,
+        lr_scheduler_d_sig,
+        # Discriminator for bak
+        model_d_bak,
+        optimizer_d_bak,
+        lr_scheduler_d_bak,
         loss_function,
     ) -> None:
         """Create an instance of BaseTrainer for training, validation, and testing."""
@@ -46,11 +52,16 @@ class BaseTrainer:
 
         # Model
         self.model_g = model_g
-        self.model_d = model_d
+        self.model_d_sig = model_d_sig
+        self.model_d_bak = model_d_bak
+
         self.optimizer_g = optimizer_g
-        self.optimizer_d = optimizer_d
+        self.optimizer_d_sig = optimizer_d_sig
+        self.optimizer_d_bak = optimizer_d_bak
+
         self.lr_scheduler_g = lr_scheduler_g
-        self.lr_scheduler_d = lr_scheduler_d
+        self.lr_scheduler_d_sig = lr_scheduler_d_sig
+        self.lr_scheduler_d_bak = lr_scheduler_d_bak
 
         self.loss_function = loss_function
 
@@ -114,7 +125,8 @@ class BaseTrainer:
 
         # Model summary
         logger.info(f"\n {summary(self.model_g, verbose=0)}")
-        logger.info(f"\n {summary(self.model_d, verbose=0)}")
+        logger.info(f"\n {summary(self.model_d_sig, verbose=0)}")
+        logger.info(f"\n {summary(self.model_d_bak, verbose=0)}")
 
     @staticmethod
     def _get_time_now():
@@ -255,7 +267,8 @@ class BaseTrainer:
             logger.info("Begin training...")
 
             self.model_g.train()
-            self.model_d.train()
+            self.model_d_sig.train()
+            self.model_d_bak.train()
 
             training_epoch_output = []
 
@@ -274,38 +287,42 @@ class BaseTrainer:
                 if self.accelerator.is_local_main_process:
                     bar_desc = ""
                     for k, v in loss_dict.items():
-                        bar_desc += f"{k}: {v.item():.4f}, "
+                        bar_desc += f"{k}: {v:.4f}, "
                     bar_desc += f"lr_g: {self.lr_scheduler_g.get_last_lr()[-1]:.6f}, "
-                    bar_desc += f"lr_d: {self.lr_scheduler_d.get_last_lr()[-1]:.6f}"
+                    bar_desc += f"lr_d: {self.lr_scheduler_d_sig.get_last_lr()[-1]:.6f}"
                     dataloader_bar.set_description(bar_desc)
 
                     # Log to tensorboard
-                    for key, value in loss_dict.items():
-                        self.writer.add_scalar(
-                            f"Train_Step/{key}",
-                            value.item(),
-                            (epoch - 1) * len(train_dataloader) + batch_idx,
-                        )
+                    # for key, value in loss_dict.items():
+                    #     self.writer.add_scalar(
+                    #         f"Train_Step/{key}",
+                    #         value,
+                    #         (epoch - 1) * len(train_dataloader) + batch_idx,
+                    #     )
 
             self.training_epoch_end(training_epoch_output)
 
-            if self.accelerator.is_local_main_process:
-                if epoch % self.save_ckpt_interval == 0:
-                    self._save_checkpoint(epoch, is_best_epoch=False)
+            if self.accelerator.is_local_main_process and epoch % self.save_ckpt_interval == 0:
+                self._save_checkpoint(epoch, is_best_epoch=False)
 
-                if epoch % self.validation_interval == 0:
-                    with torch.no_grad():
-                        logger.info(f"Training finished, begin validation...")
-                        score = self.validate(validation_dataloaders)
+            if epoch % self.validation_interval == 0:
+                with torch.no_grad():
+                    logger.info(f"Training finished, begin validation...")
+                    score = self.validate(validation_dataloaders)
+
+                    if self.accelerator.is_local_main_process:
                         should_stop = self._run_early_stop_check(score, epoch)
-
                         if should_stop:
                             early_stop_mark += 1
 
-                        logger.info(f"Validation finished.")
+                    logger.info(f"Validation finished.")
 
-            self.lr_scheduler_g.step()
-            self.lr_scheduler_d.step()
+            if not self.accelerator.optimizer_step_was_skipped:
+                # For mixed precision training,
+                # `optimizer_step_was_skipped` will be True if the gradients are `nan` or `inf`.
+                self.lr_scheduler_g.step()
+                self.lr_scheduler_d_sig.step()
+
             self.accelerator.wait_for_everyone()
 
             # Reduces the `early_stop_mark` data across all processes in such a way that all get the final result.
@@ -319,32 +336,45 @@ class BaseTrainer:
     def validate(self, dataloaders):
         logger.info(f"Begin validation...")
 
+        self.model_g.eval()
+        # self.model_d.eval()
+
+        if not isinstance(dataloaders, list):
+            dataloaders = [dataloaders]
+
+        validation_output = []
+        for dataloader_idx, dataloader in enumerate(dataloaders):
+            dataloader_output = []
+            for batch_idx, batch in enumerate(
+                tqdm(
+                    dataloader,
+                    desc=f"Inference on dataloader {dataloader_idx}",
+                    bar_format="{l_bar}{r_bar}",
+                    dynamic_ncols=True,
+                    disable=not self.accelerator.is_local_main_process,
+                )
+            ):
+                step_output = self.validation_step(batch, batch_idx, dataloader_idx)
+
+                # Note that the first dimension of the result is num_processes multiplied
+                # by the first dimension of the input tensors.
+                # =================================================
+                # [noisy,       clean_y, ...]
+                # [[4, 480000], [4, 480000], ...]
+                # =================================================
+                gathered_step_output = self.accelerator.gather_for_metrics(step_output)
+                dataloader_output.append(gathered_step_output)
+
+            validation_output.append(dataloader_output)
+
+        logger.info(f"Validation inference finished, begin validation epoch end...")
+
         if self.accelerator.is_local_main_process:
-            self.model_g.eval()
-            self.model_d.eval()
-
-            if not isinstance(dataloaders, list):
-                dataloaders = [dataloaders]
-
-            validation_output = []
-            for dataloader_idx, dataloader in enumerate(dataloaders):
-                dataloader_output = []
-                for batch_idx, batch in enumerate(
-                    tqdm(
-                        dataloader,
-                        desc=f"Inferring on dataloader {dataloader_idx}",
-                        bar_format="{l_bar}{r_bar}",
-                        dynamic_ncols=True,
-                    )
-                ):
-                    step_output = self.validation_step(batch, batch_idx, dataloader_idx)
-                    dataloader_output.append(step_output)
-                validation_output.append(dataloader_output)
-
-            logger.info(f"Validation inference finished, begin validation epoch end...")
+            # only the main process will run validation_epoch_end
             score = self.validation_epoch_end(validation_output)
-
             return score
+        else:
+            return None
 
     @torch.no_grad()
     def test(self, dataloaders, ckpt_path="best"):
@@ -354,31 +384,42 @@ class BaseTrainer:
             test_dataloaders: the dataloader(s) to test.
             ckpt_path: the checkpoint path to load the model weights from.
         """
+        logger.info(f"Begin testing...")
+        self.model_g.eval()
+
+        if not isinstance(dataloaders, list):
+            dataloaders = [dataloaders]
+
+        self._load_checkpoint(ckpt_path)
+
+        test_output = []
+        for dataloader_idx, dataloader in enumerate(dataloaders):
+            dataloader_out = []
+            for batch_idx, batch in enumerate(
+                tqdm(
+                    dataloader,
+                    desc=f"Inference on dataloader {dataloader_idx}",
+                    bar_format="{l_bar}{r_bar}",
+                    dynamic_ncols=True,
+                    disable=not self.accelerator.is_local_main_process,
+                )
+            ):
+                step_output = self.test_step(batch, batch_idx, dataloader_idx)
+
+                # Note that the first dimension of the result is num_processes multiplied
+                # by the first dimension of the input tensors.
+                # =================================================
+                # [noisy,       clean_y, ...]
+                # [[4, 480000], [4, 480000], ...]
+                # =================================================
+                gathered_step_output = self.accelerator.gather_for_metrics(step_output)
+                dataloader_out.append(gathered_step_output)
+
+            test_output.append(dataloader_out)
+
+        logger.info(f"Testing inference finished, begin testing epoch end...")
         if self.accelerator.is_local_main_process:
-            logger.info(f"Begin testing...")
-            self.model_g.eval()
-            self.model_d.eval()
-
-            if not isinstance(dataloaders, list):
-                dataloaders = [dataloaders]
-
-            self._load_checkpoint(ckpt_path)
-
-            test_output = []
-            for dataloader_idx, dataloader in enumerate(dataloaders):
-                step_outputs = []
-                for batch_idx, batch in enumerate(
-                    tqdm(
-                        dataloader,
-                        desc=f"Inference on dataloader {dataloader_idx}",
-                        bar_format="{l_bar}{r_bar}",
-                    )
-                ):
-                    step_output = self.test_step(batch, batch_idx, dataloader_idx)
-                    step_outputs.append(step_output)
-
-                test_output.append(step_outputs)
-
+            # only the main process will run test_epoch_end
             self.test_epoch_end(test_output)
 
     @torch.no_grad()

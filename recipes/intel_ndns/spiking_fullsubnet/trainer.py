@@ -1,13 +1,11 @@
 import pandas as pd
 import torch
 from accelerate.logging import get_logger
-from torch.cuda.amp import autocast
 from tqdm import tqdm
 
-from audiozen.common_trainer import Trainer as BaseTrainer
 from audiozen.loss import SISNRLoss, freq_MAE, mag_MAE
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI, IntelSISNR
-from audiozen.utils import clamp_inf_value
+from audiozen.trainer import Trainer as BaseTrainer
 
 logger = get_logger(__name__)
 

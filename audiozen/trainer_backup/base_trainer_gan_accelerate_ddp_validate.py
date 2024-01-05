@@ -15,7 +15,7 @@ from tqdm.auto import tqdm
 
 from audiozen.acoustics.audio_feature import istft, stft
 from audiozen.logger import TensorboardLogger
-from audiozen.trainer.utils import BestScoreState, EpochState, WaitCountState
+from audiozen.trainer_backup.utils import BestScoreState, EpochState, WaitCountState
 from audiozen.utils import prepare_empty_dir
 
 logger = get_logger(__name__)
@@ -68,9 +68,7 @@ class BaseTrainer:
         self.plot_norm = self.trainer_config.get("plot_norm", True)
         self.validation_interval = self.trainer_config.get("validation_interval", 1)
         self.max_num_checkpoints = self.trainer_config.get("max_num_checkpoints", 10)
-        assert (
-            self.validation_interval >= 1
-        ), "'validation_interval' should be large than one."
+        assert self.validation_interval >= 1, "'validation_interval' should be large than one."
 
         # Count Variables
         self.total_norm = -1
@@ -148,9 +146,7 @@ class BaseTrainer:
 
         # Each run will have a unique source code, config, and log file.
         time_now = self._get_time_now()
-        self.source_code_dir = (
-            Path(__file__).expanduser().absolute().parent.parent.parent
-        )
+        self.source_code_dir = Path(__file__).expanduser().absolute().parent.parent.parent
         self.source_code_backup_dir = self.exp_dir / f"source_code__{time_now}"
         self.config_path = self.exp_dir / f"config__{time_now}.toml"
 
@@ -244,9 +240,7 @@ class BaseTrainer:
         else:
             logger.info(f"Score did not improve from {self.best_score.value:.4f}.")
             self.wait_count.value += 1
-            logger.info(
-                f"Early stopping counter: {self.wait_count.value} out of {self.patience}"
-            )
+            logger.info(f"Early stopping counter: {self.wait_count.value} out of {self.patience}")
 
             if self.wait_count.value >= self.patience:
                 logger.info(f"Early stopping triggered, stopping training...")
@@ -298,10 +292,7 @@ class BaseTrainer:
 
             self.training_epoch_end(training_epoch_output)
 
-            if (
-                self.accelerator.is_local_main_process
-                and epoch % self.save_ckpt_interval == 0
-            ):
+            if self.accelerator.is_local_main_process and epoch % self.save_ckpt_interval == 0:
                 self._save_checkpoint(epoch, is_best_epoch=False)
 
             if epoch % self.validation_interval == 0:
@@ -415,9 +406,7 @@ class BaseTrainer:
                 gathered_step_output = self.accelerator.gather_for_metrics(step_output)
 
                 # Convert the gathered cuda tensors to cpu tensors
-                gathered_step_output = [
-                    tensor.detach().cpu() for tensor in gathered_step_output
-                ]
+                gathered_step_output = [tensor.detach().cpu() for tensor in gathered_step_output]
 
                 dataloader_out.append(gathered_step_output)
 

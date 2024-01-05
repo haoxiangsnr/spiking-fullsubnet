@@ -3,10 +3,10 @@ import torch
 from accelerate.logging import get_logger
 from tqdm import tqdm
 
-from audiozen.common_trainer import Trainer as BaseTrainer
 from audiozen.loss import SISNRLoss
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI, IntelSISNR
 from audiozen.pit import PairwiseNegSDR, PITWrapper
+from audiozen.trainer import Trainer as BaseTrainer
 
 logger = get_logger(__name__)
 
@@ -89,6 +89,7 @@ class Trainer(BaseTrainer):
             df_metrics_mean = df_metrics.mean(numeric_only=True)
             df_metrics_mean_df = df_metrics_mean.to_frame().T
 
+            logger.info(f"\n{df_metrics.to_markdown()}")
             logger.info(f"\n{df_metrics_mean_df.to_markdown()}")
 
             score += df_metrics_mean["OVRL"]
@@ -112,7 +113,7 @@ class Trainer(BaseTrainer):
         intel_si_snr = self.intel_si_snr(est_y, ref_y)
         dns_mos = self.dns_mos(est_y)
 
-        return si_sdr | intel_si_snr | dns_mos | {"pit_loss": loss}
+        return si_sdr | intel_si_snr | dns_mos | {"pit_loss": loss.item()}
 
     def compute_batch_metrics(self, dataloader_idx, step_out):
         noisy, clean, enhanced = step_out
@@ -132,3 +133,9 @@ class Trainer(BaseTrainer):
             )
 
         return results
+
+    def test_step(self, *args, **kwargs):
+        return self.validation_step(*args, **kwargs)
+
+    def test_epoch_end(self, outputs):
+        return self.validation_epoch_end(outputs)
