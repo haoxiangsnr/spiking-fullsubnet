@@ -1,4 +1,3 @@
-"""Loss module includes loss functions related to speech signal processing."""
 from typing import Iterable
 
 import torch
@@ -7,8 +6,6 @@ import torch.nn.functional as F
 from numpy import ndarray
 from torch import Tensor
 from torch.autograd import Function
-
-from audiozen.constant import EPSILON
 
 
 class SISNRLoss(nn.Module):
@@ -25,6 +22,7 @@ class SISNRLoss(nn.Module):
         if input.shape != target.shape:
             raise RuntimeError(f"Dimension mismatch when calculating SI-SNR, {input.shape=} vs {target.shape=}")
 
+        eps = torch.finfo(input.dtype).eps
         s_input = input - torch.mean(input, dim=-1, keepdim=True)
         s_target = target - torch.mean(target, dim=-1, keepdim=True)
 
@@ -35,11 +33,11 @@ class SISNRLoss(nn.Module):
 
         e_noise = s_input - pair_wise_proj
 
-        pair_wise_sdr = torch.sum(pair_wise_proj**2, dim=-1) / (torch.sum(e_noise**2, dim=-1) + EPSILON)
+        pair_wise_sdr = torch.sum(pair_wise_proj**2, dim=-1) / (torch.sum(e_noise**2, dim=-1) + eps)
 
         if self.return_neg:
-            return -torch.mean(10 * torch.log10(pair_wise_sdr + EPSILON))
-        return torch.mean(10 * torch.log10(pair_wise_sdr + EPSILON))
+            return -torch.mean(10 * torch.log10(pair_wise_sdr + eps))
+        return torch.mean(10 * torch.log10(pair_wise_sdr + eps))
 
 
 class angle(Function):
@@ -52,8 +50,9 @@ class angle(Function):
 
     @staticmethod
     def backward(ctx, grad: Tensor):
+        eps = torch.finfo(grad.dtype).eps
         (x,) = ctx.saved_tensors
-        grad_inv = grad / (x.real.square() + x.imag.square()).clamp_min_(EPSILON)
+        grad_inv = grad / (x.real.square() + x.imag.square()).clamp_min_(eps)
         return torch.view_as_complex(torch.stack((-x.imag * grad_inv, x.real * grad_inv), dim=-1))
 
 
@@ -89,6 +88,7 @@ class MultiResSpecLoss(nn.Module):
         return complex_stft
 
     def forward(self, est: Tensor, target: Tensor) -> Tensor:
+        eps = torch.finfo(est.dtype).eps
         loss = torch.zeros((), device=est.device, dtype=est.dtype)
 
         for n_fft in self.n_fft_list:
@@ -97,8 +97,8 @@ class MultiResSpecLoss(nn.Module):
             Y_abs = Y.abs()
             S_abs = S.abs()
             if self.gamma != 1:
-                Y_abs = Y_abs.clamp_min(EPSILON).pow(self.gamma)
-                S_abs = S_abs.clamp_min(EPSILON).pow(self.gamma)
+                Y_abs = Y_abs.clamp_min(eps).pow(self.gamma)
+                S_abs = S_abs.clamp_min(eps).pow(self.gamma)
 
             # magnitude loss
             loss += F.mse_loss(Y_abs, S_abs) * self.factor
