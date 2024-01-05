@@ -88,7 +88,7 @@ class Trainer:
 
         if self.accelerator.is_local_main_process:
             prepare_empty_dir(
-                [self.save_dir, self.exp_dir, self.checkpoints_dir, self.tb_log_dir, self.enhanced_dir, self.wav_dir],
+                [self.save_dir, self.exp_dir, self.checkpoints_dir, self.tb_log_dir, self.enhanced_dir],
                 resume=resume,
             )
 
