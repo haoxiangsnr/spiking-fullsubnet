@@ -342,41 +342,6 @@ def norm_amplitude(y: NDArray, scalar: Optional[float] = None, eps: float = EPSI
     return y / scalar, scalar
 
 
-def subsample(
-    data: NDArray,
-    sub_sample_length: int,
-    start_position: int = -1,
-    return_start_position: bool = False,
-) -> Union[NDArray, tuple[NDArray, int]]:
-    """Sample a segment from the input data.
-
-    Args:
-        data: **one-dimensional data**
-        sub_sample_length: The length of the segment to be sampled
-        start_position: The start index of the segment to be sampled. If start_position smaller than 0, randomly generate one index
-
-    """
-    assert np.ndim(data) == 1, f"Only support 1D data. The dim is {np.ndim(data)}"
-    length = len(data)
-
-    if length > sub_sample_length:
-        if start_position < 0:
-            start_position = np.random.randint(length - sub_sample_length)
-        end = start_position + sub_sample_length
-        data = data[start_position:end]
-    elif length < sub_sample_length:
-        data = np.append(data, np.zeros(sub_sample_length - length, dtype=np.float32))
-    else:
-        pass
-
-    assert len(data) == sub_sample_length
-
-    if return_start_position:
-        return data, start_position
-    else:
-        return data
-
-
 def is_clipped(y: NDArray, clipping_threshold: float = 0.999) -> bool:
     """Check if the input signal is clipped."""
     return (np.abs(y) > clipping_threshold).any()  # type: ignore

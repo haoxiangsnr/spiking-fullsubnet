@@ -6,7 +6,7 @@ import numpy as np
 import soundfile as sf
 from torch.utils.data import Dataset
 
-from audiozen.acoustics.audio_feature import subsample
+from audiozen.acoustics.io import subsample
 
 
 class DNSAudio(Dataset):
@@ -75,15 +75,11 @@ class DNSAudio(Dataset):
         if len(noisy_audio) > num_samples:
             noisy_audio = noisy_audio[:num_samples]
         else:
-            noisy_audio = np.concatenate(
-                [noisy_audio, np.zeros(num_samples - len(noisy_audio))]
-            )
+            noisy_audio = np.concatenate([noisy_audio, np.zeros(num_samples - len(noisy_audio))])
         if len(clean_audio) > num_samples:
             clean_audio = clean_audio[:num_samples]
         else:
-            clean_audio = np.concatenate(
-                [clean_audio, np.zeros(num_samples - len(clean_audio))]
-            )
+            clean_audio = np.concatenate([clean_audio, np.zeros(num_samples - len(clean_audio))])
 
         noisy_audio = noisy_audio.astype(np.float32)
         clean_audio = clean_audio.astype(np.float32)
@@ -91,13 +87,13 @@ class DNSAudio(Dataset):
         if self.train:
             noisy_audio, start_position = subsample(
                 noisy_audio,
-                sub_sample_length=train_num_samples,
-                return_start_position=True,
+                subsample_length=train_num_samples,
+                return_start_idx=True,
             )
             clean_audio = subsample(
                 clean_audio,
-                sub_sample_length=train_num_samples,
-                start_position=start_position,
+                subsample_length=train_num_samples,
+                start_idx=start_position,
             )
 
         return noisy_audio, clean_audio, noisy_file

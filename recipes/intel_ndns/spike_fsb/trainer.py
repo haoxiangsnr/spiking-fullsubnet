@@ -9,15 +9,7 @@ from tqdm import tqdm
 
 from audiozen.acoustics.audio_feature import save_wav
 from audiozen.loss import SISNRLoss, freq_MAE, mag_MAE
-from audiozen.metric import (
-    DNSMOS,
-    PESQ,
-    SISDR,
-    STOI,
-    IntelSISNR,
-    compute_neuronops,
-    compute_synops,
-)
+from audiozen.metric import DNSMOS, PESQ, SISDR, STOI, IntelSISNR, compute_neuronops, compute_synops
 from audiozen.trainer.base_trainer_gan_accelerate_ddp_validate import BaseTrainer
 
 logger = get_logger(__name__)
@@ -117,9 +109,7 @@ class Trainer(BaseTrainer):
 
             if self.accelerator.is_local_main_process:
                 logger.info(f"Loss '{key}' on epoch {self.current_epoch}: {loss_mean}")
-                self.writer.add_scalar(
-                    f"Train_Epoch/{key}", loss_mean, self.current_epoch
-                )
+                self.writer.add_scalar(f"Train_Epoch/{key}", loss_mean, self.current_epoch)
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
         noisy_y, clean_y, noisy_file = batch
@@ -146,9 +136,7 @@ class Trainer(BaseTrainer):
         # to tensor
         synops = torch.tensor([synops], device=self.accelerator.device).unsqueeze(0)
         synops = synops.repeat(enhanced_y.shape[0], 1)
-        neuron_ops = torch.tensor(
-            [neuron_ops], device=self.accelerator.device
-        ).unsqueeze(0)
+        neuron_ops = torch.tensor([neuron_ops], device=self.accelerator.device).unsqueeze(0)
         neuron_ops = neuron_ops.repeat(enhanced_y.shape[0], 1)
 
         return noisy_y, clean_y, enhanced_y, synops, neuron_ops
@@ -160,13 +148,7 @@ class Trainer(BaseTrainer):
         intel_si_snr = self.intel_si_snr(enhanced, clean)
         dns_mos = self.dns_mos(enhanced)
 
-        return (
-            si_sdr
-            | intel_si_snr
-            | dns_mos
-            | {"synops": synops.item()}
-            | {"neuron_ops": neuron_ops.item()}
-        )
+        return si_sdr | intel_si_snr | dns_mos | {"synops": synops.item()} | {"neuron_ops": neuron_ops.item()}
 
     def compute_batch_metrics(self, dataloader_idx, step_out):
         noisy, clean, enhanced, synops, neuron_ops = step_out
@@ -193,9 +175,7 @@ class Trainer(BaseTrainer):
         score = 0.0
 
         for dataloader_idx, dataloader_outputs in enumerate(outputs):
-            logger.info(
-                f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}..."
-            )
+            logger.info(f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}...")
 
             rows = []
             for step_out in tqdm(dataloader_outputs):
@@ -211,9 +191,7 @@ class Trainer(BaseTrainer):
             score += df_metrics_mean["OVRL"]
 
             for metric, value in df_metrics_mean.items():
-                self.writer.add_scalar(
-                    f"metrics_{dataloader_idx}/{metric}", value, self.current_epoch
-                )
+                self.writer.add_scalar(f"metrics_{dataloader_idx}/{metric}", value, self.current_epoch)
 
         return score
 
@@ -245,18 +223,14 @@ class Trainer(BaseTrainer):
         # to tensor
         synops = torch.tensor([synops], device=self.accelerator.device).unsqueeze(0)
         synops = synops.repeat(enhanced_y.shape[0], 1)
-        neuron_ops = torch.tensor(
-            [neuron_ops], device=self.accelerator.device
-        ).unsqueeze(0)
+        neuron_ops = torch.tensor([neuron_ops], device=self.accelerator.device).unsqueeze(0)
         neuron_ops = neuron_ops.repeat(enhanced_y.shape[0], 1)
 
         return noisy_y, clean_y, enhanced_y, synops, neuron_ops
 
     def test_epoch_end(self, outputs):
         for dataloader_idx, dataloader_outputs in enumerate(outputs):
-            logger.info(
-                f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}..."
-            )
+            logger.info(f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}...")
 
             # rows = []
             # for step_out in tqdm(dataloader_outputs):
