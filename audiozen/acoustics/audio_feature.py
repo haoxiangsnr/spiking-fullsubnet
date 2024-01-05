@@ -308,10 +308,11 @@ def istft(
     # Compatible with multiple inputs
     match input_type:
         case "real_imag":
-            if not ((isinstance(feature, tuple) or isinstance(feature, list)) and len(feature) != 2):
+            if (isinstance(feature, tuple) or isinstance(feature, list)) and len(feature) == 2:
+                real, imag = feature
+                complex_valued_features = torch.complex(real=real, imag=imag)
+            else:
                 raise ValueError(f"Only support tuple or list. Received {type(feature)} with {len(feature)} elements.")
-            real, imag = feature
-            complex_valued_features = torch.complex(real=real, imag=imag)
         case "complex":
             if not (isinstance(feature, Tensor) and torch.is_complex(feature)):
                 raise ValueError(f"Only support complex-valued tensor. Received {type(feature)}")
