@@ -35,6 +35,14 @@ class SequenceModel(nn.Module):
                 shared_weights=shared_weights,
                 bn=bn,
             )
+        elif sequence_model == "LSTM":
+            self.sequence_model = nn.LSTM(
+                input_size=input_size,
+                hidden_size=hidden_size,
+                num_layers=num_layers,
+                batch_first=True,
+                bidirectional=False,
+            )
         else:
             raise NotImplementedError(f"Sequence model {sequence_model} not implemented.")
 
@@ -55,6 +63,20 @@ class SequenceModel(nn.Module):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.use_pre_layer_norm = use_pre_layer_norm
+        self.sequence_model_name = sequence_model
+
+    def forward_lstm(self, input):
+        assert input.ndim == 3, f"Input tensor must be 3D, but got {input.ndim}D."
+        input = rearrange(input, "b f t -> b t f")
+
+        if self.use_pre_layer_norm:
+            input = self.pre_layer_norm(input)
+
+        output, _ = self.sequence_model(input)
+        output = self.proj(output)
+        output = rearrange(output, "b t f -> b f t")
+        output = self.output_activate_function(output)
+        return output, []
 
     def forward(self, input):
         """Forward function.
@@ -67,6 +89,9 @@ class SequenceModel(nn.Module):
             output (`torch.Tensor` of shape `(batch_size, num_freq, sequence_length)`): Output tensor.
                 Output tensor.
         """
+        if self.sequence_model_name == "LSTM":
+            return self.forward_lstm(input)
+
         assert input.ndim == 3, f"Input tensor must be 3D, but got {input.ndim}D."
 
         batch_size, num_freqs, sequence_length = input.shape
