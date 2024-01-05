@@ -5,60 +5,25 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Torchrun Debug SDNN",
+            "name": "Validate Debug",
             "type": "python",
             "request": "launch",
-            "program": "/home/xianghao/mambaforge/envs/ndns/bin/torchrun",
+            "module": "accelerate.commands.launch",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "cwd": "${workspaceFolder}/recipes/intel_ndns",
+            "cwd": "${workspaceFolder}/recipes/wsj0-mix/spiking_fullsubnet",
             "args": [
-                "--standalone",
-                "--nproc_per_node=1",
-                "--nnodes=1",
+                "--multi_gpu",
+                "--num_processes=2",
+                "--gpu_ids",
+                "4,5",
+                "--main_process_port",
+                "46523",
                 "run.py",
                 "-C",
-                "sdnn_delays/baseline.toml",
+                "wsj0-2mix.toml",
                 "-M",
-                "train"
-            ],
-        },
-        {
-            "name": "Torchrun Debug FSB",
-            "type": "python",
-            "request": "launch",
-            "program": "/root/mambaforge/envs/torch1.12/bin/torchrun",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "cwd": "${workspaceFolder}/recipes/dns_interspeech_2020",
-            "args": [
-                "--standalone",
-                "--nproc_per_node=1",
-                "--nnodes=1",
-                "run.py",
-                "-C",
-                "fsb/placeholder_AdamW_h5py_setEpoch_NoAMP_clipNorm-1.toml",
-                "-M",
-                "train"
-            ],
-        },
-        {
-            "name": "Torchrun Debug Accelerate",
-            "type": "python",
-            "request": "launch",
-            "program": "/home/xianghao/mambaforge/envs/audiozen/bin/accelerate",
-            "console": "integratedTerminal",
-            "justMyCode": true,
-            "cwd": "${workspaceFolder}/recipes/intel_ndns/spike_fsb",
-            "args": [
-                "launch",
-                "--config_file",
-                "ddp_four_cards.yaml",
-                "run_accelerate_gan_ddp_validate.py",
-                "-C",
-                "baseline_sharedParam.toml",
-                "-M",
-                "validate"
+                "test"
             ],
         }
     ]
