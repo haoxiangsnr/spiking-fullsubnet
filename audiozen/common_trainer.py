@@ -233,11 +233,11 @@ class Trainer:
         """
         # Save checkpoint
         if is_best_epoch:
-            self.accelerator.save_state(self.checkpoints_dir / "best")
+            self.accelerator.save_state(self.checkpoints_dir / "best", safe_serialization=False)
         else:
             # Regular checkpoint
             ckpt_path = self.checkpoints_dir / f"epoch_{str(epoch).zfill(4)}"
-            self.accelerator.save_state(ckpt_path.as_posix())
+            self.accelerator.save_state(ckpt_path.as_posix(), safe_serialization=False)
 
         # Find all regular checkpoints and only keep the latest `max_num_checkpoints` regular checkpoints
         checkpoints = sorted(self.checkpoints_dir.glob("epoch_*"))
