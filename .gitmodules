@@ -1,0 +1,3 @@
+[submodule "notebooks"]
+	path = notebooks
+	url = git@github.com:haoxiangsnr/notebooks.git
