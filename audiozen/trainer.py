@@ -88,7 +88,7 @@ class Trainer:
 
         if self.accelerator.is_local_main_process:
             prepare_empty_dir(
-                [self.save_dir, self.exp_dir, self.checkpoints_dir, self.tb_log_dir, self.enhanced_dir],
+                [self.save_dir, self.exp_dir, self.checkpoints_dir, self.tb_log_dir, self.enhanced_dir, self.metrics_dir],
                 resume=resume,
             )
 
@@ -175,6 +175,7 @@ class Trainer:
         self.checkpoints_dir = self.exp_dir / "checkpoints"
         self.tb_log_dir = self.exp_dir / "tb_log"
         self.enhanced_dir = self.exp_dir / "enhanced"
+        self.metrics_dir = self.exp_dir / "metrics"
 
         # Each run will have a unique source code, config, and log file.
         time_now = self._get_time_now()
@@ -449,6 +450,14 @@ class Trainer:
 
     @torch.no_grad()
     def validate(self, dataloaders):
+        """Validate the model.
+
+        Args:
+            dataloaders: the dataloader(s) to validate.
+
+        Returns:
+            score: the metric score of the validation epoch.
+        """
         logger.info(f"Begin validation...")
 
         self.set_models_to_eval_mode()
@@ -468,14 +477,18 @@ class Trainer:
                     disable=not self.accelerator.is_local_main_process,
                 )
             ):
+                # We recommend you directly calculate the metric score in the validation_step function and return the
+                # metric score in the validation_step function, and then calculate the mean of the metric score
+                # in the validation_epoch_end function.
                 step_output = self.validation_step(batch, batch_idx, dataloader_idx)
 
-                # Note that the first dimension of the result is num_processes multiplied
-                # by the first dimension of the input tensors.
-                # =================================================
-                # [noisy,       clean_y, ...]
-                # [[4, 480000], [4, 480000], ...]
-                # =================================================
+                """
+                [{
+                    "metric_1": metric_1_score,
+                    "metric_2": metric_1_score,
+                    ...
+                }, ...]
+                """
                 gathered_step_output = self.accelerator.gather_for_metrics(step_output)
                 dataloader_output.append(gathered_step_output)
 
@@ -520,12 +533,6 @@ class Trainer:
             ):
                 step_output = self.test_step(batch, batch_idx, dataloader_idx)
 
-                # Note that the first dimension of the result is num_processes multiplied
-                # by the first dimension of the input tensors.
-                # =================================================
-                # [noisy,       clean_y, ...]
-                # [[4, 480000], [4, 480000], ...]
-                # =================================================
                 gathered_step_output = self.accelerator.gather_for_metrics(step_output)
                 dataloader_out.append(gathered_step_output)
 
@@ -659,7 +666,7 @@ class Trainer:
                 self.writer.add_scalar(f"Train_Epoch/{key}", loss_mean, self.state.epochs_trained)
 
     def validation_step(self, batch, batch_idx, dataloader_idx):
-        """Implement a validation step.
+        """Implement a validation step for validating a model on all processes.
 
         This function defines the validation step. The input batch is from a validation dataloader.
         Here is the persuade code for validating a model:
@@ -675,6 +682,28 @@ class Trainer:
 
             score = validation_epoch_end(validation_epoch_output)
             return score
+
+        Notes:
+            **The validation step will be run on all processes.**
+
+            About batch size:
+            If your validation data have the same length, you may use a batch size larger than 1 to speed up the validation.
+            For example, if you have 1000 samples in the validation set, and you have a batch size of 100, then you will
+            have 10 batches in the validation set. However, if your data in the validation set has a different length, please
+            use a batch size of 1. It still works for distributed validation. Otherwise, you will get an error.
+
+            About distributed validation:
+            The output of this function will be gathered across all processes. For example, if you have 4 processes, and
+            you have a batch size of 1, then you will have 4 outputs from this function. The output of this function will
+            be gathered across all processes. The first dimension of the result is num_processes multiplied by the first
+            dimension of the input tensors. **Please make sure the first dimension of the input tensors is the batch size.**
+            **The last dimension of the output will be padded to the length of the longest sample in the validation set.**
+            It means that the output will be a tensor with the shape of [num_processes * batch_size, max_length]. If you
+            calculate the metric score on the output, you should do a truncation to remove the padding. Otherwise, if you
+            are using a metric that sensitive to the padding, you will get a wrong metric score. It is not easy to
+            implement this truncation in the ``validation_epoch_end`` function. We recommend you directly calculate the metric
+            score in the validation_step function. I guess the Accelerate team will implement a automatic truncation in the
+            future. https://github.com/huggingface/accelerate/issues/226
 
         Args:
             batch: a batch of data.
