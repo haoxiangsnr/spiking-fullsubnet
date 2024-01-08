@@ -1,4 +1,5 @@
 from functools import partial
+from typing import Tuple
 
 import torch
 import torch.nn as nn
@@ -180,6 +181,10 @@ class Model(nn.Module):
         assert input.ndim == 2, f"Input tensor must be 2D, but got {input.ndim}D."
         batch_size, sequence_length = input.shape
 
+        # ================== Pad the input ==================
+        pad = self.hop_length - (sequence_length % self.hop_length)
+        input = F.pad(input, (0, pad))
+
         noisy_mag, _, noisy_real, noisy_imag = self.stft(input)
         noisy_cmp = torch.complex(real=noisy_real, imag=noisy_imag)
         noisy_cmp = rearrange(noisy_cmp, "b f t -> b 1 f t")
@@ -198,13 +203,15 @@ class Model(nn.Module):
 
         if self.num_spks > 1:
             enh_stft = rearrange(enh_stft, "b 1 s f t -> (b s) f t")
-            enh_y = self.istft(enh_stft, length=sequence_length)
+            enh_y = self.istft(enh_stft)
+            enh_y = enh_y[:, :sequence_length]
             enh_y = rearrange(enh_y, "(b s) t -> b s t", s=self.num_spks)
             return enh_y, _
         else:
             enh_stft = rearrange(enh_stft, "b 1 1 f t -> b f t")
             enh_mag = torch.abs(enh_stft)  # For computing DNSMOS loss
-            enh_y = self.istft(enh_stft, length=sequence_length)
+            enh_y = self.istft(enh_stft)
+            enh_y = enh_y[:, :sequence_length]
             return enh_y, enh_mag
 
 
