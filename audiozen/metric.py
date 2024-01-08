@@ -8,7 +8,6 @@ import onnxruntime as ort
 import torch
 from pesq import pesq as pesq_backend
 from pystoi import stoi as stoi_backend
-from torch import Tensor
 
 from audiozen.utils import check_same_shape
 
@@ -64,7 +63,7 @@ class PESQ:
         return {f"pesq_{self.mode}": pesq_val}
 
 
-class IntelSISNR:
+class SISDR:
     def __init__(self) -> None:
         super().__init__()
 
@@ -74,30 +73,12 @@ class IntelSISNR:
         target: Union[torch.tensor, np.ndarray],
         reduce_mean: bool = True,
     ) -> torch.tensor:
-        """Calculates SI-SNR estiamte from target audio and estiamte audio. The
-        audio sequene is expected to be a tensor/array of dimension more than 1.
-        The last dimension is interpreted as time.
-
-        The implementation is based on the example here:
-        https://www.tutorialexample.com/wp-content/uploads/2021/12/SI-SNR-definition.png
-
-        Parameters
-        ----------
-        target : Union[torch.tensor, np.ndarray]
-            Target audio waveform.
-        estimate : Union[torch.tensor, np.ndarray]
-            Estimate audio waveform.
-
-        Returns
-        -------
-        torch.tensor
-            SI-SNR of each target and estimate pair.
-        """
-        EPS = 1e-8
         if not torch.is_tensor(target):
             target: torch.tensor = torch.tensor(target)
         if not torch.is_tensor(estimate):
             estimate: torch.tensor = torch.tensor(estimate)
+
+        eps = torch.finfo(estimate.dtype).eps
 
         # zero mean to ensure scale invariance
         s_target = target - torch.mean(target, dim=-1, keepdim=True)
@@ -106,67 +87,17 @@ class IntelSISNR:
         # <s, s'> / ||s||**2 * s
         pair_wise_dot = torch.sum(s_target * s_estimate, dim=-1, keepdim=True)
         s_target_norm = torch.sum(s_target**2, dim=-1, keepdim=True)
-        pair_wise_proj = pair_wise_dot * s_target / s_target_norm
+        pair_wise_proj = (pair_wise_dot * s_target + eps) / (s_target_norm + eps)
 
         e_noise = s_estimate - pair_wise_proj
 
-        pair_wise_sdr = torch.sum(pair_wise_proj**2, dim=-1) / (torch.sum(e_noise**2, dim=-1) + EPS)
-        val = 10 * torch.log10(pair_wise_sdr + EPS)
+        pair_wise_sdr = (torch.sum(pair_wise_proj**2, dim=-1) + eps) / (torch.sum(e_noise**2, dim=-1) + eps)
+        val = 10 * torch.log10(pair_wise_sdr + eps)
 
         if reduce_mean:
             val = torch.mean(val)
 
-        return {"intel_si_snr": val.item()}
-
-
-class SISDR:
-    def __init__(self) -> None:
-        super().__init__()
-
-    def __call__(self, est: Tensor, ref: Tensor, zero_mean: bool = False) -> dict:
-        """Scale-invariant signal-to-distortion ratio (SI-SDR).
-
-        Args:
-            est: float tensor with the shape of (B, T)
-            ref: float tensor with shape of (B,T)
-            zero_mean: If to zero mean ref and est or not
-
-        Returns:
-            Float tensor with shape of SDR values per sample
-
-        Examples:
-            >>> ref = torch.tensor([3.0, -0.5, 2.0, 7.0])
-            >>> est = torch.tensor([2.5, 0.0, 2.0, 8.0])
-            >>> si_sdr(est, ref)
-            >>> tensor(18.4030)
-        """
-        est = est.reshape(-1)
-        ref = ref.reshape(-1)
-
-        check_same_shape(est, ref)
-
-        if not torch.is_tensor(est) or not torch.is_tensor(ref):
-            est = torch.tensor(est)
-            ref = torch.tensor(ref)
-
-        eps = torch.finfo(est.dtype).eps
-
-        if zero_mean:
-            ref = ref - torch.mean(ref, dim=-1, keepdim=True)
-            est = est - torch.mean(est, dim=-1, keepdim=True)
-
-        alpha = (torch.sum(est * ref, dim=-1, keepdim=True) + eps) / (torch.sum(ref**2, dim=-1, keepdim=True) + eps)
-        ref_scaled = alpha * ref
-
-        noise = ref_scaled - est
-
-        val = (torch.sum(ref_scaled**2, dim=-1) + eps) / (torch.sum(noise**2, dim=-1) + eps)
-        val = 10 * torch.log10(val)
-
-        val = val.item()
-
-        return {"si_sdr": val}
-
+        return {"si_sdr": val.item()}
 
 class pDNSMOS:
     def __init__(self, input_sr=16000) -> None:
