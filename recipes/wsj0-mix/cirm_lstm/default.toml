@@ -1,0 +1,97 @@
+[meta]
+save_dir = "exp"
+description = "Train a model using Generative Adversarial Networks (GANs)"
+seed = 20220815
+
+[trainer]
+path = "trainer.Trainer"
+[trainer.args]
+debug = false
+max_steps = 0
+max_epochs = 200
+max_grad_norm = 10
+save_max_score = true
+save_ckpt_interval = 10
+max_patience = 20
+plot_norm = true
+validation_interval = 10
+max_num_checkpoints = 20
+scheduler_name = "constant_schedule_with_warmup"
+warmup_steps = 0
+warmup_ratio = 0.00
+gradient_accumulation_steps = 1
+
+[loss_function]
+path = "torch.nn.MSELoss"
+[loss_function.args]
+
+[optimizer]
+path = "torch.optim.AdamW"
+[optimizer.args]
+lr = 1e-4
+
+[model]
+path = "audiozen.models.cirm_lstm.modeling_cirm_lstm.Model"
+[model.args]
+n_fft = 256
+hop_length = 64
+win_length = 256
+fdrc = 0.5
+input_size = 129
+hidden_size = 512
+num_layers = 3
+proj_size = 129
+output_activate_function = false
+df_order = 3
+use_pre_layer_norm_fb = true
+bn = true
+shared_weights = true
+sequence_model = "LSTM"
+num_spks = 2
+
+[acoustics]
+n_fft = 256
+hop_length = 64
+win_length = 256
+sr = 8000
+
+
+[train_dataset]
+path = "dataloader.Dataset"
+[train_dataset.args]
+mix_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tr/mix"
+s1_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tr/s1"
+s2_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tr/s2"
+is_train = true
+[train_dataset.dataloader]
+batch_size = 64
+num_workers = 8
+drop_last = true
+pin_memory = true
+
+[validate_dataset]
+path = "dataloader.Dataset"
+[validate_dataset.args]
+mix_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tt/mix"
+s1_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tt/s1"
+s2_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tt/s2"
+is_train = false
+offset = 0
+limit = 200
+[validate_dataset.dataloader]
+batch_size = 1
+num_workers = 1
+
+
+[test_dataset]
+path = "dataloader.Dataset"
+[test_dataset.args]
+mix_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tt/mix"
+s1_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tt/s1"
+s2_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tt/s2"
+is_train = false
+offset = 0
+limit = false
+[test_dataset.dataloader]
+batch_size = 1
+num_workers = 1

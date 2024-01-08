@@ -64,11 +64,10 @@ sr = 8000
 [train_dataset]
 path = "dataloader.Dataset"
 [train_dataset.args]
-mix_scp_or_dir = "/home/xhao/proj/spiking-fullsubnet/recipes/wsj0-mix/spiking_fullsubnet/min_tr_mix_4s.scp"
-s1_scp_or_dir = "/home/xhao/proj/spiking-fullsubnet/recipes/wsj0-mix/spiking_fullsubnet/min_tr_s1_4s.scp"
-s2_scp_or_dir = "/home/xhao/proj/spiking-fullsubnet/recipes/wsj0-mix/spiking_fullsubnet/min_tr_s2_4s.scp"
+mix_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tr/mix"
+s1_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tr/s1"
+s2_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tr/s2"
 is_train = true
-
 [train_dataset.dataloader]
 batch_size = 64
 num_workers = 8
@@ -88,6 +87,7 @@ limit = 200
 batch_size = 1
 num_workers = 1
 
+
 [test_dataset]
 path = "dataloader.Dataset"
 [test_dataset.args]
@@ -95,6 +95,8 @@ mix_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tt/mix"
 s1_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tt/s1"
 s2_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tt/s2"
 is_train = false
+offset = 0
+limit = false
 [test_dataset.dataloader]
 batch_size = 1
 num_workers = 1
