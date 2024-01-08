@@ -23,7 +23,7 @@ accelerate launch run.py -C baseline_m.toml -M train
 ```
 
 ```{note}
-Alternatively, if you don't want to use the CLI tool, you may use explicit arguments to [specify the GPU usage](https://huggingface.co/docs/accelerate/package_reference/cli#accelerate-env). For example: `accelerate launch --multi_gpu --num_processes=6 --gpu_ids 0,1,2,3,4,5 --main_process_port 46524 --main_process_ip 127.0.0.1 run.py -C baseline_m.toml`
+Alternatively, if you don't want to use the CLI config tool, you may use explicit arguments to [specify the GPU usage](https://huggingface.co/docs/accelerate/package_reference/cli#accelerate-env). For example: `accelerate launch --multi_gpu --num_processes=4 --gpu_ids 4,5,6,7 --main_process_port 46524 run.py -C baseline_m.toml` for 4 GPUs.
 ```
 
 You've initiated an experiment. Please note that the following sections, as well as additional pages, may not be optimally structured at the moment, resembling more closely the format of API documentation. This might require some technical proficiency to navigate effectively. Don't worry, we will provide more examples later.
