@@ -239,6 +239,7 @@ def stft(
     hop_length,
     win_length,
     output_type: Literal["mag_phase", "real_imag", "complex"] | None = None,
+    **kwargs,
 ):
     """Wrapper of the official ``torch.stft`` for single-channel and multichannel signals.
 
@@ -249,6 +250,7 @@ def stft(
         hop_length: hop length.
         win_length: hanning window size.
         output_type: "mag_phase", "real_imag", "complex", or None. Defaults to None.
+        kwargs: other arguments for ``torch.stft``.
 
     Returns:
         If the input is single-channel, return the spectrogram with shape of [B, F, T], otherwise [B, C, F, T].
@@ -266,7 +268,16 @@ def stft(
         y = y.reshape(-1, num_samples)
 
     window = torch.hann_window(n_fft, device=y.device)
-    complex_stft = torch.stft(y, n_fft, hop_length, win_length, window=window, return_complex=True)
+    complex_stft = torch.stft(
+        y,
+        n_fft,
+        hop_length,
+        win_length,
+        window=window,
+        return_complex=True,
+        pad_mode="constant",
+        **kwargs,
+    )
 
     # Reshape back to original if the input is multi-channel
     if y.ndim == 3:
