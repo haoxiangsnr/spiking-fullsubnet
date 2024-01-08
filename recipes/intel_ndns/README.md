@@ -1,13 +1,10 @@
 # Intel N-DNS Challenge Track 1
 
-## Dataset
-
+Please follow the [instructions](https://github.com/IntelLabs/IntelNeuromorphicDNSChallenge#dataset) provided by the Intel N-DNS Challenge organizers to download the dataset.
 Here is the data length distribution of the DNS Challenge dataset.
 The bucket denotes the range of the data length in seconds.
 The total counts denote the number of files in the corresponding bucket.
 
-<details>
-<summary> Click to show the data length distribution of the DNS Challenge clean dataset </summary>
 
 ```shell
 # /datasets/datasets_fullband/clean_fullband
@@ -59,79 +56,8 @@ Total number of files: 804132.
 Total duration: 1869 hr 43 min 7.05 s.
 Average duration: 8.37 s.
 ```
-</details>
-
-There are some files with 0 duration. We have filtered them out.
+There are some 0s files. You may need to filter them out.
 
 - `russian_speech/M-AILABS_Speech_Dataset/ru_RU_47hrs_48k/male/minaev/oblomov/wavs/oblomov_s002765.wav` is `[1, 0]`.
 - `russian_speech/M-AILABS_Speech_Dataset/ru_RU_47hrs_48k/male/minaev/oblomov/wavs/oblomov_s003811.wav` is `[1, 0]`.
 - Number of non-mono wav files: 0
-
-### Clean subset
-
-Some audio files have low DNS-MOS score. We have filtered them out by setting the threshold to 4.0.
-At mean time, we have also resampled the audio files to 16k sample rate. Here is the information of the filtered dataset.
-
-```shell
-Found 804125 files in /datasets/datasets_fullband/datasets_fullband_16k/clean_fullband.
-Remove 596912 files out of 804125 files.
-
-821M  =>  8.0K    emotional_speech
-19G   =>  5.2G    french_speech
-84G   =>  13G     german_speech
-9.5G  =>  3.0G    italian_speech
-69G   =>  34G     read_speech
-2.7G  =>  979M    russian_speech
-15G   =>  3.2G    spanish_speech
-4.4G  =>  374M    vctk_wav48_silence_trimmed
-330M  =>  4.0K    VocalSet_48kHz_mono
-```
-
-We saved them to `/datasets/datasets_fullband/datasets_fullband_16k/clean_fullband_mos4_l0.1s`
-
-Also, we use 3.8 as the threshold to filter out the files with low SNR.
-
-```shell
-Removed 364355 files. 439770 files left.
-```
-
-### Training set
-
-Please follow the [instructions](https://github.com/IntelLabs/IntelNeuromorphicDNSChallenge#dataset) provided by the Intel N-DNS Challenge organizers to download the training set. If you can access servers (`10.21.4.69` and `10.21.4.65`) at PolyU, you may directly use the simulated data at `/datasets/datasets_fullband/training_set`.
-
-Note that the original dataset is very large (about 700 GB). We recommend you to download the training set as early as possible.
-
-RIRs in 65 server have been deleted due to the limited storage space. The RIRs in 69 server are still available.
-
-News: we have updated the new training set with the same size as the original one based on the high-quality audio files (with DNS-MOS score > 4.0 `/datasets/datasets_fullband/datasets_fullband_16k/clean_fullband_mos4_l0.1s`). Check here for more details `/datasets/datasets_fullband/training_set_20230728`
-
-
-### Validation set
-
-Please download the validation set from the release page.
-If you can access servers (`10.21.4.69` and `10.21.4.65`) in PolyU, you may directly use the simulated data at `/datasets/datasets_fullband/validation_set`.
-
-## Reference
-
-|                Entry                | <sub>$\text{SI-SNR}$ <sup>(dB) | <sub>$\text{SI-SNRi}$ <sup>data (dB) | <sub>$\text{SI-SNRi}$ <sup>enc+dec (dB) | <sub>$\text{MOS}$ <sup>(ovrl) | <sub>$\text{MOS}$ <sup>(sig) | <sub>$\text{MOS}$ <sup>(bak) | <sub>$\text{latency}$ <sup>enc+dec (ms) | <sub>$\text{latency}$ <sup>total (ms) | <sub>$\text{Power}$ $\text{proxy}$ <sup>(M-Ops/s) | <sub>$\text{PDP}$ $\text{proxy}$ <sup>(M-Ops) | <sub>$\text{Params}$ <sup>($\times 10^3$) | <sub>$\text{Size}$ <sup>(KB) |
-| :---------------------------------: | -----------------------------: | -----------------------------------: | --------------------------------------: | ----------------------------: | ---------------------------: | ---------------------------: | --------------------------------------: | ------------------------------------: | ------------------------------------------------: | --------------------------------------------: | ----------------------------------------: | ---------------------------: |
-|           Validation set            |                           7.62 |                                    - |                                       - |                          2.45 |                         3.19 |                         2.72 |                                       - |                                     - |                                                 - |                                             - |                                         - |                            - |
-|    Microsoft NsNet2 (02/20/2023)    |                          11.89 |                                 4.26 |                                    4.26 |                          2.95 |                         3.27 |                         3.94 |                                   0.024 |                                20.024 |                                            136.13 |                                          2.72 |                                     2,681 |                       10,500 |
-| Intel proprietary DNS (02/28/2023)  |                          12.71 |                                 5.09 |                                    5.09 |                          3.09 |                         3.35 |                         4.08 |                                   0.036 |                                 8.036 |                                                 - |                                             - |                                     1,901 |                        3,802 |
-| Baseline SDNN solution (02/20/2023) |                          12.50 |                                 4.88 |                                    4.88 |                          2.71 |                         3.21 |                         3.46 |                                   0.036 |                                 8.036 |                                             11.59 |                                          0.09 |                                       525 |                          465 |
-
-## Results
-
-|                Entry                | <sub>$\text{SI-SNR}$ <sup>(dB) | <sub>$\text{SI-SNRi}$ <sup>data (dB) | <sub>$\text{SI-SNRi}$ <sup>enc+dec (dB) | <sub>$\text{MOS}$ <sup>(ovrl) | <sub>$\text{MOS}$ <sup>(sig) | <sub>$\text{MOS}$ <sup>(bak) | <sub>$\text{latency}$ <sup>enc+dec (ms) | <sub>$\text{latency}$ <sup>total (ms) | <sub>$\text{Power}$ $\text{proxy}$ <sup>(M-Ops/s) | <sub>$\text{PDP}$ $\text{proxy}$ <sup>(M-Ops) | <sub>$\text{Params}$ <sup>($\times 10^3$) | <sub>$\text{Size}$ <sup>(KB) |
-| :---------------------------------: | -----------------------------: | -----------------------------------: | --------------------------------------: | ----------------------------: | ---------------------------: | ---------------------------: | --------------------------------------: | ------------------------------------: | ------------------------------------------------: | --------------------------------------------: | ----------------------------------------: | ---------------------------: |
-|           Validation set            |                           6.89 |                                    - |                                       - |                          2.54 |                         3.40 |                         2.49 |                                       - |                                     - |                                                 - |                                             - |                                         - |                            - |
-| Baseline SDNN (audiozen on epoch 7) |                          11.17 |                                 4.88 |                                    4.88 |                          2.81 |                         3.43 |                         3.09 |                                   0.036 |                                 8.036 |                                             11.59 |                                          0.09 |                                       525 |                          465 |
-|                 FSB                 |                          17.84 |                                 4.88 |                                    4.88 |                          3.60 |                         3.85 |                         4.27 |                                   0.036 |                                 8.036 |                                             22680 |                                        182.26 |                                      9301 |                              |
-|             FSB (tiny)              |                          16.24 |                                 4.88 |                                    4.88 |                          3.48 |                         3.72 |                         4.23 |                                   0.036 |                                 8.036 |                                            299.84 |                                          2.41 |                                      2451 |                              | 84 |
-
-## Results (polyfit)
-
-|           |    P808 |    OVRL |    SIG |     BAK |  si_sdr |
-| --------: | ------: | ------: | -----: | ------: | ------: |
-|     Noisy | 3.04809 | 2.39574 | 3.0967 | 2.66386 | 6.89017 |
-| FSB + GAN | 3.11288 | 2.65288 | 3.0765 | 3.61572 |   -0.38 |
