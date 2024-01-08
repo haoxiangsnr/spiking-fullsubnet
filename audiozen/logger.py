@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from pathlib import Path
 
 import toml
@@ -54,7 +55,8 @@ def init_logging_logger(config):
     console_handler.setLevel(level=log_level)
 
     # Create a file handler and set the logger level to debug
-    file_handler = logging.FileHandler((log_dir / f"{config['meta']['exp_id']}.log").as_posix())
+    time_now = time.strftime("%Y_%m_%d--%H_%M_%S")
+    file_handler = logging.FileHandler(str(log_dir / f"{config['meta']['exp_id']}_{time_now}.log"))
     file_handler.setLevel(level=log_level)
 
     # Create formatters (file logger have more info)
