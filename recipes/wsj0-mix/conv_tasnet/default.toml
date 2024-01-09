@@ -75,7 +75,7 @@ s1_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tt/s1"
 s2_scp_or_dir = "/datasets/wsj0-mix/2speakers/wav8k/min/tt/s2"
 is_train = false
 offset = 0
-limit = false
+limit = 200
 [test_dataset.dataloader]
 batch_size = 1
 num_workers = 1

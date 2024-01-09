@@ -34,7 +34,7 @@ class Dataset(data.Dataset):
             s1_fpath_list = s1_fpath_list[offset:]
             s2_fpath_list = s2_fpath_list[offset:]
 
-        if limit is not None:
+        if limit > 0:
             mix_fpath_list = mix_fpath_list[:limit]
             s1_fpath_list = s1_fpath_list[:limit]
             s2_fpath_list = s2_fpath_list[:limit]

@@ -4,7 +4,7 @@ description = "Train a model using Generative Adversarial Networks (GANs)"
 seed = 20220815
 
 [trainer]
-path = "trainer_GAN.Trainer"
+path = "trainer_CMGAN.Trainer"
 [trainer.args]
 debug = false
 max_steps = 0

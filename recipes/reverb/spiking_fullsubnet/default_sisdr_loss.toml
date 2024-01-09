@@ -4,17 +4,17 @@ description = "Train a model using Generative Adversarial Networks (GANs)"
 seed = 20220815
 
 [trainer]
-path = "trainer_GAN.Trainer"
+path = "trainer.Trainer"
 [trainer.args]
 debug = false
 max_steps = 0
 max_epochs = 200
 max_grad_norm = 10
 save_max_score = true
-save_ckpt_interval = 1
-max_patience = 20
+save_ckpt_interval = 5
+max_patience = 200
 plot_norm = true
-validation_interval = 1
+validation_interval = 5
 max_num_checkpoints = 20
 scheduler_name = "constant_schedule_with_warmup"
 warmup_steps = 0
@@ -30,13 +30,8 @@ path = "torch.optim.AdamW"
 [optimizer.args]
 lr = 1e-3
 
-[discriminator_optimizer]
-path = "torch.optim.AdamW"
-[discriminator_optimizer.args]
-lr = 1e-3
-
 [model]
-path = "model.SpikingFullSubNet"
+path = "audiozen.models.spiking_fullsubnet.modeling_spiking_fullsubnet.SpikingFullSubNet"
 [model.args]
 n_fft = 512
 hop_length = 128
@@ -58,10 +53,7 @@ use_pre_layer_norm_sb = true
 bn = true
 shared_weights = true
 sequence_model = "GSN"
-
-[discriminator]
-path = "discriminator.Discriminator"
-[discriminator.args]
+num_spks = 1
 
 [acoustics]
 n_fft = 512
@@ -70,32 +62,42 @@ win_length = 512
 sr = 16000
 
 [train_dataset]
-path = "dataloader.DNSAudio"
+path = "dataloader.SimTrainDataset"
 [train_dataset.args]
-root = "/datasets/datasets_fullband/training_set/"
-limit = false
-offset = 0
-
+rvb_scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/tr_simu_1ch.scp"
+dry_scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/tr_cln.scp"
+duration_in_seconds = 4.0
+sr = 16000
 [train_dataset.dataloader]
-batch_size = 64
+batch_size = 32
 num_workers = 8
 drop_last = true
 pin_memory = true
 
 [validate_dataset]
-path = "dataloader.DNSAudio"
+path = "dataloader.SimDTDataset"
 [validate_dataset.args]
-root = "/datasets/datasets_fullband/validation_set/"
-train = false
+rvb_scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/et_simu_1ch.scp"
+dry_scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/et_cln.scp"
+sr = 16000
+limit = 200
+offset = 0
 [validate_dataset.dataloader]
-batch_size = 16
-num_workers = 8
+batch_size = 1
+num_workers = 1
 
-[test_dataset]
-path = "dataloader.DNSAudio"
+[[test_dataset]]
+path = "dataloader.EvaluationSimDataset"
 [test_dataset.args]
-root = "/datasets/IntelNeuromorphicDNSChallenge-latest/data/MicrosoftDNS_4_ICASSP/test_set_1/"
-train = false
+scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/et_simu_1ch.scp"
 [test_dataset.dataloader]
-batch_size = 24
-num_workers = 8
+batch_size = 1
+num_workers = 1
+
+[[test_dataset]]
+path = "dataloader.EvaluationRealDataset"
+[test_dataset.args]
+scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/et_real_1ch.scp"
+[test_dataset.dataloader]
+batch_size = 1
+num_workers = 1

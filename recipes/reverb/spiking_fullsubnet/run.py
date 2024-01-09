@@ -1,4 +1,5 @@
 import argparse
+from math import sqrt
 from pathlib import Path
 
 import toml
@@ -13,7 +14,7 @@ from audiozen.utils import instantiate
 def run(config, resume):
     init_logging_logger(config)
 
-    ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
+    ddp_kwargs = DistributedDataParallelKwargs(find_unused_parameters=False)
     accelerator = Accelerator(
         gradient_accumulation_steps=config["trainer"]["args"]["gradient_accumulation_steps"],
         kwargs_handlers=[ddp_kwargs],
@@ -22,15 +23,12 @@ def run(config, resume):
     set_seed(config["meta"]["seed"], device_specific=True)
 
     model = instantiate(config["model"]["path"], args=config["model"]["args"])
-    discriminator = instantiate(config["discriminator"]["path"], args=config["discriminator"]["args"])
 
     optimizer = instantiate(
-        config["optimizer"]["path"], args={"params": model.parameters()} | config["optimizer"]["args"]
-    )
-
-    discriminator_optimizer = instantiate(
-        config["discriminator_optimizer"]["path"],
-        args={"params": discriminator.parameters()} | config["discriminator_optimizer"]["args"],
+        config["optimizer"]["path"],
+        args={"params": model.parameters()}
+        | config["optimizer"]["args"]
+        | {"lr": config["optimizer"]["args"]["lr"] * sqrt(accelerator.num_processes)},
     )
 
     loss_function = instantiate(
@@ -38,9 +36,7 @@ def run(config, resume):
         args=config["loss_function"]["args"],
     )
 
-    (model, optimizer, discriminator, discriminator_optimizer) = accelerator.prepare(
-        model, optimizer, discriminator, discriminator_optimizer
-    )
+    (model, optimizer) = accelerator.prepare(model, optimizer)
 
     if "train" in args.mode:
         train_dataset = instantiate(config["train_dataset"]["path"], args=config["train_dataset"]["args"])
@@ -66,7 +62,7 @@ def run(config, resume):
                 )
             )
 
-    if "test" in args.mode:
+    if "test" in args.mode or "predict" in args.mode:
         if not isinstance(config["test_dataset"], list):
             config["test_dataset"] = [config["test_dataset"]]
 
@@ -89,8 +85,6 @@ def run(config, resume):
         resume=resume,
         model=model,
         optimizer=optimizer,
-        discriminator=discriminator,
-        discriminator_optimizer=discriminator_optimizer,
         loss_function=loss_function,
     )
 
@@ -102,7 +96,7 @@ def run(config, resume):
         elif flag == "test":
             trainer.test(test_dataloaders, config["meta"]["ckpt_path"])
         elif flag == "predict":
-            raise NotImplementedError("Predict is not implemented yet.")
+            trainer.predict(test_dataloaders, config["meta"]["ckpt_path"])
         elif flag == "finetune":
             raise NotImplementedError("Finetune is not implemented yet.")
         else:
@@ -136,7 +130,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ckpt_path",
         type=str,
-        default=None,
+        default="latest",
         help="Checkpoint path for test. It can be 'best', 'latest', or a path to a checkpoint.",
     )
 
@@ -148,7 +142,7 @@ if __name__ == "__main__":
     config["meta"]["exp_id"] = config_path.stem
     config["meta"]["config_path"] = config_path.as_posix()
 
-    if "test" in args.mode:
+    if "test" in args.mode or "predict" in args.mode:
         if args.ckpt_path is None:
             raise ValueError("checkpoint path is required for test. Use '--ckpt_path'.")
         else:

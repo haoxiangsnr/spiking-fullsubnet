@@ -30,7 +30,9 @@ def run(config, resume):
 
     discriminator_optimizer = instantiate(
         config["discriminator_optimizer"]["path"],
-        args={"params": discriminator.parameters()} | config["discriminator_optimizer"]["args"],
+        args={"params": discriminator.parameters()}
+        | config["discriminator_optimizer"]["args"]
+        | {"lr": 2 * config["discriminator_optimizer"]["args"]["lr"]},
     )
 
     loss_function = instantiate(

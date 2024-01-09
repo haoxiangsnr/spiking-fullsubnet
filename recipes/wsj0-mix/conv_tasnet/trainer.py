@@ -55,8 +55,26 @@ class Trainer(BaseTrainer):
         # compute metrics
         si_sdr = self.si_sdr(est_y, ref_y)
         dns_mos = self.dns_mos(est_y)
+        nb_pesq = self.pesq_nb(est_y, ref_y)
 
-        out = si_sdr | dns_mos
+        mix_y = torch.stack([mix_y, mix_y], dim=0)
+        si_sdr_mix = self.si_sdr(mix_y, ref_y)
+        si_sdr_mix["si_sdr_mix"] = si_sdr_mix["si_sdr"]
+        del si_sdr_mix["si_sdr"]
+
+        dns_mos_mix = self.dns_mos(mix_y)
+        dns_mos_mix["OVRL_mix"] = dns_mos_mix["OVRL"]
+        del dns_mos_mix["OVRL"]
+        dns_mos_mix["SIG_mix"] = dns_mos_mix["SIG"]
+        del dns_mos_mix["SIG"]
+        dns_mos_mix["BAK_mix"] = dns_mos_mix["BAK"]
+        del dns_mos_mix["BAK"]
+
+        nb_pesq_mix = self.pesq_nb(mix_y, ref_y)
+        nb_pesq_mix["nb_pesq_mix"] = nb_pesq_mix["pesq_nb"]
+        del nb_pesq_mix["pesq_nb"]
+
+        out = si_sdr | dns_mos | nb_pesq | si_sdr_mix | dns_mos_mix | nb_pesq_mix
         return [out]
 
     def validation_epoch_end(self, outputs):

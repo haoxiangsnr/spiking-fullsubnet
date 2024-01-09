@@ -4,7 +4,7 @@ from accelerate.logging import get_logger
 from tqdm import tqdm
 
 from audiozen.loss import SISNRLoss, freq_MAE, mag_MAE
-from audiozen.metric import DNSMOS, PESQ, SISDR, STOI, IntelSISNR
+from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
 from audiozen.trainer import Trainer as BaseTrainer
 
 logger = get_logger(__name__)
@@ -18,7 +18,6 @@ class Trainer(BaseTrainer):
         self.pesq_wb = PESQ(sr=self.sr, mode="wb")
         self.pesq_nb = PESQ(sr=self.sr, mode="nb")
         self.si_sdr = SISDR()
-        self.intel_si_snr = IntelSISNR()
         self.sisnr_loss = SISNRLoss()
 
     def training_step(self, batch, batch_idx):
@@ -88,10 +87,9 @@ class Trainer(BaseTrainer):
         noisy, clean, enhanced = step_out
 
         si_sdr = self.si_sdr(enhanced, clean)
-        intel_si_snr = self.intel_si_snr(enhanced, clean)
         dns_mos = self.dns_mos(enhanced)
 
-        return si_sdr | intel_si_snr | dns_mos
+        return si_sdr | dns_mos
 
     def compute_batch_metrics(self, dataloader_idx, step_out):
         noisy, clean, enhanced = step_out

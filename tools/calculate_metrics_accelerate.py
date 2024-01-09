@@ -4,11 +4,10 @@ import librosa
 import numpy as np
 import pandas as pd
 import torch
-from accelerate import Accelerator, PartialState
-from regex import P
+from accelerate import Accelerator
 from tqdm import tqdm
 
-from audiozen.metric import DNSMOS, SISDR, IntelSISNR
+from audiozen.metric import DNSMOS, IntelSISNR
 
 
 class TestDataset(torch.utils.data.Dataset):
@@ -47,9 +46,7 @@ class TestDataset(torch.utils.data.Dataset):
         if len(clean_wav) > num_samples:
             clean_wav = clean_wav[:num_samples]
         else:
-            clean_wav = np.concatenate(
-                [clean_wav, np.zeros(num_samples - len(clean_wav))]
-            )
+            clean_wav = np.concatenate([clean_wav, np.zeros(num_samples - len(clean_wav))])
 
         return enh_wav, clean_wav
 

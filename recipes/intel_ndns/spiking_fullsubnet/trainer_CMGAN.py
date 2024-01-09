@@ -10,7 +10,7 @@ from tqdm.auto import tqdm
 
 from audiozen.acoustics.audio_feature import save_wav
 from audiozen.loss import SISNRLoss, freq_MAE, mag_MAE
-from audiozen.metric import DNSMOS, PESQ, SISDR, STOI, compute_neuronops, compute_synops
+from audiozen.metric import DNSMOS, PESQ, SISDR, STOI, IntelSISNR, compute_neuronops, compute_synops
 from audiozen.trainer import Trainer as BaseTrainer
 
 logger = get_logger(__name__)
@@ -44,6 +44,7 @@ class Trainer(BaseTrainer):
         self.pesq_wb = PESQ(sr=self.sr, mode="wb")
         self.pesq_nb = PESQ(sr=self.sr, mode="nb")
         self.si_sdr = SISDR()
+        self.intel_si_snr = IntelSISNR()
         self.sisnr_loss = SISNRLoss()
 
     def create_schedulers(self, max_steps: int):
@@ -119,11 +120,20 @@ class Trainer(BaseTrainer):
         # )
 
         pred_fake = self.discriminator(clean_mag, enhanced_mag)  # [B, 1]
-        loss_g_fake = 0.05 * F.mse_loss(pred_fake, one_labels)
-        loss_freq_mae = freq_MAE(enhanced_y, clean_y)
-        loss_mag_mae = mag_MAE(enhanced_y, clean_y)
-        loss_sdr = 0.001 * (100 - self.sisnr_loss(enhanced_y, clean_y))
-        loss_g = loss_freq_mae + loss_mag_mae + loss_g_fake + loss_sdr
+
+        loss_g_fake = F.mse_loss(pred_fake, one_labels)
+        loss_mag_mae = mag_MAE(enhanced_y, clean_y, win=self.win_length, stride=self.hop_length)
+        loss_freq_mae = freq_MAE(enhanced_y, clean_y, win=self.win_length, stride=self.hop_length)
+        loss_time_mae = F.l1_loss(enhanced_y, clean_y)
+
+        # Apply loss weights
+        loss_weights = [0.1, 0.9, 0.2, 0.05]
+        loss_freq_mae = loss_freq_mae * loss_weights[0]
+        loss_mag_mae = loss_mag_mae * loss_weights[1]
+        loss_time_mae = loss_time_mae * loss_weights[2]
+        loss_g_fake = loss_g_fake * loss_weights[3]
+
+        loss_g = loss_freq_mae + loss_mag_mae + loss_time_mae + loss_g_fake
 
         self.accelerator.backward(loss_g)
         self.optimizer.step()
@@ -145,7 +155,7 @@ class Trainer(BaseTrainer):
             "loss_g": loss_g.item(),
             "loss_freq_mae": loss_freq_mae.item(),
             "loss_mag_mae": loss_mag_mae.item(),
-            "loss_sdr": loss_sdr.item(),
+            "loss_time_mae": loss_time_mae.item(),
             "loss_g_fake": loss_g_fake.item(),
             "loss_d": loss_d.item(),
             "loss_d_real": loss_d_real.item(),
@@ -193,9 +203,10 @@ class Trainer(BaseTrainer):
         noisy, clean, enhanced = step_out
 
         si_sdr = self.si_sdr(enhanced, clean)
+        intel_si_snr = self.intel_si_snr(enhanced, clean)
         dns_mos = self.dns_mos(enhanced)
 
-        return si_sdr | dns_mos
+        return si_sdr | intel_si_snr | dns_mos
 
     def compute_batch_metrics(self, dataloader_idx, step_out):
         noisy, clean, enhanced = step_out

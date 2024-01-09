@@ -52,8 +52,9 @@ class Trainer(BaseTrainer):
         # compute metrics
         si_sdr = self.si_sdr(est_y, ref_y)
         dns_mos = self.dns_mos(est_y)
+        pesq_nb = self.pesq_nb(est_y, ref_y)
 
-        out = si_sdr | dns_mos
+        out = si_sdr | dns_mos | pesq_nb
         return [out]
 
     def validation_epoch_end(self, outputs):

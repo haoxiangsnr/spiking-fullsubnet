@@ -88,7 +88,14 @@ class Trainer:
 
         if self.accelerator.is_local_main_process:
             prepare_empty_dir(
-                [self.save_dir, self.exp_dir, self.checkpoints_dir, self.tb_log_dir, self.enhanced_dir, self.metrics_dir],
+                [
+                    self.save_dir,
+                    self.exp_dir,
+                    self.checkpoints_dir,
+                    self.tb_log_dir,
+                    self.enhanced_dir,
+                    self.metrics_dir,
+                ],
                 resume=resume,
             )
 
@@ -548,31 +555,32 @@ class Trainer:
         """Predict.
 
         Notes:
-            In predict, there are no labels available, only the model inputs, meaning prediction isn't used for evaluation.
+            In predict, there are no labels available, only the model inputs.
 
         Args:
             dataloaders: the dataloader(s) to predict.
             ckpt_path: the checkpoint path to load the model weights from.
         """
-        if self.rank == 0:
-            logger.info(f"Begin predicting...")
+        logger.info(f"Begin predicting...")
 
-            self.set_models_to_eval_mode()
+        if not isinstance(dataloaders, list):
+            dataloaders = [dataloaders]
 
-            if not isinstance(dataloaders, list):
-                dataloaders = [dataloaders]
+        self._load_checkpoint(ckpt_path)
 
-            self._load_checkpoint(ckpt_path)
+        self.set_models_to_eval_mode()
 
-            for dataloader_idx, dataloader in enumerate(dataloaders):
-                for batch_idx, batch in enumerate(
-                    tqdm(
-                        dataloader,
-                        desc=f"Inference on dataloader {dataloader_idx}",
-                        bar_format="{l_bar}{r_bar}",
-                    )
-                ):
-                    self.predict_step(batch, batch_idx, dataloader_idx)
+        for dataloader_idx, dataloader in enumerate(dataloaders):
+            for batch_idx, batch in enumerate(
+                tqdm(
+                    dataloader,
+                    desc=f"Predicting on dataloader {dataloader_idx}",
+                    bar_format="{l_bar}{r_bar}",
+                    dynamic_ncols=True,
+                    disable=not self.accelerator.is_local_main_process,
+                )
+            ):
+                self.predict_step(batch, batch_idx, dataloader_idx)
 
     def _check_improvement(self, score, save_max_score=True):
         """Check if the current model got the best metric score"""

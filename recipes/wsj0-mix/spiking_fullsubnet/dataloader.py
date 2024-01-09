@@ -10,7 +10,7 @@ from audiozen.acoustics.io import subsample
 
 class Dataset(data.Dataset):
     def __init__(
-        self, mix_scp_or_dir, s1_scp_or_dir, s2_scp_or_dir, sr=8000, duration=4, is_train=True, limit=None, offset=0
+        self, mix_scp_or_dir, s1_scp_or_dir, s2_scp_or_dir, sr=8000, duration=4, is_train=True, limit=-1, offset=0
     ):
         super().__init__()
         mix_scp_or_dir = Path(mix_scp_or_dir).expanduser().resolve()
@@ -34,7 +34,7 @@ class Dataset(data.Dataset):
             s1_fpath_list = s1_fpath_list[offset:]
             s2_fpath_list = s2_fpath_list[offset:]
 
-        if limit is not None:
+        if limit > 0:
             mix_fpath_list = mix_fpath_list[:limit]
             s1_fpath_list = s1_fpath_list[:limit]
             s2_fpath_list = s2_fpath_list[:limit]
