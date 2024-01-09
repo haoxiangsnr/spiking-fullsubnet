@@ -1,4 +1,5 @@
 import argparse
+from math import sqrt
 from pathlib import Path
 
 import toml
@@ -25,7 +26,9 @@ def run(config, resume):
 
     optimizer = instantiate(
         config["optimizer"]["path"],
-        args={"params": model.parameters()} | config["optimizer"]["args"],
+        args={"params": model.parameters()}
+        | config["optimizer"]["args"]
+        | {"lr": config["optimizer"]["args"]["lr"] * sqrt(accelerator.num_processes)},
     )
 
     loss_function = instantiate(

@@ -1,4 +1,5 @@
 import argparse
+from math import sqrt
 from pathlib import Path
 
 import toml
@@ -25,12 +26,17 @@ def run(config, resume):
     discriminator = instantiate(config["discriminator"]["path"], args=config["discriminator"]["args"])
 
     optimizer = instantiate(
-        config["optimizer"]["path"], args={"params": model.parameters()} | config["optimizer"]["args"]
+        config["optimizer"]["path"],
+        args={"params": model.parameters()}
+        | config["optimizer"]["args"]
+        | {"lr": config["optimizer"]["args"]["lr"] * sqrt(accelerator.num_processes)},
     )
 
     discriminator_optimizer = instantiate(
         config["discriminator_optimizer"]["path"],
-        args={"params": discriminator.parameters()} | config["discriminator_optimizer"]["args"],
+        args={"params": discriminator.parameters()}
+        | config["discriminator_optimizer"]["args"]
+        | {"lr": config["discriminator_optimizer"]["args"]["lr"] * sqrt(accelerator.num_processes)},
     )
 
     loss_function = instantiate(
