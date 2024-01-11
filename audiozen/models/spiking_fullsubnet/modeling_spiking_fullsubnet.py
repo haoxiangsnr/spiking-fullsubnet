@@ -420,7 +420,7 @@ class SpikingFullSubNet(nn.Module):
                 Waveform tensor.
 
         Returns:
-            output (`torch.Tensor` of shape `(batch_size, num_freq, sequence_length)`):
+            output (`torch.Tensor` of shape `(batch_size, sequence_length) or `(batch_size, num_spks, sequence_length)`):
                 Output tensor.
         """
         assert input.ndim == 2, f"Input tensor must be 2D, but got {input.ndim}D."

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torch.nn.utils import weight_norm
+from torch.nn.utils.parametrizations import weight_norm
 
 from audiozen.constant import EPSILON
 
@@ -15,9 +15,7 @@ class Chomp1d(nn.Module):
 
 
 class TemporalBlock(nn.Module):
-    def __init__(
-        self, n_inputs, n_outputs, kernel_size, stride, dilation, padding, dropout=0.2
-    ):
+    def __init__(self, n_inputs, n_outputs, kernel_size, stride, dilation, padding, dropout=0.2):
         super(TemporalBlock, self).__init__()
         self.conv1 = weight_norm(
             nn.Conv1d(
@@ -58,11 +56,7 @@ class TemporalBlock(nn.Module):
             self.dropout2,
         )
 
-        self.downsample = (
-            nn.Conv1d(n_inputs, n_outputs, kernel_size=1)
-            if n_inputs != n_outputs
-            else None
-        )
+        self.downsample = nn.Conv1d(n_inputs, n_outputs, kernel_size=1) if n_inputs != n_outputs else None
         self.relu = nn.ReLU()
         self.init_weights()
 
@@ -277,11 +271,7 @@ class TCNBlock(nn.Module):
         self.conv1x1 = nn.Conv1d(in_channels, hidden_channel, 1)
         self.prelu1 = nn.PReLU()
         self.norm1 = nn.GroupNorm(1, hidden_channel, eps=EPSILON)
-        padding = (
-            (dilation * (kernel_size - 1)) // 2
-            if not causal
-            else (dilation * (kernel_size - 1))
-        )
+        padding = (dilation * (kernel_size - 1)) // 2 if not causal else (dilation * (kernel_size - 1))
         self.depthwise_conv = nn.Conv1d(
             hidden_channel,
             hidden_channel,
@@ -348,11 +338,7 @@ class STCNBlock(nn.Module):
         self.conv1x1 = nn.Conv1d(in_channels, hidden_channel, 1)
         self.prelu1 = nn.PReLU()
         self.norm1 = nn.GroupNorm(1, hidden_channel, eps=EPSILON)
-        padding = (
-            (dilation * (kernel_size - 1)) // 2
-            if not causal
-            else (dilation * (kernel_size - 1))
-        )
+        padding = (dilation * (kernel_size - 1)) // 2 if not causal else (dilation * (kernel_size - 1))
         self.depthwise_conv = nn.Conv1d(
             hidden_channel,
             hidden_channel,
