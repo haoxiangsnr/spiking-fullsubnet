@@ -5,7 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from base_model import BaseModel, SequenceModel
 from einops import rearrange
-from torch import nn
 from torch.nn import functional
 
 from audiozen.acoustics.audio_feature import istft, stft
@@ -31,9 +30,7 @@ def deepfiltering(complex_spec, coefs, frame_size: int):
         complex_spec = complex_spec.unsqueeze(-1)  # [B, C, F, T, 1]
 
     complex_coefs = torch.complex(coefs[..., 0], coefs[..., 1])  # [B, C, F, T]
-    complex_coefs = rearrange(
-        complex_coefs, "b (c df) f t -> b c df f t", df=frame_size
-    )
+    complex_coefs = rearrange(complex_coefs, "b (c df) f t -> b c df f t", df=frame_size)
 
     # df
     out = torch.einsum("...ftn,...nft->...ft", complex_spec, complex_coefs)
@@ -136,9 +133,7 @@ class SubbandProcessor(BaseModel):
                 )
             )
 
-            self.linear_out_layers.append(
-                LinearWrapper(bottleneck_size, sb_ctr_freq * 2 * sb_df_order)
-            )
+            self.linear_out_layers.append(LinearWrapper(bottleneck_size, sb_ctr_freq * 2 * sb_df_order))
 
         self.linear_in_layers = nn.ModuleList(self.linear_in_layers)
         self.linear_out_layers = nn.ModuleList(self.linear_out_layers)
@@ -209,9 +204,7 @@ class SubbandProcessor(BaseModel):
 
         elif upper_cutoff_freq == num_freqs:
             # lower = lower_cutoff_freq - num_neighbor_freqs, upper = num_freqs
-            valid_input = input[
-                ..., lower_cutoff_freq - num_neighbor_freqs : num_freqs, :
-            ]
+            valid_input = input[..., lower_cutoff_freq - num_neighbor_freqs : num_freqs, :]
 
             valid_input = functional.pad(
                 input=valid_input,
@@ -222,9 +215,7 @@ class SubbandProcessor(BaseModel):
             # lower = lower_cutoff_freq - num_neighbor_freqs, upper = upper_cutoff_freq + num_neighbor_freqs
             valid_input = input[
                 ...,
-                lower_cutoff_freq
-                - num_neighbor_freqs : upper_cutoff_freq
-                + num_neighbor_freqs,
+                lower_cutoff_freq - num_neighbor_freqs : upper_cutoff_freq + num_neighbor_freqs,
                 :,
             ]
 
@@ -266,7 +257,6 @@ class SubbandProcessor(BaseModel):
 
         standard_sb_inputs = []
         lower_cutoff_freq = 0
-        subband_sizes = []
         for ln_idx, ln_layer in enumerate(self.linear_in_layers):
             upper_cutoff_freq = lower_cutoff_freq + self.freq_cutoffs[ln_idx]
 
@@ -293,9 +283,7 @@ class SubbandProcessor(BaseModel):
             sb_input = rearrange(sb_input, "b n c f t -> b n (c f) t")
             sb_input = self.norm(sb_input)
             standard_sb_input = ln_layer(sb_input)
-            standard_sb_input = rearrange(
-                standard_sb_input, "b n (c f) t -> b n c f t", c=2
-            )
+            standard_sb_input = rearrange(standard_sb_input, "b n (c f) t -> b n c f t", c=2)
             standard_sb_inputs.append(standard_sb_input)
             lower_cutoff_freq = upper_cutoff_freq
 
@@ -414,12 +402,8 @@ class Model(BaseModel):
         for df_coefs, df_order in zip(df_coefs_list, self.sb_df_orders):
             # [B, C, F , T] = [B, C, F, ]
             num_sub_freqs = df_coefs.shape[2]
-            complex_stft_in = noisy_stft[
-                ..., num_filtered : num_filtered + num_sub_freqs, :
-            ]
-            enhanced_subband = deepfiltering(
-                complex_stft_in, df_coefs, frame_size=df_order
-            )  # [B, 1, F, T] of complex
+            complex_stft_in = noisy_stft[..., num_filtered : num_filtered + num_sub_freqs, :]
+            enhanced_subband = deepfiltering(complex_stft_in, df_coefs, frame_size=df_order)  # [B, 1, F, T] of complex
             enhanced_spec_list.append(enhanced_subband)
             num_filtered += num_sub_freqs
 
@@ -447,7 +431,6 @@ class Model(BaseModel):
 
 if __name__ == "__main__":
     import toml
-    from torchinfo import summary
 
     from audiozen.metric import compute_synops
 

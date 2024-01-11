@@ -8,6 +8,7 @@ import pandas as pd
 import requests
 import soundfile as sf
 
+
 WACC_SERVICE_URL = "https://wacc.azurewebsites.net/api/TriggerEvaluation?code=K2XN7ouruRN/2k1HNyS79ET39rEMZ9jOOCnFtodPDj42WJFjG9LWXg=="
 SUPPORTED_SAMPLING_RATE = 16000
 TRANSCRIPTIONS_FILE = "DNSChallenge4_devtest.tsv"
@@ -26,9 +27,7 @@ def main(args):
             # print(
             #     "Only sampling rate of 16000 is supported as of now so resampling audio"
             # )
-            audio = librosa.core.resample(
-                original_audio, orig_sr=fs, target_sr=SUPPORTED_SAMPLING_RATE
-            )
+            audio = librosa.core.resample(original_audio, orig_sr=fs, target_sr=SUPPORTED_SAMPLING_RATE)
             sf.write(fpath, audio, SUPPORTED_SAMPLING_RATE)
 
         try:
@@ -36,7 +35,7 @@ def main(args):
                 resp = requests.post(WACC_SERVICE_URL, files={"audiodata": f})
             wacc = resp.json()
             print(wacc)
-        except:
+        finally:
             print("Error occured during scoring")
             print("response is ", resp)
         sf.write(fpath, original_audio, fs)

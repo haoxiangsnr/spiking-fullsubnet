@@ -6,7 +6,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from efficient_spiking_neuron import MemoryState, efficient_spiking_neuron
 from einops import rearrange
-from torch import nn
 from torch.nn import functional
 
 from audiozen.acoustics.audio_feature import istft, stft
@@ -33,9 +32,7 @@ def deepfiltering(complex_spec, coefs, frame_size: int):
         complex_spec = complex_spec.unsqueeze(-1)  # [B, C, F, T, 1]
 
     complex_coefs = torch.complex(coefs[..., 0], coefs[..., 1])  # [B, C, F, T]
-    complex_coefs = rearrange(
-        complex_coefs, "b (c df) f t -> b c df f t", df=frame_size
-    )
+    complex_coefs = rearrange(complex_coefs, "b (c df) f t -> b c df f t", df=frame_size)
 
     # df
     out = torch.einsum("...ftn,...nft->...ft", complex_spec, complex_coefs)
@@ -92,9 +89,7 @@ class SequenceModel(nn.Module):
             elif output_activate_function == "PReLU":
                 self.activate_function = nn.PReLU()
             else:
-                raise NotImplementedError(
-                    f"Not implemented activation function {self.activate_function}"
-                )
+                raise NotImplementedError(f"Not implemented activation function {self.activate_function}")
 
         self.output_activate_function = output_activate_function
         self.output_size = output_size
@@ -399,9 +394,7 @@ class SubbandModel(BaseModel):
 
         elif upper_cutoff_freq == num_freqs:
             # lower = lower_cutoff_freq - num_neighbor_freqs, upper = num_freqs
-            valid_input = input[
-                ..., lower_cutoff_freq - num_neighbor_freqs : num_freqs, :
-            ]
+            valid_input = input[..., lower_cutoff_freq - num_neighbor_freqs : num_freqs, :]
 
             valid_input = functional.pad(
                 input=valid_input,
@@ -412,9 +405,7 @@ class SubbandModel(BaseModel):
             # lower = lower_cutoff_freq - num_neighbor_freqs, upper = upper_cutoff_freq + num_neighbor_freqs
             valid_input = input[
                 ...,
-                lower_cutoff_freq
-                - num_neighbor_freqs : upper_cutoff_freq
-                + num_neighbor_freqs,
+                lower_cutoff_freq - num_neighbor_freqs : upper_cutoff_freq + num_neighbor_freqs,
                 :,
             ]
 
@@ -493,9 +484,7 @@ class SubbandModel(BaseModel):
             subband_output.append(sb_model_output)
             subband_all_layer_outputs.append(sb_all_layer_outputs)
 
-            print(
-                f"bottleneck_{sb_idx}: {(after_sb_norm - start_sb) / (16000 / 128) * 1000}ms"
-            )
+            print(f"bottleneck_{sb_idx}: {(after_sb_norm - start_sb) / (16000 / 128) * 1000}ms")
 
         # [B, C, F, T]
         # output = torch.cat(subband_output, dim=-2)
@@ -583,9 +572,7 @@ class Separator(BaseModel):
         assert ndim in (2, 3), "Input must be 2D (B, T) or 3D tensor (B, 1, T)"
 
         if ndim == 3:
-            assert (
-                noisy_y.size(1) == 1
-            ), "Input must be 2D (B, T) or 3D tensor (B, 1, T)"
+            assert noisy_y.size(1) == 1, "Input must be 2D (B, T) or 3D tensor (B, 1, T)"
             noisy_y = noisy_y.squeeze(1)
 
         start = time.time()
@@ -623,12 +610,8 @@ class Separator(BaseModel):
         for df_coefs, df_order in zip(df_coefs_list, self.sb_df_orders):
             # [B, C, F , T] = [B, C, F, ]
             num_sub_freqs = df_coefs.shape[2]
-            complex_stft_in = complex_stft[
-                ..., num_filtered : num_filtered + num_sub_freqs, :
-            ]
-            enhanced_subband = deepfiltering(
-                complex_stft_in, df_coefs, frame_size=df_order
-            )  # [B, 1, F, T] of complex
+            complex_stft_in = complex_stft[..., num_filtered : num_filtered + num_sub_freqs, :]
+            enhanced_subband = deepfiltering(complex_stft_in, df_coefs, frame_size=df_order)  # [B, 1, F, T] of complex
             enhanced_spec_list.append(enhanced_subband)
             num_filtered += num_sub_freqs
 
@@ -661,7 +644,6 @@ class Separator(BaseModel):
 
 if __name__ == "__main__":
     import toml
-    from torchinfo import summary
 
     from audiozen.metric import compute_synops
 

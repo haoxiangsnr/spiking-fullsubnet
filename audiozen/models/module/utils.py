@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 import torch
-import torch_complex.functional as FC
+
 
 EPS = torch.as_tensor(torch.finfo(torch.get_default_dtype()).eps)
 PI = math.pi
@@ -89,17 +89,11 @@ def vector_to_Hermitian(vec):
     tril = (triu2[1], triu2[0])  # below main diagonal; for symmetry
     mat[(...,) + triu + (np.zeros(triu[0].shape[0]),)] = vec[..., : triu[0].shape[0]]
     start = triu[0].shape[0]
-    mat[(...,) + tril + (np.zeros(tril[0].shape[0]),)] = mat[
-        (...,) + triu2 + (np.zeros(triu2[0].shape[0]),)
-    ]
+    mat[(...,) + tril + (np.zeros(tril[0].shape[0]),)] = mat[(...,) + triu2 + (np.zeros(triu2[0].shape[0]),)]
 
     # imaginary component
-    mat[(...,) + triu2 + (np.ones(triu2[0].shape[0]),)] = vec[
-        ..., start : start + triu2[0].shape[0]
-    ]
-    mat[(...,) + tril + (np.ones(tril[0].shape[0]),)] = -mat[
-        (...,) + triu2 + (np.ones(triu2[0].shape[0]),)
-    ]
+    mat[(...,) + triu2 + (np.ones(triu2[0].shape[0]),)] = vec[..., start : start + triu2[0].shape[0]]
+    mat[(...,) + tril + (np.ones(tril[0].shape[0]),)] = -mat[(...,) + triu2 + (np.ones(triu2[0].shape[0]),)]
 
     return mat
 
@@ -130,36 +124,6 @@ def get_mvdr(gammax, Phi):
     return complex_tensor_division(b, denom[..., None, :] + EPS)
 
 
-def get_multi_frame_mvdr_vector(
-    gamma_x, phi_n, use_torch_solver: bool = True, eps: float = EPS
-):
-    """
-    Compute conventional MF-MVDR filter.
-
-    Args:
-        gamma_x (ComplexTensor): speech inter-frame vector
-        phi_n (ComplexTensor): noise correlation matrix
-        use_torch_solver (bool): whether to use `solve` instead of `inverse`
-        eps (float)
-
-    Returns:
-        beamforming_vector (ComplexTensor): (..., L, N)
-
-    Shape:
-        gamma_x: [B, F, T, N]
-        phi_n: [B, F, T, N, N]
-        beamforming_vector: [B, F, T, N]
-    """
-    if use_torch_solver:
-        numerator = FC.solve(gamma_x.unsqueeze(-1), phi_n)[0].squeeze(-1)
-    else:
-        numerator = FC.matmul(phi_n.inverse2(), gamma_x.unsqueeze(-1)).squeeze(-1)
-
-    denominator = FC.einsum("...d,...d->...", [gamma_x.conj(), numerator])
-
-    return numerator / (denominator.real.unsqueeze(-1) + eps)
-
-
 def complex_solve_matrix_vector(A, b):
     """
     solves a complex system of linear equations
@@ -173,9 +137,7 @@ def complex_solve_matrix_vector(A, b):
         dim=-2,
     )
     b_big = torch.cat((b[..., 0], b[..., 1]), dim=-1)
-    x_big = torch.solve(b_big[..., None], A_big)[0][
-        ..., 0
-    ]  # ignore singleton dimension
+    x_big = torch.solve(b_big[..., None], A_big)[0][..., 0]  # ignore singleton dimension
     length = int(x_big.shape[-1] / 2)
     return torch.stack((x_big[..., :length], x_big[..., length:]), dim=-1)
 
@@ -234,14 +196,7 @@ def filter_minimum_gain_like(G_min, w, y, alpha=None, k=10.0):
 
 def minimum_gain_like(G_min, Y, filtered_input, alpha=None, k=10.0):
     if alpha is None:
-        alpha = 1.0 / (
-            1.0
-            + torch.exp(
-                -2
-                * k
-                * (complex_tensor_abs(filtered_input) - complex_tensor_abs(G_min * Y))
-            )
-        )
+        alpha = 1.0 / (1.0 + torch.exp(-2 * k * (complex_tensor_abs(filtered_input) - complex_tensor_abs(G_min * Y))))
         alpha = alpha[..., None]
         return_alpha = True
     else:
@@ -292,25 +247,19 @@ def complex_tensor_conj(t: torch.Tensor) -> torch.Tensor:
 
 
 @torch.jit.script
-def complex_tensor_matrix_vector_product(
-    matrix: torch.Tensor, vector: torch.Tensor
-) -> torch.Tensor:
+def complex_tensor_matrix_vector_product(matrix: torch.Tensor, vector: torch.Tensor) -> torch.Tensor:
     """perform multiplication of complex tensor matrix and vector with real and imag components in last dimensions"""
     return torch.stack(
         [
-            matrix[..., 0] @ vector[..., 0][..., None]
-            - matrix[..., 1] @ vector[..., 1][..., None],
-            matrix[..., 0] @ vector[..., 1][..., None]
-            + matrix[..., 1] @ vector[..., 0][..., None],
+            matrix[..., 0] @ vector[..., 0][..., None] - matrix[..., 1] @ vector[..., 1][..., None],
+            matrix[..., 0] @ vector[..., 1][..., None] + matrix[..., 1] @ vector[..., 0][..., None],
         ],
         dim=-1,
     )[..., 0, :]
 
 
 @torch.jit.script
-def complex_tensor_matrix_matrix_product(
-    mat1: torch.Tensor, mat2: torch.Tensor
-) -> torch.Tensor:
+def complex_tensor_matrix_matrix_product(mat1: torch.Tensor, mat2: torch.Tensor) -> torch.Tensor:
     """matrix multiplication of complex matrices mat1 and mat2
     Args:
         mat1 ([tensor]): ... x M x N x 2 complex tensor
@@ -351,12 +300,10 @@ def tik_reg(mat: torch.Tensor, reg: float = 0.001) -> torch.Tensor:
     mat: ... x iAdj x 2
     """
     iAdj = mat.shape[-2]  # number of adjacent frames
-    temp = ((reg * trace(complex_tensor_abs(mat))) / iAdj)[..., None, None] * torch.eye(
-        iAdj, device=mat.device
-    )[None, None, ...]
-    return mat + torch.stack(
-        [temp, temp.new_zeros(size=(1,)).expand(temp.shape)], dim=-1
-    )
+    temp = ((reg * trace(complex_tensor_abs(mat))) / iAdj)[..., None, None] * torch.eye(iAdj, device=mat.device)[
+        None, None, ...
+    ]
+    return mat + torch.stack([temp, temp.new_zeros(size=(1,)).expand(temp.shape)], dim=-1)
 
 
 @torch.jit.script

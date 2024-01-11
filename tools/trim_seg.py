@@ -39,7 +39,7 @@ def trim_and_segment(src_fpath, src_dir, dest_dir, sr, min_duration, max_duratio
     except ValueError:
         print(f"File {src_fpath} is corrupted.")
         return
-    except:
+    finally:
         print(f"File {src_fpath} is not a valid audio file.")
         return
 

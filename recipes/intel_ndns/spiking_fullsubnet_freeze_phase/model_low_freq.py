@@ -5,7 +5,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from efficient_spiking_neuron import MemoryState, efficient_spiking_neuron
 from einops import rearrange
-from torch import nn
 from torch.nn import functional
 
 from audiozen.acoustics.audio_feature import istft, stft
@@ -621,7 +620,6 @@ class Separator(BaseModel):
 
 if __name__ == "__main__":
     import toml
-    from torchinfo import summary
 
     from audiozen.metric import compute_synops
 

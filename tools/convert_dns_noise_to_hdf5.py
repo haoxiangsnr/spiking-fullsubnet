@@ -1,9 +1,9 @@
 from pathlib import Path
 
-import h5py
 import librosa
 import numpy as np
 from tqdm import tqdm
+
 
 noise_path = "/datasets/datasets_fullband/training_set/noise"
 hdf5_path = "/datasets/datasets_fullband/training_set/noise_fp16.hdf5"

@@ -2,13 +2,13 @@ import logging
 
 import pandas as pd
 import torch
-import torch.nn.functional as F
 from joblib import Parallel, delayed
 from lava.lib.dl import slayer
 from tqdm import tqdm
 
 from audiozen.metric import DNSMOS, SISDR
 from audiozen.trainer_backup.base_trainer import BaseTrainer
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class Trainer(BaseTrainer):
 
         if self.rank == 0:
             logger.info(f"Training loss on epoch {self.current_epoch}: {loss_mean}")
-            self.writer.add_scalar(f"Loss/Train", loss_mean, self.current_epoch)
+            self.writer.add_scalar("Loss/Train", loss_mean, self.current_epoch)
 
     @torch.no_grad()
     def validation_step(self, batch, batch_idx, dataloader_idx):

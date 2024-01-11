@@ -27,9 +27,9 @@ class DNSAudio(Dataset):
         if limit:
             self.noisy_files = self.noisy_files[:limit]
 
-        self.file_id_from_name = re.compile("fileid_(\d+)")
-        self.snr_from_name = re.compile("snr(-?\d+)")
-        self.target_level_from_name = re.compile("tl(-?\d+)")
+        self.file_id_from_name = re.compile(r"fileid_(\d+)")
+        self.snr_from_name = re.compile(r"snr(-?\d+)")
+        self.target_level_from_name = re.compile(r"tl(-?\d+)")
         self.source_info_from_name = re.compile("^(.*?)_snr")
 
         self.train = train

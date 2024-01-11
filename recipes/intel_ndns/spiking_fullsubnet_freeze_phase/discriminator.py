@@ -50,8 +50,6 @@ class Discriminator(nn.Module):
 
 
 if __name__ == "__main__":
-    import torch
-
     model = Discriminator()
 
     x = torch.rand(1, 1, 257, 32000 // 128 + 1)

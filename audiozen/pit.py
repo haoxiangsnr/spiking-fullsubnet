@@ -1,7 +1,6 @@
 from itertools import permutations
 
 import torch
-import torch.nn as nn
 
 
 class PairwiseNegSDR:

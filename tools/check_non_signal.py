@@ -2,9 +2,6 @@ from pathlib import Path
 
 import click
 import librosa
-import numpy as np
-import soundfile as sf
-from joblib import Parallel, delayed
 from tqdm.auto import tqdm
 
 

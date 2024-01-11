@@ -19,6 +19,7 @@ import onnxruntime as ort
 import soundfile as sf
 from tqdm import tqdm
 
+
 SAMPLERATE = 16000
 INPUT_LENGTH = 9.01
 

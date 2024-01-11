@@ -13,6 +13,7 @@ from audiozen.loss import SISNRLoss, freq_MAE, mag_MAE
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI, compute_neuronops, compute_synops
 from audiozen.trainer import Trainer as BaseTrainer
 
+
 logger = get_logger(__name__)
 
 

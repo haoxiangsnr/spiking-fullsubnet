@@ -11,6 +11,7 @@ from pystoi import stoi as stoi_backend
 
 from audiozen.utils import check_same_shape
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -99,6 +100,7 @@ class SISDR:
 
         return {"si_sdr": val.item()}
 
+
 class pDNSMOS:
     def __init__(self, input_sr=16000) -> None:
         super().__init__()
@@ -149,7 +151,6 @@ class pDNSMOS:
         if self.input_sr != 16000:
             audio = librosa.resample(audio, orig_sr=self.input_sr, target_sr=SAMPLERATE)
 
-        actual_audio_len = len(audio)
         len_samples = int(INPUT_LENGTH * SAMPLERATE)
 
         while len(audio) < len_samples:
@@ -168,11 +169,11 @@ class pDNSMOS:
                 continue
 
             input_features = np.array(audio_seg).astype("float32")[np.newaxis, :]
-            p808_input_features = np.array(self.audio_melspec(audio=audio_seg[:-160])).astype("float32")[
-                np.newaxis, :, :
-            ]
+            # p808_input_features = np.array(self.audio_melspec(audio=audio_seg[:-160])).astype("float32")[
+            # np.newaxis, :, :
+            # ]
             oi = {"input_1": input_features}
-            p808_oi = {"input_1": p808_input_features}
+            # p808_oi = {"input_1": p808_input_features}
             p_mos_sig_raw, p_mos_bak_raw, p_mos_ovr_raw = self.p835_personal_sess.run(None, oi)[0][0]
 
             predicted_p_mos_ovr_seg_raw.append(p_mos_ovr_raw)

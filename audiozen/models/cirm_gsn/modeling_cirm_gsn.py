@@ -2,7 +2,7 @@ from functools import partial
 
 import torch
 import torch.nn as nn
-from einops import rearrange, repeat
+from einops import rearrange
 from torch.nn import functional as F
 
 from audiozen.acoustics.audio_feature import istft, stft
@@ -230,7 +230,6 @@ class Model(nn.Module):
         df_coef = rearrange(fb_output, "b (c d s f) t -> b d s f t c", c=2, d=self.df_order, s=self.num_spks)
 
         # ================== Reconstruct the output ==================
-        num_freqs = df_coef.shape[3]
         enh_stft = deepfiltering(noisy_cmp, df_coef, self.df_order, self.num_spks)  # [B, c, s, f, t]
 
         if self.num_spks > 1:

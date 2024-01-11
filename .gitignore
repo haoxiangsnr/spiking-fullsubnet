@@ -9,6 +9,9 @@ _build/
 core.*
 tmp/
 
+# Ruff
+.ruff_cache/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

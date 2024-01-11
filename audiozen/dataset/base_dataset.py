@@ -66,12 +66,8 @@ class BaseDataset(data.Dataset):
 
     @staticmethod
     def _parse_snr_range(snr_range):
-        assert (
-            len(snr_range) == 2
-        ), f"The range of SNR should be [low, high], not {snr_range}."
-        assert (
-            snr_range[0] <= snr_range[-1]
-        ), f"The low SNR should not larger than high SNR."
+        assert len(snr_range) == 2, f"The range of SNR should be [low, high], not {snr_range}."
+        assert snr_range[0] <= snr_range[-1], "The low SNR should not larger than high SNR."
 
         low, high = snr_range
         snr_list = []
@@ -82,8 +78,7 @@ class BaseDataset(data.Dataset):
 
     def _preload_dataset(self, file_path_list, remark=""):
         waveform_list = Parallel(n_jobs=self.num_workers)(
-            delayed(self._load_wav)(f_path, sr=self.sr)
-            for f_path in tqdm(file_path_list, desc=remark)
+            delayed(self._load_wav)(f_path, sr=self.sr) for f_path in tqdm(file_path_list, desc=remark)
         )
         return list(zip(file_path_list, waveform_list))  # type: ignore
 
@@ -125,14 +120,10 @@ class BaseDataset(data.Dataset):
                     # Randomly select a segment
                     offset = np.random.randint(frame_orig_duration - frame_duration)
                     sf_desc.seek(offset)
-                    y = sf_desc.read(
-                        frames=frame_duration, dtype=np.float32, always_2d=True
-                    ).T
+                    y = sf_desc.read(frames=frame_duration, dtype=np.float32, always_2d=True).T
                 else:
                     y = sf_desc.read(dtype=np.float32, always_2d=True).T  # [C, T]
-                    y = np.pad(
-                        y, ((0, 0), (0, frame_duration - frame_orig_duration)), mode
-                    )
+                    y = np.pad(y, ((0, 0), (0, frame_duration - frame_orig_duration)), mode)
             else:
                 y = sf_desc.read(dtype=np.float32, always_2d=True).T
 

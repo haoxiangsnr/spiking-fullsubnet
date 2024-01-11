@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI, IntelSISNR
 
+
 """
 Steps:
     1. Check alignment of reference and estimated wav files
@@ -33,9 +34,7 @@ class MetricComputer:
         basename = get_basename(ref_wav_path)
 
         if len(ref) != len(est):
-            raise ValueError(
-                f"{ref_wav_path} and {est_wav_path} are not in the same length."
-            )
+            raise ValueError(f"{ref_wav_path} and {est_wav_path} are not in the same length.")
 
         # pesq_wb = self.pesq_wb(est, ref)
         # pesq_nb = self.pesq_nb(est, ref)
@@ -61,10 +60,7 @@ class MetricComputer:
 
 
 def load_wav_paths_from_text_file(scp_path, to_abs=True):
-    wav_paths = [
-        line.rstrip("\n")
-        for line in open(os.path.abspath(os.path.expanduser(scp_path)), "r")
-    ]
+    wav_paths = [line.rstrip("\n") for line in open(os.path.abspath(os.path.expanduser(scp_path)), "r")]
     if to_abs:
         tmp = []
         for path in wav_paths:
@@ -139,9 +135,7 @@ def pre_processing(est_list, ref_list, align_mode=None):
             for ref_path in reference_wav_paths:
                 for est_path in estimated_wav_paths:
                     est_basename = get_basename(est_path)
-                    if "clean_" + "_".join(
-                        est_basename.split("_")[-2:]
-                    ) == get_basename(ref_path):
+                    if "clean_" + "_".join(est_basename.split("_")[-2:]) == get_basename(ref_path):
                         reordered_estimated_wav_paths.append(est_path)
         elif align_mode == "dns_1_custom":
             for ref_path in reference_wav_paths:
@@ -149,9 +143,7 @@ def pre_processing(est_list, ref_list, align_mode=None):
                     # e.g., clnsp74_fan_out_56236_0_snr9_tl-28_fileid_210.wav-denoise.wav
                     # clean_fileid_207.wav
                     est_basename = get_basename(est_path)[:-12]  # remove ".wav-denoise"
-                    expected_basename = "clean_" + "_".join(
-                        est_basename.split("_")[-2:]
-                    )
+                    expected_basename = "clean_" + "_".join(est_basename.split("_")[-2:])
                     if expected_basename == get_basename(ref_path):
                         reordered_estimated_wav_paths.append(est_path)
         elif align_mode == "intel_ndns":
@@ -177,7 +169,6 @@ def pre_processing(est_list, ref_list, align_mode=None):
         elif align_mode == "maxhub_noisy":
             # Reference_channel = 0
             # 寻找对应的干净语音
-            reference_channel = 0
             print(f"Found #files: {len(reference_wav_paths)}")
             for est_path in estimated_wav_paths:
                 # MC0604W0154_room4_rev_RT600.1_mic1_micpos1.5p0.5p1.84_srcpos4.507p1.5945p1.3_langle180_angle20_ds3.2_kesou_kesou_mic1.wav
@@ -189,9 +180,7 @@ def pre_processing(est_list, ref_list, align_mode=None):
 
         estimated_wav_paths = reordered_estimated_wav_paths
 
-    print(
-        f"After checking, #Ref: {len(reference_wav_paths)}, #Est: {len(estimated_wav_paths)}"
-    )
+    print(f"After checking, #Ref: {len(reference_wav_paths)}, #Est: {len(estimated_wav_paths)}")
 
     return reference_wav_paths, estimated_wav_paths
 
@@ -199,18 +188,14 @@ def pre_processing(est_list, ref_list, align_mode=None):
 def check_two_aligned_list(a, b):
     assert len(a) == len(b), f"两个列表中的长度不等. {len(a)} {len(b)}"
     for z, (i, j) in enumerate(zip(a, b), start=1):
-        assert get_basename(i) == get_basename(j), (
-            f"两个列表中存在不相同的文件名，行数为: {z}" f"\n\t {i}" f"\n\t{j}"
-        )
+        assert get_basename(i) == get_basename(j), f"两个列表中存在不相同的文件名，行数为: {z}" f"\n\t {i}" f"\n\t{j}"
 
 
 def main(args):
     sr = args.sr
     align_mode = args.align_mode.lower()
 
-    reference_wav_paths, estimated_wav_paths = pre_processing(
-        args.estimated, args.reference, align_mode
-    )
+    reference_wav_paths, estimated_wav_paths = pre_processing(args.estimated, args.reference, align_mode)
 
     metric_computer = MetricComputer(sr=sr)
     metric_computer.compute(reference_wav_paths, estimated_wav_paths, n_jobs=40)
@@ -226,14 +211,14 @@ if __name__ == "__main__":
         "--reference",
         required=True,
         help="It can be a list of dir paths seprated using comma or a list of scp text paths.",
-        type=lambda s: [i for i in s.split(",")],
+        type=lambda s: list(s.split(",")),
     )
     parser.add_argument(
         "-E",
         "--estimated",
         required=True,
         help="",
-        type=lambda s: [i for i in s.split(",")],
+        type=lambda s: list(s.split(",")),
     )
 
     parser.add_argument("--sr", type=int, default=16000, help="Sample rate.")

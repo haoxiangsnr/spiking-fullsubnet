@@ -1,6 +1,5 @@
 import copy
 from abc import abstractmethod
-from typing import Callable
 
 import torch
 import torch.nn as nn

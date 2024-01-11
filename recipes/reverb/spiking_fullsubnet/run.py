@@ -31,10 +31,7 @@ def run(config, resume):
         | {"lr": config["optimizer"]["args"]["lr"] * sqrt(accelerator.num_processes)},
     )
 
-    loss_function = instantiate(
-        config["loss_function"]["path"],
-        args=config["loss_function"]["args"],
-    )
+    loss_function = instantiate(config["loss_function"]["path"], args=config["loss_function"]["args"])
 
     (model, optimizer) = accelerator.prepare(model, optimizer)
 
@@ -54,12 +51,7 @@ def run(config, resume):
             validate_dataset = instantiate(validate_config["path"], args=validate_config["args"])
 
             validate_dataloaders.append(
-                accelerator.prepare(
-                    DataLoader(
-                        dataset=validate_dataset,
-                        **validate_config["dataloader"],
-                    )
-                )
+                accelerator.prepare(DataLoader(dataset=validate_dataset, **validate_config["dataloader"]))
             )
 
     if "test" in args.mode or "predict" in args.mode:
@@ -70,14 +62,7 @@ def run(config, resume):
         for test_config in config["test_dataset"]:
             test_dataset = instantiate(test_config["path"], args=test_config["args"])
 
-            test_dataloaders.append(
-                accelerator.prepare(
-                    DataLoader(
-                        dataset=test_dataset,
-                        **test_config["dataloader"],
-                    )
-                )
-            )
+            test_dataloaders.append(accelerator.prepare(DataLoader(dataset=test_dataset, **test_config["dataloader"])))
 
     trainer = instantiate(config["trainer"]["path"], initialize=False)(
         accelerator=accelerator,

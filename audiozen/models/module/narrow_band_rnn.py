@@ -1,9 +1,8 @@
-import math
-from typing import List, Tuple
+from typing import Tuple
 
 import torch
 import torch.nn as nn
-from torch import Tensor, jit
+from torch import Tensor
 from torch.nn import Parameter
 
 
@@ -20,9 +19,7 @@ class SubBandLSTMCell(nn.Module):
         self.bias_ih = Parameter(torch.randn(4 * hidden_size))
         self.bias_hh = Parameter(torch.randn(4 * hidden_size))
 
-    def forward(
-        self, input: Tensor, state: Tuple[Tensor, Tensor]
-    ) -> Tuple[Tensor, Tuple[Tensor, Tensor]]:
+    def forward(self, input: Tensor, state: Tuple[Tensor, Tensor]) -> Tuple[Tensor, Tuple[Tensor, Tensor]]:
         """
         Args:
             input: [B, N, F]
@@ -53,18 +50,9 @@ class SubBandLSTMCell(nn.Module):
         # W_h @ h_{t-1}
         # [B, aN] => [B, F, aN]
         # [B, F, aN] @ [aN, H] = [B, H]
-        hx = (
-            hx[:, None, :]
-            .expand(-1, num_freqs, -1)
-            .reshape(batch_size * num_freqs, self.alpha * self.sub_band_size)
-        )
+        hx = hx[:, None, :].expand(-1, num_freqs, -1).reshape(batch_size * num_freqs, self.alpha * self.sub_band_size)
 
-        gates = (
-            torch.mm(input, self.weight_x.t())
-            + self.bias_ih
-            + torch.mm(hx, self.weight_h.t())
-            + self.bias_hh
-        )
+        gates = torch.mm(input, self.weight_x.t()) + self.bias_ih + torch.mm(hx, self.weight_h.t()) + self.bias_hh
         ingate, forgetgate, cellgate, outgate = gates.chunk(4, 1)
 
         ingate = torch.sigmoid(ingate)
@@ -72,9 +60,7 @@ class SubBandLSTMCell(nn.Module):
         cellgate = torch.tanh(cellgate)
         outgate = torch.sigmoid(outgate)
 
-        cx = (
-            cx[:, None, :].expand(-1, num_freqs, -1).reshape(batch_size * num_freqs, -1)
-        )
+        cx = cx[:, None, :].expand(-1, num_freqs, -1).reshape(batch_size * num_freqs, -1)
 
         # 这里的 cx 限制了，难道 cx 单独修改一下？
         cy = (forgetgate * cx) + (ingate * cellgate)
@@ -87,9 +73,7 @@ class SubBandLSTMCell(nn.Module):
 
 
 class SubBandGRUCell(nn.Module):
-    def __init__(
-        self, input_size: int, sub_band_size: int, hidden_size: int, alpha: int
-    ):
+    def __init__(self, input_size: int, sub_band_size: int, hidden_size: int, alpha: int):
         """
 
         Args:
@@ -114,28 +98,20 @@ class SubBandGRUCell(nn.Module):
         """
         super().__init__()
         # for reset_gate and update gate
-        self.weight_x = Parameter(
-            torch.randn(2 * hidden_size, input_size)
-        )  # first term: W_x @ x_t
-        self.weight_h = Parameter(
-            torch.randn(2 * hidden_size, alpha * sub_band_size)
-        )  # second term: W_h @ h_{t-1}
+        self.weight_x = Parameter(torch.randn(2 * hidden_size, input_size))  # first term: W_x @ x_t
+        self.weight_h = Parameter(torch.randn(2 * hidden_size, alpha * sub_band_size))  # second term: W_h @ h_{t-1}
         self.bias_x = Parameter(torch.randn(2 * hidden_size))
         self.bias_h = Parameter(torch.randn(2 * hidden_size))
 
         # for new gate
         self.weight_x_new_gate = Parameter(torch.randn(hidden_size, input_size))
-        self.weight_h_new_gate = Parameter(
-            torch.randn(hidden_size, alpha * sub_band_size)
-        )
+        self.weight_h_new_gate = Parameter(torch.randn(hidden_size, alpha * sub_band_size))
         self.bias_x_new_gate = Parameter(torch.randn(hidden_size))
         self.bias_h_new_gate = Parameter(torch.randn(hidden_size))
 
         # from [B, H] to [B, aN]
         # e.g. [B, 256] to [B, 3 * 30]
-        self.linear_update_gate = nn.Linear(
-            hidden_size, alpha * sub_band_size, bias=False
-        )
+        self.linear_update_gate = nn.Linear(hidden_size, alpha * sub_band_size, bias=False)
         self.linear_new_gate = nn.Linear(hidden_size, alpha * sub_band_size, bias=False)
 
         # export useful vars
@@ -148,9 +124,7 @@ class SubBandGRUCell(nn.Module):
         batch_size, num_freqs, sub_band_size = input.shape
 
         input = input.reshape(batch_size * num_freqs, sub_band_size)
-        hidden_state = hidden_state.reshape(
-            batch_size * num_freqs, self.alpha * self.sub_band_size
-        )
+        hidden_state = hidden_state.reshape(batch_size * num_freqs, self.alpha * self.sub_band_size)
         print(input.shape, hidden_state.shape)
 
         # reset_gate and update_gate
@@ -159,10 +133,7 @@ class SubBandGRUCell(nn.Module):
         # H 为存储了特征的变换信息，aN 存储了特征的记忆信息。
         # 特征的记忆信息可能并不需要那么多。我们将其从 H 变为 aN，与子带的大小相关，进而降低计算量。
         gates = (
-            torch.mm(input, self.weight_x.t())
-            + self.bias_x
-            + torch.mm(hidden_state, self.weight_h.t())
-            + self.bias_h
+            torch.mm(input, self.weight_x.t()) + self.bias_x + torch.mm(hidden_state, self.weight_h.t()) + self.bias_h
         )
         reset_gate, update_gate = gates.chunk(2, 1)
         reset_gate = torch.sigmoid(reset_gate)
@@ -178,24 +149,18 @@ class SubBandGRUCell(nn.Module):
 
         # new hidden state
         # linear_layer used to rescale H to aN
-        new_hidden_state = (
-            1 - self.linear_update_gate(update_gate)
-        ) * self.linear_new_gate(new_gate) + self.linear_update_gate(
-            update_gate
-        ) * hidden_state
+        new_hidden_state = (1 - self.linear_update_gate(update_gate)) * self.linear_new_gate(
+            new_gate
+        ) + self.linear_update_gate(update_gate) * hidden_state
 
-        new_hidden_state = new_hidden_state.reshape(
-            batch_size, num_freqs, self.alpha * self.sub_band_size
-        )
+        new_hidden_state = new_hidden_state.reshape(batch_size, num_freqs, self.alpha * self.sub_band_size)
 
         # [B, aN]
         return new_hidden_state
 
 
 class SubBandGRULayer(nn.Module):
-    def __init__(
-        self, input_size: int, sub_band_size: int, hidden_size: int, alpha: int
-    ):
+    def __init__(self, input_size: int, sub_band_size: int, hidden_size: int, alpha: int):
         """
 
         Args:
@@ -220,9 +185,7 @@ class SubBandGRULayer(nn.Module):
     def forward(self, input, hidden_state=None):
         batch_size, feature_size, sub_band_size, seq_len = input.shape
         if hidden_state is None:
-            hidden_state = torch.zeros(
-                batch_size, self.hidden_size, dtype=input.dtype, device=input.device
-            )
+            hidden_state = torch.zeros(batch_size, self.hidden_size, dtype=input.dtype, device=input.device)
 
         outputs = []
         for i in range(seq_len):
@@ -271,9 +234,7 @@ class SubBandGRU(nn.Module):
             SubBandGRULayer(input_size, sub_band_size, hidden_size, alpha),
         ]
         self.layers += [
-            SubBandGRULayer(
-                sub_band_size * alpha, sub_band_size, sub_band_size * alpha, alpha
-            )
+            SubBandGRULayer(sub_band_size * alpha, sub_band_size, sub_band_size * alpha, alpha)
             for _ in range(num_layers - 1)
         ]
         self.layers = nn.ModuleList(self.layers)
@@ -324,5 +285,3 @@ if __name__ == "__main__":
         num_layers=num_layers,
     )
     print(model(ipt)[0].shape)
-
-from torch import Tensor

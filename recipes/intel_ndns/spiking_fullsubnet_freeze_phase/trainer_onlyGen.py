@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
 import torch
-import torch.nn.functional as F
 from accelerate.logging import get_logger
 from tqdm import tqdm
 
 from audiozen.loss import SISNRLoss, freq_MAE, mag_MAE
 from audiozen.metric import DNSMOS, PESQ, SISDR, STOI, compute_neuronops, compute_synops
 from audiozen.trainer_backup.base_trainer_gan_accelerate_ddp_validate import BaseTrainer
+
 
 logger = get_logger(__name__)
 
@@ -43,7 +43,7 @@ class Trainer(BaseTrainer):
 
         batch_size, *_ = noisy_y.shape
 
-        one_labels = torch.ones(batch_size, 1, device=self.accelerator.device).float()
+        # one_labels = torch.ones(batch_size, 1, device=self.accelerator.device).float()
         clean_mag, *_ = self.torch_stft(clean_y)
 
         # ================== Train Generator ================== #
@@ -80,7 +80,7 @@ class Trainer(BaseTrainer):
         return {
             "loss_g": loss_g.item(),
             "loss_freq_mae": loss_freq_mae.item(),
-            "loss_mag_mae": loss_mag_mae.item()
+            "loss_mag_mae": loss_mag_mae.item(),
             # "loss_g_fake": loss_g_fake,
             # "loss_time": loss_time,
             # "loss_mag": loss_mag,
@@ -97,9 +97,7 @@ class Trainer(BaseTrainer):
 
             if self.accelerator.is_local_main_process:
                 logger.info(f"Loss '{key}' on epoch {self.current_epoch}: {loss_mean}")
-                self.writer.add_scalar(
-                    f"Train_Epoch/{key}", loss_mean, self.current_epoch
-                )
+                self.writer.add_scalar(f"Train_Epoch/{key}", loss_mean, self.current_epoch)
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
         noisy_y, clean_y, noisy_file = batch
@@ -122,9 +120,7 @@ class Trainer(BaseTrainer):
         # to tensor
         synops = torch.tensor([synops], device=self.accelerator.device).unsqueeze(0)
         synops = synops.repeat(enhanced_y.shape[0], 1)
-        neuron_ops = torch.tensor(
-            [neuron_ops], device=self.accelerator.device
-        ).unsqueeze(0)
+        neuron_ops = torch.tensor([neuron_ops], device=self.accelerator.device).unsqueeze(0)
         neuron_ops = neuron_ops.repeat(enhanced_y.shape[0], 1)
 
         return noisy_y, clean_y, enhanced_y, synops, neuron_ops
@@ -135,12 +131,7 @@ class Trainer(BaseTrainer):
         si_sdr = self.si_sdr(enhanced, clean)
         dns_mos = self.dns_mos(enhanced)
 
-        return (
-            si_sdr
-            | dns_mos
-            | {"synops": synops.item()}
-            | {"neuron_ops": neuron_ops.item()}
-        )
+        return si_sdr | dns_mos | {"synops": synops.item()} | {"neuron_ops": neuron_ops.item()}
 
     def compute_batch_metrics(self, dataloader_idx, step_out):
         noisy, clean, enhanced, synops, neuron_ops = step_out
@@ -167,9 +158,7 @@ class Trainer(BaseTrainer):
         score = 0.0
 
         for dataloader_idx, dataloader_outputs in enumerate(outputs):
-            logger.info(
-                f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}..."
-            )
+            logger.info(f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}...")
 
             rows = []
             for step_out in tqdm(dataloader_outputs):
@@ -185,9 +174,7 @@ class Trainer(BaseTrainer):
             score += df_metrics_mean["OVRL"]
 
             for metric, value in df_metrics_mean.items():
-                self.writer.add_scalar(
-                    f"metrics_{dataloader_idx}/{metric}", value, self.current_epoch
-                )
+                self.writer.add_scalar(f"metrics_{dataloader_idx}/{metric}", value, self.current_epoch)
 
         return score
 
@@ -196,9 +183,7 @@ class Trainer(BaseTrainer):
 
     def test_epoch_end(self, outputs):
         for dataloader_idx, dataloader_outputs in enumerate(outputs):
-            logger.info(
-                f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}..."
-            )
+            logger.info(f"Computing metrics on epoch {self.current_epoch} for dataloader {dataloader_idx}...")
 
             rows = []
             for step_out in tqdm(dataloader_outputs):

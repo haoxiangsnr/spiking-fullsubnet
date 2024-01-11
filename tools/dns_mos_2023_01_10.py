@@ -11,12 +11,11 @@ import os
 
 import librosa
 import numpy as np
-import numpy.polynomial.polynomial as poly
 import onnxruntime as ort
 import pandas as pd
 import soundfile as sf
-from requests import session
 from tqdm import tqdm
+
 
 SAMPLING_RATE = 16000
 INPUT_LENGTH = 9.01

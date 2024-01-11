@@ -1,19 +1,19 @@
-"""
-Note:
-
-    Install pyloudnorm first.
-"""
-
 from pathlib import Path
-from pprint import pformat
 
 import librosa
 import numpy as np
 import pandas as pd
-import pyloudnorm as pyln
 import soundfile as sf
 from joblib import Parallel, delayed
 from tqdm import tqdm
+
+
+try:
+    import pyloudnorm as pyln
+except ImportError:
+    print("Please install pyloudnorm first.")
+    print("pip install pyloudnorm")
+    exit()
 
 
 def normalize_to_noisy(src_fpath, ref_fpath, src_dir, dest_dir):
@@ -22,9 +22,7 @@ def normalize_to_noisy(src_fpath, ref_fpath, src_dir, dest_dir):
     if isinstance(ref_fpath, str):
         ref_fpath = Path(ref_fpath)
 
-    assert (
-        src_fpath.stem == ref_fpath.stem
-    ), f"{src_fpath} and {ref_fpath} have different name."
+    assert src_fpath.stem == ref_fpath.stem, f"{src_fpath} and {ref_fpath} have different name."
 
     dest_fpath = dest_dir / src_fpath.relative_to(src_dir)
     dest_fpath.parent.mkdir(parents=True, exist_ok=True)
@@ -67,20 +65,18 @@ def main(src_dir, ref_dir, dest_dir, num_workers):
         for src_fpath, ref_fpath in tqdm(zip(src_fpath_list, ref_fpath_list))
     )
 
-    # rows = []
-    # for src_fpath, ref_fpath, (y_loudness, y_ref_loudness) in zip(
-    #     src_fpath_list, ref_fpath_list, loudness
-    # ):
-    #     rows.append(
-    #         {
-    #             "noisy": y_ref_loudness,
-    #             "enhanced": y_loudness,
-    #             "src": src_fpath,
-    #             "ref": ref_fpath,
-    #         }
-    #     )
-    # pd.DataFrame(rows).to_csv(dest_dir / "loudness.csv", index=False)
-    # print(f"Loudness normalization finished. (dest_dir: {dest_dir / 'loudness.csv'})")
+    rows = []
+    for src_fpath, ref_fpath, (y_loudness, y_ref_loudness) in zip(src_fpath_list, ref_fpath_list, loudness):
+        rows.append(
+            {
+                "noisy": y_ref_loudness,
+                "enhanced": y_loudness,
+                "src": src_fpath,
+                "ref": ref_fpath,
+            }
+        )
+    pd.DataFrame(rows).to_csv(dest_dir / "loudness.csv", index=False)
+    print(f"Loudness normalization finished. (dest_dir: {dest_dir / 'loudness.csv'})")
 
 
 if __name__ == "__main__":

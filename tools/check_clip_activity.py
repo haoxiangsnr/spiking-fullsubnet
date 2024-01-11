@@ -56,9 +56,9 @@ def main(src_dir, dest_dir, clip_threshold, activity_threshold):
         num_valid_wav += 1
 
     print(f"Valid wav files: {num_valid_wav} out of {len(wav_fpath_list)} in {src_dir}")
-    print(f"After checking clipping...")
+    print("After checking clipping...")
     print(f"Clipped wav files: {len(clipped_wav_fpath)}")
-    print(f"After checking inactive wav files...")
+    print("After checking inactive wav files...")
     print(f"Inactive wav files: {len(inactive_wav_fpath)}")
     print(f"Total: {len(clipped_wav_fpath) + len(inactive_wav_fpath)}")
 
