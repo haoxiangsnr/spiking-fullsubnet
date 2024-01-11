@@ -22,6 +22,7 @@ from audiozen.optimization import get_constant_schedule_with_warmup, get_linear_
 from audiozen.trainer_utils import TrainerState
 from audiozen.utils import prepare_empty_dir, print_env
 
+
 logger = get_logger(__name__)
 
 
@@ -133,7 +134,7 @@ class Trainer:
             logger.info(f"Early stopping counter: {self.state.patience} out of {self.max_patience}")
 
             if self.state.patience >= self.max_patience:
-                logger.info(f"Early stopping triggered, stopping training...")
+                logger.info("Early stopping triggered, stopping training...")
                 should_stop = True
 
         return should_stop
@@ -435,7 +436,7 @@ class Trainer:
 
             if epoch % self.validation_interval == 0:
                 with torch.no_grad():
-                    logger.info(f"Training finished, begin validation...")
+                    logger.info("Training finished, begin validation...")
                     score = self.validate(validation_dataloaders)
 
                     if self.accelerator.is_local_main_process:
@@ -443,7 +444,7 @@ class Trainer:
                         if should_stop:
                             early_stop_mark += 1
 
-                    logger.info(f"Validation finished.")
+                    logger.info("Validation finished.")
 
             self.accelerator.wait_for_everyone()
 
@@ -465,7 +466,7 @@ class Trainer:
         Returns:
             score: the metric score of the validation epoch.
         """
-        logger.info(f"Begin validation...")
+        logger.info("Begin validation...")
 
         self.set_models_to_eval_mode()
 
@@ -501,7 +502,7 @@ class Trainer:
 
             validation_output.append(dataloader_output)
 
-        logger.info(f"Validation inference finished, begin validation epoch end...")
+        logger.info("Validation inference finished, begin validation epoch end...")
 
         if self.accelerator.is_local_main_process:
             # only the main process will run validation_epoch_end
@@ -518,7 +519,7 @@ class Trainer:
             test_dataloaders: the dataloader(s) to test.
             ckpt_path: the checkpoint path to load the model weights from.
         """
-        logger.info(f"Begin testing...")
+        logger.info("Begin testing...")
         if not isinstance(dataloaders, list):
             dataloaders = [dataloaders]
 
@@ -545,7 +546,7 @@ class Trainer:
 
             test_output.append(dataloader_out)
 
-        logger.info(f"Testing inference finished, begin testing epoch end...")
+        logger.info("Testing inference finished, begin testing epoch end...")
         if self.accelerator.is_local_main_process:
             # only the main process will run test_epoch_end
             self.test_epoch_end(test_output)
@@ -561,7 +562,7 @@ class Trainer:
             dataloaders: the dataloader(s) to predict.
             ckpt_path: the checkpoint path to load the model weights from.
         """
-        logger.info(f"Begin predicting...")
+        logger.info("Begin predicting...")
 
         if not isinstance(dataloaders, list):
             dataloaders = [dataloaders]
