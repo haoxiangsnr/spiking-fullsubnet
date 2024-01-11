@@ -4,7 +4,6 @@ from typing import Optional, Tuple, Union
 import librosa
 import numpy as np
 import soundfile as sf
-from numpy.typing import NDArray
 
 
 def load_audio(
@@ -29,7 +28,7 @@ def load_audio(
     Examples:
         >>> load_audio("test.wav", duration=2.0, sr=16000)
     """
-    audio_path = str(path)
+    path = str(path)
 
     with sf.SoundFile(path) as sf_desc:
         orig_sr = sf_desc.samplerate

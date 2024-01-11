@@ -734,7 +734,7 @@ class Trainer:
             validation_epoch_output = [
                 [dataloader_1_batch_1_output, dataloader_1_batch_2_output, ...],
                 [dataloader_2_batch_1_output, dataloader_2_batch_2_output, ...],
-                ...
+                ...,
             ]
 
 

@@ -191,8 +191,6 @@ def mag_MAE(estimation, target, win=2048, stride=512, srs=None, sudo_sr=None):
 
 
 if __name__ == "__main__":
-    import torch
-
     n_ffts = [240, 480, 960, 1440]
     gamma = 0.3
     factor = 1
