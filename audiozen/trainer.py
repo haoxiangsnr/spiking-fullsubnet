@@ -37,6 +37,8 @@ class Trainer:
         loss_function,
     ):
         """Create an instance of BaseTrainer for training, validation, and testing."""
+        self.config = config
+        self.resume = resume
         # Setup directories
         self._initialize_exp_dirs_and_paths(config)
 
@@ -63,6 +65,7 @@ class Trainer:
         self.save_ckpt_interval = self.trainer_config.get("save_ckpt_interval", 1)
         self.max_patience = self.trainer_config.get("max_patience", 10)
         self.plot_norm = self.trainer_config.get("plot_norm", True)
+        self.plot_lr = self.trainer_config.get("plot_lr", False)
         self.validation_interval = self.trainer_config.get("validation_interval", 1)
         self.max_num_checkpoints = self.trainer_config.get("max_num_checkpoints", 10)
         self.scheduler_name = self.trainer_config.get("scheduler_name", "constant_schedule_with_warmup")
@@ -82,10 +85,6 @@ class Trainer:
 
         # Others
         pd.set_option("display.float_format", lambda x: "%.3f" % x)
-
-        # Resume
-        if resume:
-            self._load_checkpoint(ckpt_path="latest")
 
         if self.accelerator.is_local_main_process:
             prepare_empty_dir(
@@ -315,6 +314,14 @@ class Trainer:
         for k, v in loss_dict.items():
             bar_desc += f"{k}: {(v):.4f}, "
         bar_desc += f"norm: {norm:.4f}, " f"lr: {self.lr_scheduler.get_last_lr()[-1]:.10f}"
+
+        # plot norm
+        if self.plot_norm:
+            self.writer.add_scalar("Train_Step/norm", norm, self.state.steps_trained)
+
+        if self.plot_lr:
+            self.writer.add_scalar("Train_Step/lr", self.lr_scheduler.get_last_lr()[-1], self.state.steps_trained)
+
         return bar_desc
 
     def train(self, train_dataloader: DataLoader, validation_dataloaders):
@@ -369,6 +376,10 @@ class Trainer:
 
         # Generator learning rate scheduler
         self.create_schedulers(max_steps=max_steps)
+
+        # Resume
+        if self.resume:
+            self._load_checkpoint(ckpt_path="latest")
 
         for epoch in range(self.state.epochs_trained + 1, max_epochs + 1):
             logger.info(f"{'=' * 9} Epoch {epoch} out of {max_epochs} {'=' * 9}")
