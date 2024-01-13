@@ -1,5 +1,4 @@
 import importlib
-import logging
 import os
 import platform
 import random
@@ -13,9 +12,6 @@ import torch
 import torch.distributed as dist
 from accelerate import __version__ as version
 from torch import Tensor
-
-
-logger = logging.getLogger(__name__)
 
 
 def print_env():
