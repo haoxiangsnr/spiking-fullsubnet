@@ -31,7 +31,7 @@ To install the PyTorch binaries, we recommend [Anaconda](https://www.anaconda.co
 
 3. Install PyPI dependencies. Clone the repository and install PyPI dependencies via `pip -r requirements.txt`. Check `requirements.txt` for more details.
     ```shell
-    git clone git@github.com:haoxiangsnr/spiking-fullsubnet.git
+    git clone https://github.com/haoxiangsnr/spiking-fullsubnet.git
 
     cd spiking-fullsubnet
 
@@ -40,8 +40,6 @@ To install the PyTorch binaries, we recommend [Anaconda](https://www.anaconda.co
 
 4. We integrated all the audio signal processing tools into a package named `audiozen`. We will install the `audiozen` package in editable mode. By installing in editable mode, we can call `audiozen` package in everywhere of code, e.g, in `recipes` and `tools` folders. In addition, we are able to modify the source code of `audiozen` package directly. Any changes to the original package would reflect directly in your conda environment.
     ```shell
-    cd audiozen
-
     pip install --editable . # or for short: pip install -e .
     ```
 

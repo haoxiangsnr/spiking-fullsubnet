@@ -122,7 +122,7 @@ conda<span class="w"> </span>install<span class="w"> </span>ffmpeg<span class="w
 </div>
 </li>
 <li><p>Install PyPI dependencies. Clone the repository and install PyPI dependencies via <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code>. Check <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> for more details.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:haoxiangsnr/spiking-fullsubnet.git
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/haoxiangsnr/spiking-fullsubnet.git
 
 <span class="nb">cd</span><span class="w"> </span>spiking-fullsubnet
 
@@ -131,9 +131,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
 </div>
 </li>
 <li><p>We integrated all the audio signal processing tools into a package named <code class="docutils literal notranslate"><span class="pre">audiozen</span></code>. We will install the <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in editable mode. By installing in editable mode, we can call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in everywhere of code, e.g, in <code class="docutils literal notranslate"><span class="pre">recipes</span></code> and <code class="docutils literal notranslate"><span class="pre">tools</span></code> folders. In addition, we are able to modify the source code of <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package directly. Any changes to the original package would reflect directly in your conda environment.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>audiozen
-
-pip<span class="w"> </span>install<span class="w"> </span>--editable<span class="w"> </span>.<span class="w"> </span><span class="c1"># or for short: pip install -e .</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--editable<span class="w"> </span>.<span class="w"> </span><span class="c1"># or for short: pip install -e .</span>
 </pre></div>
 </div>
 </li>
