@@ -31,7 +31,7 @@ path = "torch.optim.AdamW"
 lr = 1e-3
 
 [model]
-path = "model.SpikingFullSubNet"
+path = "audiozen.models.spiking_fullsubnet.modeling_spiking_fullsubnet.SpikingFullSubNet"
 [model.args]
 n_fft = 512
 hop_length = 128
@@ -53,6 +53,7 @@ use_pre_layer_norm_sb = true
 bn = true
 shared_weights = true
 sequence_model = "GSN"
+num_spks = 1
 
 [acoustics]
 n_fft = 512
