@@ -99,3 +99,9 @@ class Trainer(BaseTrainer):
                     self.writer.add_scalar(f"metrics_{dataloader_idx}/{metric}", value, self.state.epochs_trained)
 
         return score
+
+    def test_step(self, batch, batch_idx, dataloader_idx=0):
+        return self.validation_step(batch, batch_idx, dataloader_idx)
+
+    def test_epoch_end(self, outputs, log_to_tensorboard=True):
+        return self.test_epoch_end(outputs, log_to_tensorboard=False)
