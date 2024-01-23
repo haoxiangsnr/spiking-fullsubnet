@@ -23,7 +23,7 @@ class Trainer(BaseTrainer):
         self.pesq_nb = PESQ(sr=self.sr, mode="nb")
         self.sisnr_loss = SISNRLoss(return_neg=False)
         self.si_sdr = SISDR()
-        self.north_star_metric = "si_sdr"
+        self.north_star_metric = "OVRL"
 
     def training_step(self, batch, batch_idx):
         self.optimizer.zero_grad()
@@ -98,24 +98,6 @@ class Trainer(BaseTrainer):
                     self.writer.add_scalar(f"metrics_{dataloader_idx}/{metric}", value, self.state.epochs_trained)
 
         return score
-
-    def test_step(self, batch, batch_idx, dataloader_idx=0):
-        mix_y, fpath = batch
-        fpath = Path(fpath[0])
-        est_y, *_ = self.model(mix_y)
-
-        # save audio
-        est_y = est_y.squeeze(0).detach().cpu().numpy()
-
-        mix_root = Path("/nfs/xhao/data/reverb_challenge/REVERB_DATA_OFFICIAL")
-        est_root = Path("/nfs/xhao/data/reverb_challenge/kaldi/egs/reverb/s5/wav/spiking_fullsubnet")
-        save_fpath = est_root / fpath.relative_to(mix_root)
-        save_fpath.parent.mkdir(parents=True, exist_ok=True)
-
-        sf.write(save_fpath, est_y, samplerate=self.sr)
-
-    def test_epoch_end(self, outputs):
-        pass
 
     def predict_step(self, batch, batch_idx, dataloader_idx):
         mix_y, fpath = batch

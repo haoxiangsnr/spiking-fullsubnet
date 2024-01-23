@@ -85,3 +85,19 @@ offset = 0
 [validate_dataset.dataloader]
 batch_size = 1
 num_workers = 0
+
+[[test_dataset]]
+path = "dataloader.EvaluationSimDataset"
+[test_dataset.args]
+scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/et_simu_1ch.scp"
+[test_dataset.dataloader]
+batch_size = 1
+num_workers = 1
+
+[[test_dataset]]
+path = "dataloader.EvaluationRealDataset"
+[test_dataset.args]
+scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/et_real_1ch.scp"
+[test_dataset.dataloader]
+batch_size = 1
+num_workers = 1

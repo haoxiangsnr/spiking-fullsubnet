@@ -11,10 +11,10 @@ max_steps = 0
 max_epochs = 200
 max_grad_norm = 10
 save_max_score = true
-save_ckpt_interval = 5
-max_patience = 200
+save_ckpt_interval = 1
+max_patience = 20
 plot_norm = true
-validation_interval = 5
+validation_interval = 1
 max_num_checkpoints = 20
 scheduler_name = "constant_schedule_with_warmup"
 warmup_steps = 0
@@ -45,7 +45,7 @@ fb_output_activate_function = false
 sb_hidden_size = 224
 sb_num_layers = 2
 freq_cutoffs = [0, 32, 128, 256]
-df_orders = [5, 3, 1]
+df_orders = [1, 1, 1]
 center_freq_sizes = [4, 32, 64]
 neighbor_freq_sizes = [15, 15, 15]
 use_pre_layer_norm_fb = true
@@ -62,42 +62,32 @@ win_length = 512
 sr = 16000
 
 [train_dataset]
-path = "dataloader.SimTrainDataset"
+path = "dataloader.DNSAudio"
 [train_dataset.args]
-rvb_scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/tr_simu_1ch.scp"
-dry_scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/tr_cln.scp"
-duration_in_seconds = 4.0
-sr = 16000
+root = "/datasets/datasets_fullband/training_set/"
+limit = false
+offset = 0
+
 [train_dataset.dataloader]
-batch_size = 32
+batch_size = 64
 num_workers = 8
 drop_last = true
 pin_memory = true
 
 [validate_dataset]
-path = "dataloader.SimDTDataset"
+path = "dataloader.DNSAudio"
 [validate_dataset.args]
-rvb_scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/et_simu_1ch.scp"
-dry_scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/et_cln.scp"
-sr = 16000
-limit = 200
-offset = 0
+root = "/datasets/datasets_fullband/validation_set/"
+train = false
 [validate_dataset.dataloader]
-batch_size = 1
-num_workers = 1
+batch_size = 16
+num_workers = 8
 
-[[test_dataset]]
-path = "dataloader.EvaluationSimDataset"
+[test_dataset]
+path = "dataloader.DNSAudio"
 [test_dataset.args]
-scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/et_simu_1ch.scp"
+root = "/nfs/xhao/data/intel_ndns/test_set/"
+train = false
 [test_dataset.dataloader]
 batch_size = 1
-num_workers = 1
-
-[[test_dataset]]
-path = "dataloader.EvaluationRealDataset"
-[test_dataset.args]
-scp_fpath = "/home/xhao/proj/spiking-fullsubnet/recipes/reverb/data/et_real_1ch.scp"
-[test_dataset.dataloader]
-batch_size = 1
-num_workers = 1
+num_workers = 0
