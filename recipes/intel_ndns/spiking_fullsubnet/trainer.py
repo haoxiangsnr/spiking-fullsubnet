@@ -104,4 +104,4 @@ class Trainer(BaseTrainer):
         return self.validation_step(batch, batch_idx, dataloader_idx)
 
     def test_epoch_end(self, outputs, log_to_tensorboard=True):
-        return self.test_epoch_end(outputs, log_to_tensorboard=False)
+        return self.validation_epoch_end(outputs, log_to_tensorboard=False)

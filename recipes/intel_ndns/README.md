@@ -61,3 +61,19 @@ There are some 0s files. You may need to filter them out.
 - `russian_speech/M-AILABS_Speech_Dataset/ru_RU_47hrs_48k/male/minaev/oblomov/wavs/oblomov_s002765.wav` is `[1, 0]`.
 - `russian_speech/M-AILABS_Speech_Dataset/ru_RU_47hrs_48k/male/minaev/oblomov/wavs/oblomov_s003811.wav` is `[1, 0]`.
 - Number of non-mono wav files: 0
+
+## Inference Example
+
+Please change the following arguments according to your environment.
+
+```shell
+# For denoising
+cd recipes/intel_ndns/spiking_fullsubnet
+# For dereverberation
+cd recipes/reverb/spiking_fullsubnet
+# For separation
+cd recipes/wsj0-mix/spiking_fullsubnet
+```
+
+accelerate launch --multi_gpu --num_processes=4 --gpu_ids 4,5,6,7 --main_process_port 46529 run.py -C baseline_m.toml -M test --ckpt_path best
+```
