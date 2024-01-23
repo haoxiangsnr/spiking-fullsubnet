@@ -6,7 +6,7 @@ from einops import rearrange, repeat
 from torch.nn import functional as F
 
 from audiozen.acoustics.audio_feature import istft, stft
-from recipes.intel_ndns.spiking_fullsubnet.efficient_spiking_neuron import MemoryState, efficient_spiking_neuron
+from audiozen.models.spiking_fullsubnet.efficient_spiking_neuron import MemoryState, efficient_spiking_neuron
 
 
 class SequenceModel(nn.Module):
