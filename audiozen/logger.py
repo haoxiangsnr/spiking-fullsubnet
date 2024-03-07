@@ -19,7 +19,7 @@ class TensorboardLogger(SummaryWriter):
         )
 
 
-def init_logging_logger(config):
+def init_logging_logger(output_dir):
     """Initialize logging logger with handlers.
 
     Args:
@@ -34,8 +34,8 @@ def init_logging_logger(config):
         >>> logger.info("info message")
     """
     # Parse log_fpath
-    log_dir: Path = Path(config["meta"]["save_dir"]).expanduser().absolute() / config["meta"]["exp_id"]
-    log_dir.mkdir(parents=True, exist_ok=True)
+    output_dir = Path(output_dir) if isinstance(output_dir, str) else output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # disable logging for libraries that use standard logging module
     logging.getLogger("matplotlib").setLevel(logging.WARNING)
@@ -56,7 +56,7 @@ def init_logging_logger(config):
 
     # Create a file handler and set the logger level to debug
     time_now = time.strftime("%Y_%m_%d--%H_%M_%S")
-    file_handler = logging.FileHandler(str(log_dir / f"{config['meta']['exp_id']}_{time_now}.log"))
+    file_handler = logging.FileHandler(str(output_dir / f"{time_now}.log"))
     file_handler.setLevel(level=log_level)
 
     # Create formatters (file logger have more info)
@@ -77,4 +77,4 @@ def init_logging_logger(config):
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
 
-    logger.info(f"Initialized logger with log file in {log_dir.as_posix()}.")
+    logger.info(f"Initialized logger with log file in {output_dir.as_posix()}.")

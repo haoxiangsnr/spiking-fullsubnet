@@ -26,13 +26,13 @@ def has_length(dataset):
 
 
 class TrainerState:
-    def __init__(self, save_max_score) -> None:
+    def __init__(self, greater_is_better) -> None:
         self.epochs_trained = 0
         self.steps_trained = 0
 
-        self.patience = 0
+        self.early_stopping_patience_counter = 0
 
-        self.best_score = -np.inf if save_max_score else np.inf
+        self.best_score = -np.inf if greater_is_better else np.inf
         self.best_score_epoch = 0
 
     def load_state_dict(self, state_dict: dict) -> None:
@@ -42,13 +42,13 @@ class TrainerState:
         self.best_score = state_dict["best_score"]
         self.best_score_epoch = state_dict["best_score_epoch"]
 
-        self.patience = state_dict["patience"]
+        self.early_stopping_patience_counter = state_dict["early_stopping_patience_counter"]
 
     def state_dict(self) -> dict:
         return {
             "epochs_trained": self.epochs_trained,
             "steps_trained": self.steps_trained,
-            "patience": self.patience,
+            "early_stopping_patience_counter": self.early_stopping_patience_counter,
             "best_score": self.best_score,
             "best_score_epoch": self.best_score_epoch,
         }

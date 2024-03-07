@@ -80,7 +80,7 @@ class Trainer:
             logger.info(f"`validation_interval` is set to {self.validation_interval}. It must be >= 1.")
 
         # Trainer states
-        self.state = TrainerState(save_max_score=self.save_max_score)
+        self.state = TrainerState(greater_is_better=self.save_max_score)
         self.accelerator.register_for_checkpointing(self.state)  # Register accelerate objects
 
         # Others
@@ -123,16 +123,18 @@ class Trainer:
             self.state.best_score = score
             self.state.best_score_epoch = self.state.epochs_trained
             self._save_checkpoint(self.state.epochs_trained, is_best_epoch=True)
-            self.state.patience = 0
+            self.state.early_stopping_patience_counter = 0
             logger.info(f"Found new best score: {score:.4f}, saving checkpoint...")
         else:
             logger.info(
                 f"Score did not improve from {self.state.best_score:.4f} at epoch {self.state.best_score_epoch}."
             )
-            self.state.patience += 1
-            logger.info(f"Early stopping counter: {self.state.patience} out of {self.max_patience}")
+            self.state.early_stopping_patience_counter += 1
+            logger.info(
+                f"Early stopping counter: {self.state.early_stopping_patience_counter} out of {self.max_patience}"
+            )
 
-            if self.state.patience >= self.max_patience:
+            if self.state.early_stopping_patience_counter >= self.max_patience:
                 logger.info("Early stopping triggered, stopping training...")
                 should_stop = True
 
