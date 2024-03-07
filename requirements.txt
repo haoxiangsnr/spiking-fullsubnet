@@ -1,3 +1,4 @@
+simple_parsing
 einops
 flit
 h5py
