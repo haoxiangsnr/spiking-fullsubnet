@@ -1,6 +1,7 @@
 import logging
 import sys
 from dataclasses import dataclass
+from typing import Union
 
 from simple_parsing.helpers import Serializable
 
@@ -16,7 +17,7 @@ class TrainingArgs(Serializable):
     do_train: bool = True  # Whether to run the training.
     do_eval: bool = False  # Whether to run the evaluation.
     do_predict: bool = False  # Whether to run the prediction.
-    resume_from_checkpoint: bool = False  # Whether to resume the experiment from a checkpoint.
+    resume_from_checkpoint: Union[str, bool] = False  # The checkpoint to resume from.
     seed: int = 20220815  # The seed to use for reproducibility.
 
     per_device_train_batch_size: int = 8

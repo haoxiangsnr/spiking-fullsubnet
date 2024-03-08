@@ -98,8 +98,8 @@ class Trainer:
             self.args.save(self.trainer_args_path.as_posix())
 
             logger.info(f"Model arguments are saved to {self.model_args_path.as_posix()}.")
-            if hasattr(self.model, "config") or hasattr(self.model, "args"):
-                self.model.config.save(self.model_args_path.as_posix())
+            if hasattr(self.model, "args"):
+                self.model.args.save(self.model_args_path.as_posix())
 
             # Backup of project code
             # shutil.copytree(src=self.source_code_dir.as_posix(), dst=self.source_code_backup_dir.as_posix())
@@ -407,7 +407,7 @@ class Trainer:
             "num_workers": self.args.dataloader_num_workers,
             "pin_memory": self.args.dataloader_pin_memory,
             "persistent_workers": self.args.dataloader_persistent_workers,
-            "drop_last": self.args.dataloader_drop_last,
+            "drop_last": True,
             "prefetch_factor": self.args.dataloader_prefetch_factor,
         }
 

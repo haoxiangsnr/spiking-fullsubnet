@@ -308,7 +308,7 @@ def compute_synops(fb_all_layer_outputs, sb_all_layer_outputs, shared_weights=Tr
             * fb_all_layer_outputs[i].size(-1)
             * (fb_all_layer_outputs[i + 1].size(-1) + fb_all_layer_outputs[i].size(-1))
         )
-        print(f"i: {i}, synops: {curr_synops}")
+        # print(f"i: {i}, synops: {curr_synops}")
         synops += curr_synops
     for i in range(len(sb_all_layer_outputs)):
         for j in range(1, len(sb_all_layer_outputs[i]) - 1):
@@ -318,7 +318,7 @@ def compute_synops(fb_all_layer_outputs, sb_all_layer_outputs, shared_weights=Tr
                 * sb_all_layer_outputs[i][j].size(-1)
                 * (sb_all_layer_outputs[i][j + 1].size(-1) + sb_all_layer_outputs[i][j].size(-1))
             )
-            print(f"i: {i}, j: {j}, synops: {curr_synops}")
+            # print(f"i: {i}, j: {j}, synops: {curr_synops}")
             synops += curr_synops
 
     if shared_weights:
@@ -328,14 +328,14 @@ def compute_synops(fb_all_layer_outputs, sb_all_layer_outputs, shared_weights=Tr
 
 
 def compute_neuronops(fb_all_layer_outputs, sb_all_layer_outputs):
-    print("Compute neuronops.....")
+    # print("Compute neuronops.....")
     neuronops = 0.0
     for i in range(len(fb_all_layer_outputs)):
-        print(f"i:{i}, {fb_all_layer_outputs[i].size()}")
+        # print(f"i:{i}, {fb_all_layer_outputs[i].size()}")
         neuronops += fb_all_layer_outputs[i].size(-1)
     for i in range(len(sb_all_layer_outputs)):
         for j in range(len(sb_all_layer_outputs[i])):
-            print(f"i:{i} j: {j}, {sb_all_layer_outputs[i][j].size()}")
+            # print(f"i:{i} j: {j}, {sb_all_layer_outputs[i][j].size()}")
             neuronops += sb_all_layer_outputs[i][j].size(-1)
     return neuronops
 
