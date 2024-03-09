@@ -42,7 +42,7 @@ class Trainer:
 
         Args:
             model: The model to train, evaluate or use for predictions.
-            args: The training arguments.
+            args: The training arguments. It is a object of `audiozen.trainer_args.TrainingArgs`.
             data_collator: The data collator to use for training and evaluation. Defaults to None.
             train_dataset: The training dataset. Defaults to None.
             eval_dataset: The evaluation dataset. Defaults to None. It can be a single dataset or a dictionary of datasets.
@@ -51,15 +51,17 @@ class Trainer:
         Important attributes:
             **is_in_train**: Whether or not a model is currently running `train` (e.g. when `evaluate` is called while in `train`)
         """
-        self.args = args
         self.is_in_train = False
+        self.args = args
+
         # Accelerator should be created as early as possible
-        self.create_accelerator_and_postprocess()
+        self.create_accelerator()
 
         # Set random seed using the method from accelerate
         set_seed(self.args.seed, device_specific=True)
 
-        # Model. We are able to prepare the model directly in the __init__ method. However, we don't do it there is a bug
+        # Model. We are able to prepare the model directly in the __init__ method.
+        # However, we don't do it there is a bug in accelerate.
         self.model = model
 
         # Optimizers
@@ -69,6 +71,10 @@ class Trainer:
         self.data_collator = data_collator
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
+
+        # Dataloaders. They will be created in the `train` and `evaluate` methods.
+        self.train_dataloader = None
+        self.eval_dataloaders = None
 
         # Setup directories
         self._setup_exp_paths(output_dir=self.args.output_dir)
@@ -108,7 +114,7 @@ class Trainer:
             # Model summary
             logger.info(f"\n{summary(self.model, verbose=0)}")
 
-    def create_accelerator_and_postprocess(self):
+    def create_accelerator(self):
         grad_acc_kwargs = {"num_steps": self.args.gradient_accumulation_steps}
         grad_acc_kwargs["sync_with_dataloader"] = False
         gradient_accumulation_plugin = GradientAccumulationPlugin(**grad_acc_kwargs)
@@ -235,21 +241,23 @@ class Trainer:
     def _get_time_now():
         return time.strftime("%Y_%m_%d--%H_%M_%S")
 
-    def _setup_exp_paths(self, output_dir):
+    def _setup_exp_paths(self, output_dir: str):
         """Set the paths for the experiment.
 
         Args:
-            save_dir: the root directory to save all experiments.
+            output_dir: the root directory to save all experiments.
 
-        Notes:
-            - save_dir: /home/xhao/exp
+        Example:
+            - output_dir: /home/xhao/exp/fullsubnet_lr_0.1
             - checkpoints_dir: /home/xhao/exp/fullsubnet_lr_0.1/checkpoints
             - tb_log_dir: /home/xhao/exp/fullsubnet_lr_0.1/tb_log
-            - src_source_code_dir: /home/xhao/audiozen
-            - source_code_backup_dir: /home/xhao/exp/fullsubnet_lr_0.1/source_code__2023_01_07__17_19_57
-            - config_path: /home/xhao/exp/fullsubnet_lr_0.1/config__2023_01_07__17_19_57.toml
+            - enhanced_dir: /home/xhao/exp/fullsubnet_lr_0.1/enhanced
+            - metrics_dir: /home/xhao/exp/fullsubnet_lr_0.1/metrics
+            - source_code_backup_dir: /home/xhao/exp/fullsubnet_lr_0.1/source_code__YYYY_MM_DD__HH_MM_SS
+            - trainer_args_path: /home/xhao/exp/fullsubnet_lr_0.1/trainer_args__YYYY_MM_DD__HH_MM_SS.yaml
+            - model_args_path: /home/xhao/exp/fullsubnet_lr_0.1/model_args__YYYY_MM_DD__HH_MM_SS.yaml
         """
-        time_now = self._get_time_now()
+        time_now = self._get_time_now()  # returns a timestamp string
 
         self.output_dir = Path(output_dir).expanduser().absolute()
         self.checkpoints_dir = self.output_dir / "checkpoints"
@@ -279,23 +287,33 @@ class Trainer:
 
         return ckpt_path
 
-    def _load_checkpoint(self, ckpt):
-        """load a checkpoint from the checkpints directory.
+    def _load_checkpoint(self, ckpt: str):
+        """Load a specific checkpoint.
 
         Args:
-            ckpt_path: "best", "latest", or a path to a checkpoint file
+            ckpt_path: "no", "best", "latest", or a path to a checkpoint file.
         """
-        if ckpt == "best":
-            ckpt = self.checkpoints_dir / "best"
+        if not isinstance(ckpt, str):
+            raise ValueError(f"Invalid checkpoint specifier: {ckpt}.")
+
+        # Lower case the checkpoint string
+        ckpt = ckpt.lower()
+
+        # It can be "no", "best", "latest", or a path to a checkpoint file.
+        if ckpt == "no":
+            logger.info("Will start from scratch (no checkpoint will be loaded).")
+            return
+        elif ckpt == "best":
+            ckpt_path = self.checkpoints_dir / "best"
         elif ckpt == "latest":
-            ckpt = self._find_latest_ckpt_path()
+            ckpt_path = self._find_latest_ckpt_path()
         else:
-            ckpt = Path(ckpt).expanduser().absolute()
+            ckpt_path = Path(ckpt).expanduser().absolute()
 
-        if not ckpt.exists():
-            raise FileNotFoundError(f"Checkpoint {ckpt.as_posix()} not found.")
+        if not ckpt_path.exists():
+            raise FileNotFoundError(f"Checkpoint {ckpt_path.as_posix()} not found.")
 
-        self.accelerator.load_state(ckpt, map_location="cpu")
+        self.accelerator.load_state(ckpt_path, map_location="cpu")
 
         logger.info(f"Checkpoint on epoch {self.state.epochs_trained} is loaded.")
 
@@ -407,7 +425,7 @@ class Trainer:
             "num_workers": self.args.dataloader_num_workers,
             "pin_memory": self.args.dataloader_pin_memory,
             "persistent_workers": self.args.dataloader_persistent_workers,
-            "drop_last": True,
+            "drop_last": False,
             "prefetch_factor": self.args.dataloader_prefetch_factor,
         }
 
@@ -573,31 +591,26 @@ class Trainer:
 
     @torch.no_grad()
     def evaluate(self):
-        """Run evaluation and returns metrics.
+        """Run evaluation (validation) and returns metrics.
 
         Returns:
-            score: the metric score of the evaluation epoch.
+            score: The representative score of the evaluation.
         """
         logger.info("Begin evaluation...")
-        eval_dataloaders = self.get_eval_dataloaders()
 
+        # get_eval_dataloaders() will be called multiple times, so it will prepare the dataloaders multiple times.
+        # As a result, it will save multiple copies of the dataloaders in the Accelerate object.
+        # Here, we will make sure that the dataloaders are only prepared once.
+        if self.eval_dataloaders is None:
+            self.eval_dataloaders = self.get_eval_dataloaders()
+
+        # Whether the evaluation is running during the training or running as a standalone evaluation.
+        # If the evaluation is running as a standalone evaluation, the model should be loaded from a checkpoint.
         if not self.is_in_train:
             self.model = self.accelerator.prepare(self.model)
+            self._load_checkpoint(ckpt=self.args.resume_from_checkpoint)
 
-            resume_from_checkpoint = self.args.resume_from_checkpoint
-            # Resume from the latest checkpoint
-            if isinstance(resume_from_checkpoint, bool):
-                if resume_from_checkpoint:
-                    self._load_checkpoint(ckpt="latest")
-                else:
-                    logger.info("Evaluating on a randomly initialized model.")
-            # Resume from a specific checkpoint
-            elif isinstance(resume_from_checkpoint, str):
-                self._load_checkpoint(ckpt=resume_from_checkpoint)
-            else:
-                raise ValueError(f"Invalid ``resume_from_checkpoint``: {resume_from_checkpoint}")
-
-        evaluation_output = self.evaluation_loop(eval_dataloaders, description="evaluate", gather_step_output=True)
+        evaluation_output = self.evaluation_loop(description="evaluate", gather_step_output=True)
 
         logger.info("Evaluation finished, begin hook `evaluate_epoch_end`...")
         if self.accelerator.is_local_main_process:
@@ -609,26 +622,26 @@ class Trainer:
 
     @torch.no_grad()
     def predict(self):
+        """Run prediction.
+
+        In the predict mode, the model will be loaded from a checkpoint and the evaluation_loop will be called.
+        However, the evaluation_loop will not gather any step_output from all processes.
+        """
         logger.info("Begin predicting...")
-        eval_dataloaders = self.get_eval_dataloaders()
 
-        resume_from_checkpoint = self.args.resume_from_checkpoint
-        # Resume from the latest checkpoint
-        if isinstance(resume_from_checkpoint, bool):
-            if resume_from_checkpoint:
-                self._load_checkpoint(ckpt="latest")
-            else:
-                logger.info("Evaluating on a randomly initialized model.")
-        # Resume from a specific checkpoint
-        elif isinstance(resume_from_checkpoint, str):
-            self._load_checkpoint(ckpt=resume_from_checkpoint)
-        else:
-            raise ValueError(f"Invalid ``resume_from_checkpoint``: {resume_from_checkpoint}")
+        # In the predict mode, get_eval_dataloaders() will be called only once.
+        self.eval_dataloaders = self.get_eval_dataloaders()
 
-        self.evaluation_loop(eval_dataloaders, description="predict", gather_step_output=False)
+        self.model = self.accelerator.prepare(self.model)
+        self._load_checkpoint(ckpt=self.args.resume_from_checkpoint)
+
+        # In the predict mode, we don't need to gather the step_output from all processes.
+        self.evaluation_loop(description="predict", gather_step_output=False)
+
+        logger.info("Prediction finished.")
 
     @torch.no_grad()
-    def evaluation_loop(self, dataloaders: Dict[str, DataLoader], description: str, gather_step_output: bool = False):
+    def evaluation_loop(self, description: str, gather_step_output: bool = False):
         """Prediction/evaluation loop, shared by `Trainer.evaluate()` and `Trainer.predict()`."""
         args = self.args
 
@@ -637,39 +650,47 @@ class Trainer:
         logger.info(f"***** Running {description} *****")
         logger.info(f"  Batch size = {args.eval_batch_size}")
 
-        evaluation_output = []
-        for key, dataloader in dataloaders.items():
+        evaluation_output = {}
+        for dl_idx, (dl_id, dataloader) in enumerate(self.eval_dataloaders.items()):
             dataloader_output = []
             for batch_idx, batch in enumerate(
                 tqdm(
                     dataloader,
-                    desc=f"Evaluation on dataloader {key}",
+                    desc=f"Evaluation on dataloader `{dl_id}`",
                     bar_format="{l_bar}{r_bar}",
                     dynamic_ncols=True,
                     disable=not self.accelerator.is_local_main_process,
                 )
             ):
-                # We recommend you directly calculate the metric score in the evaluation_step function and return the
-                # metric score in the evaluation_step function, and then calculate the mean of the metric score
-                # in the evaluation_epoch_end function.
-                step_output = self.evaluation_step(batch, batch_idx, key)
+                """
+                It is advised against computing metrics within the `evaluation_epoch_end` method for several reasons:
+                    1. Most evaluation metrics are inherently sequential and not parallelizable. Hence, computing them in `evaluation_epoch_end` does not offer a speed advantage during evaluation.
+                    2. By not aggregating all outputs for metric calculation at the epoch's end, we reduce the risk of memory overflow, which can occur when gathering results across all processes.
+                    3. Calculating the metric score during `evaluation_step` allows for earlier detection of any errors in the code.
 
-                # If gather_step_output is True, we will gather the step_output from all processes and return a list of
-                # step_output. If gather_step_output is False, we will return a list of gathered step_output.
-                # If do predict, we don't need to gather the step_output from all processes.
-                # If do evaluation, we need to do it.
+                Recommendations for metric calculation:
+                    1. Perform immediate metric score calculation within the `evaluation_step` method.
+                    2. Accumulate the results at this stage.
+                    3. If necessary, compute the average or aggregate metric score in the `evaluation_epoch_end` method.
+                """
+                step_output = self.evaluation_step(batch, batch_idx, dl_id)
+
+                # If `gather_step_output` is True, we will gather the step_output from all processes and return a list of all metric scores.
                 if gather_step_output:
                     """
-                    [{
-                        "metric_1": metric_1_score,
-                        "metric_2": metric_1_score,
+                    Collect the step_output from all processes and return a list of all metric scores. Assume we have two processes:
+                    [
+                        {"metric_1": xx, "metric_2": xx, ...},  # process 0
+                        {"metric_1": xx, "metric_2": xx, ...},  # process 1
+                        {"metric_1": xx, "metric_2": xx, ...},  # process 0
+                        {"metric_1": xx, "metric_2": xx, ...},  # process 1
                         ...
-                    }, ...]
+                    ]
                     """
                     step_output = self.accelerator.gather_for_metrics(step_output)
                 dataloader_output.append(step_output)
-            evaluation_output.append(dataloader_output)
 
+            evaluation_output[dl_id] = dataloader_output
         return evaluation_output
 
     def _check_improvement(self, score, save_max_score=True):
@@ -686,48 +707,43 @@ class Trainer:
                 return False
 
     def training_step(self, batch, batch_idx):
-        """Implement a training step.
+        """Implement a training step (iteration).
 
-        Implement your own training step here.
-        The input batch is from a training dataloader and the output of this function should be a loss tensor.
+        Implement your own training step here. The input batch is from a training dataloader and the output of this
+        function can be various. For example, it can be a dict of loss, or a dict of loss and some enhanced audio signals.
         Here is the persuade code for training a model:
 
         .. code-block:: python
-            :emphasize-lines: 7
+            :emphasize-lines: 6
 
             for epoch in range(start_epoch, end_epoch):
                 self.model.train()
 
                 training_epoch_output = []
                 for batch, batch_index in dataloader:
-                    zero_grad()
-                    loss = training_step(batch, batch_idx)
-                    loss.backward()
-                    optimizer.step()
+                    loss_dict = training_step(batch, batch_idx)
+                    training_epoch_output.append(loss_dict)
 
-                training_epoch_output.append(loss)
                 training_epoch_end(training_epoch_output)
-
                 save_checkpoint()
-
                 if some_condition:
                     score = validate()
                     if score > best_score:
                         save_checkpoint(best=True)
-
 
         Args:
             batch: a batch of data, which passed from a custom training dataloader.
             batch_idx: the index of the current batch.
 
         Returns:
-            loss: the loss of the batch.
+            loss_dict: a dict of loss. For example, {"loss_1": loss, "loss_2": loss, ...}
         """
         raise NotImplementedError
 
     def training_epoch_end(self, training_epoch_output):
-        """Implement the logic of the end of a training epoch. Please override this function if you want to do something.
+        """Implement the logic of the end of a training epoch.
 
+        By default, this function will log the mean loss of each loss item on a training epoch. You can override this.
         When the training epoch ends, this function will be called. The input is a list of the loss dict of each step
         in a training epoch. You may want to log the epoch-level training loss here.
 
@@ -741,16 +757,14 @@ class Trainer:
                     training_epoch_output.append(loss)
 
                 training_epoch_end(training_epoch_output)
-
                 save_checkpoint()
-
                 if some_condition:
                     score = validate()
                     if score > best_score:
                         save_checkpoint(best=True)
 
         Args:
-            training_epoch_output: the output of the training epoch. It may a list of the output of each batch.
+            training_epoch_output: the output of the training epoch. It may a list of the output of each batch (iteration).
         """
         loss_keys = training_epoch_output[0].keys()
 
