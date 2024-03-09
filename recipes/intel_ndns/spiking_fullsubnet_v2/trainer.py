@@ -1,9 +1,8 @@
 import pandas as pd
 from accelerate.logging import get_logger
-from tqdm import tqdm
 
 from audiozen.loss import SISNRLoss, freq_MAE, mag_MAE
-from audiozen.metric import DNSMOS, PESQ, SISDR, STOI
+from audiozen.metric import DNSMOS, SISDR, compute_neuronops, compute_synops
 from audiozen.trainer_v2 import Trainer as BaseTrainer
 
 
@@ -14,9 +13,6 @@ class Trainer(BaseTrainer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dns_mos = DNSMOS(input_sr=self.sr, device=self.accelerator.process_index)
-        self.stoi = STOI(sr=self.sr)
-        self.pesq_wb = PESQ(sr=self.sr, mode="wb")
-        self.pesq_nb = PESQ(sr=self.sr, mode="nb")
         self.sisnr_loss = SISNRLoss(return_neg=False)
         self.si_sdr = SISDR()
         self.north_star_metric = "si_sdr"
@@ -38,8 +34,9 @@ class Trainer(BaseTrainer):
 
         self.accelerator.backward(loss)
 
+        # If accumulated gradients are ready, clip them
         if self.accelerator.sync_gradients:
-            norm = self.accelerator.clip_grad_norm_(self.model.parameters(), self.args.max_grad_norm)
+            norm_before = self.accelerator.clip_grad_norm_(self.model.parameters(), self.args.max_grad_norm)
 
         self.optimizer.step()
 
@@ -49,58 +46,71 @@ class Trainer(BaseTrainer):
             "loss_mag_mae": loss_mag_mae,
             "loss_sdr": loss_sdr,
             "loss_sdr_norm": loss_sdr_norm,
-            "norm_before": norm,
+            "norm_before": norm_before,
         }
 
-    def evaluation_step(self, batch, batch_idx, dataloader_idx=0):
+    def evaluation_step(self, batch, batch_idx, dataloader_id=0):
         mix_y, ref_y, id = batch
-        est_y, *_ = self.model(mix_y)
 
-        if len(id) != 1:
-            raise ValueError(f"Expected batch size 1 during validation, got {len(id)}")
+        # In this case, the batch size is larger than one. We need to iterate over the batch size later
+        est_y, enh_mag, fb_all_layer_outputs, sb_all_layer_outputs = self.model(mix_y)  # [B, T]
 
-        # calculate metrics
-        mix_y = mix_y.squeeze(0).detach().cpu().numpy()
-        ref_y = ref_y.squeeze(0).detach().cpu().numpy()
-        est_y = est_y.squeeze(0).detach().cpu().numpy()
+        # Compute synops and neuronops, which has been averaged over the samples in the batch
+        synops = compute_synops(
+            fb_all_layer_outputs,
+            sb_all_layer_outputs,
+            shared_weights=self.accelerator.unwrap_model(self.model).args.shared_weights,
+        )
+        neuron_ops = compute_neuronops(fb_all_layer_outputs, sb_all_layer_outputs)
 
-        si_sdr = self.si_sdr(est_y, ref_y)
-        dns_mos = self.dns_mos(est_y)
+        # Compute other metrics for each sample in the batch
+        batch_size = mix_y.shape[0]
+        out = []
+        for i in range(batch_size):
+            ref_y_i = ref_y[i].squeeze(0).detach().cpu().numpy()
+            est_y_i = est_y[i].squeeze(0).detach().cpu().numpy()
 
-        out = si_sdr | dns_mos
-        return [out]
+            si_sdr = self.si_sdr(est_y_i, ref_y_i)
+            dns_mos = self.dns_mos(est_y_i)
+
+            out_i = si_sdr | dns_mos | {"synops": synops} | {"neuron_ops": neuron_ops}
+            out.append(out_i)
+
+        return out
 
     def evaluation_epoch_end(self, outputs, log_to_tensorboard=True):
+        # We use this variable to store the score for the current epoch
         score = 0.0
 
-        for dataloader_idx, dataloader_outputs in enumerate(outputs):
-            logger.info(f"Computing metrics on epoch {self.state.epochs_trained} for dataloader {dataloader_idx}...")
+        for dl_id, dataloader_outputs in outputs.items():
+            logger.info(f"Computing metrics on epoch {self.state.epochs_trained} for dataloader `{dl_id}`...")
 
-            loss_dict_list = []
-            for step_loss_dict_list in tqdm(dataloader_outputs):
-                loss_dict_list.extend(step_loss_dict_list)
+            # It should be a list of dictionaries, where each dictionary contains the metrics for a sample
+            metric_dict_list = dataloader_outputs
+            logger.info(f"The number of samples in the dataloader `{dl_id}` is {len(metric_dict_list)}")
 
-            df_metrics = pd.DataFrame(loss_dict_list)
-
-            # Compute mean of all metrics
+            # Use pandas to compute the mean of all metrics and save them to a csv file
+            df_metrics = pd.DataFrame(metric_dict_list)
             df_metrics_mean = df_metrics.mean(numeric_only=True)
-            df_metrics_mean_df = df_metrics_mean.to_frame().T
+            df_metrics_mean_df = df_metrics_mean.to_frame().T  # Convert mean to a DataFrame
 
             time_now = self._get_time_now()
             df_metrics.to_csv(
-                self.metrics_dir / f"dl_{dataloader_idx}_epoch_{self.state.epochs_trained}_{time_now}.csv",
+                self.metrics_dir / f"dl_{dl_id}_epoch_{self.state.epochs_trained}_{time_now}.csv",
                 index=False,
             )
             df_metrics_mean_df.to_csv(
-                self.metrics_dir / f"dl_{dataloader_idx}_epoch_{self.state.epochs_trained}_{time_now}_mean.csv",
+                self.metrics_dir / f"dl_{dl_id}_epoch_{self.state.epochs_trained}_{time_now}_mean.csv",
                 index=False,
             )
 
             logger.info(f"\n{df_metrics_mean_df.to_markdown()}")
+
+            # We use the `north_star_metric` to compute the score. In this case, it is the `si_sdr`.
             score += df_metrics_mean[self.north_star_metric]
 
             if log_to_tensorboard:
                 for metric, value in df_metrics_mean.items():
-                    self.writer.add_scalar(f"metrics_{dataloader_idx}/{metric}", value, self.state.epochs_trained)
+                    self.writer.add_scalar(f"metrics_{dl_id}/{metric}", value, self.state.epochs_trained)
 
         return score
