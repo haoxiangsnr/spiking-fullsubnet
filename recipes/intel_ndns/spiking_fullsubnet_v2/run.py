@@ -30,12 +30,14 @@ def run(args):
         eval_dataset=eval_dataset,
     )
 
-    if trainer.args.do_train:
-        trainer.train()
-    elif trainer.args.do_eval:
+    if trainer_args.do_eval:
         trainer.evaluate()
-    elif trainer.args.do_predict:
+    elif trainer_args.do_predict:
         trainer.predict()
+    elif trainer_args.do_train:
+        trainer.train()
+    else:
+        raise ValueError("At least one of do_train, do_eval, or do_predict must be True.")
 
 
 if __name__ == "__main__":
