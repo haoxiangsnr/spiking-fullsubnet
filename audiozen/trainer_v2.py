@@ -674,7 +674,6 @@ class Trainer:
                     3. If necessary, compute the average or aggregate metric score in the `evaluation_epoch_end` method.
                 """
                 step_output = self.evaluation_step(batch, batch_idx, dl_id)
-                print(f"len(step_output): {len(step_output)} on device {self.device}")
 
                 # If `gather_step_output` is True, we will gather the step_output from all processes and return a list of all metric scores.
                 if gather_step_output:
