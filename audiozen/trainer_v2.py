@@ -92,7 +92,7 @@ class Trainer:
         if self.accelerator.is_local_main_process:
             prepare_empty_dir(
                 [self.checkpoints_dir, self.tb_log_dir, self.enhanced_dir, self.metrics_dir],
-                resume=self.args.resume_from_checkpoint,
+                resume=self.args.resume_from_checkpoint != "no",
             )
 
             logger.info(f"\nEnvironment information:\n{print_env()}")
@@ -674,12 +674,13 @@ class Trainer:
                     3. If necessary, compute the average or aggregate metric score in the `evaluation_epoch_end` method.
                 """
                 step_output = self.evaluation_step(batch, batch_idx, dl_id)
+                print(f"len(step_output): {len(step_output)} on device {self.device}")
 
                 # If `gather_step_output` is True, we will gather the step_output from all processes and return a list of all metric scores.
                 if gather_step_output:
                     """
                     Collect the step_output from all processes and return a list of all metric scores. Assume we have two processes:
-                    [
+                    step_output = [
                         {"metric_1": xx, "metric_2": xx, ...},  # process 0
                         {"metric_1": xx, "metric_2": xx, ...},  # process 1
                         {"metric_1": xx, "metric_2": xx, ...},  # process 0
@@ -691,6 +692,14 @@ class Trainer:
                 dataloader_output.append(step_output)
 
             evaluation_output[dl_id] = dataloader_output
+
+        """
+        evaluation_output = {
+            "dataloader_id_1": [step_output_0, step_output_1, ...],
+            "dataloader_id_2": [step_output_0, step_output_1, ...],
+            ...
+        }
+        """
         return evaluation_output
 
     def _check_improvement(self, score, save_max_score=True):

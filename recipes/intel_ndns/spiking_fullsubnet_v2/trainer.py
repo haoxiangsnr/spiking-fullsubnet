@@ -85,8 +85,9 @@ class Trainer(BaseTrainer):
         for dl_id, dataloader_outputs in outputs.items():
             logger.info(f"Computing metrics on epoch {self.state.epochs_trained} for dataloader `{dl_id}`...")
 
-            # It should be a list of dictionaries, where each dictionary contains the metrics for a sample
-            metric_dict_list = dataloader_outputs
+            metric_dict_list = []
+            for i, step_output in enumerate(dataloader_outputs):
+                metric_dict_list += step_output
             logger.info(f"The number of samples in the dataloader `{dl_id}` is {len(metric_dict_list)}")
 
             # Use pandas to compute the mean of all metrics and save them to a csv file
