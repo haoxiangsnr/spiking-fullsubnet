@@ -24,7 +24,7 @@ model:
   sb_hidden_size: 224
   sb_num_layers: 2
   freq_cutoffs: [0, 32, 128, 256]
-  df_orders: [5, 3, 1]
+  df_orders: [7, 1, 1]
   center_freq_sizes: [4, 32, 64]
   neighbor_freq_sizes: [15, 15, 15]
   use_pre_layer_norm_fb: True

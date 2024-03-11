@@ -1,10 +1,11 @@
 trainer:
+  output_dir: exp/middle_8-32-64_311
   do_train: True
   resume_from_checkpoint: "no"
   per_device_train_batch_size: 64
   eval_batch_size: 8
   dataloader_num_workers: 8
-  num_train_epochs: 100
+  num_train_epochs: 200
   max_grad_norm: 10
   save_epoch_interval: 5
   eval_epoch_interval: 5
@@ -25,7 +26,7 @@ model:
   sb_num_layers: 2
   freq_cutoffs: [0, 32, 128, 256]
   df_orders: [5, 3, 1]
-  center_freq_sizes: [4, 32, 64]
+  center_freq_sizes: [8, 32, 64]
   neighbor_freq_sizes: [15, 15, 15]
   use_pre_layer_norm_fb: True
   use_pre_layer_norm_sb: True

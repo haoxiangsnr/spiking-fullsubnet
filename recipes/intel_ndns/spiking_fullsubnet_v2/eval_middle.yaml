@@ -1,8 +1,9 @@
 trainer:
-  do_train: True
+  do_train: False
+  do_eval: True
   resume_from_checkpoint: "no"
   per_device_train_batch_size: 64
-  eval_batch_size: 8
+  eval_batch_size: 60
   dataloader_num_workers: 8
   num_train_epochs: 100
   max_grad_norm: 10
@@ -40,7 +41,7 @@ train_dataset:
   offset: 0
 
 eval_dataset:
-  root: /datasets/datasets_fullband/validation_set/
+  root: /datasets/datasets_fullband/test_set_1/
   train: False
-  limit: 200
+  limit: False
   offset: 0
