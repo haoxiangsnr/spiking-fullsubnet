@@ -327,6 +327,35 @@ def compute_synops(fb_all_layer_outputs, sb_all_layer_outputs, shared_weights=Tr
         return 2 * synops.item()
 
 
+def compute_synops_v2(fb_all_layer_outputs, sb_all_layer_outputs, shared_weights=True):
+    synops = 0.0
+    T = fb_all_layer_outputs[1].size(0)
+    batch_size = fb_all_layer_outputs[1].size(1)
+    for i in range(1, len(fb_all_layer_outputs) - 1):
+        curr_synops = (
+            torch.gt(fb_all_layer_outputs[i], 0).float().sum()
+            / (T * batch_size)
+            * (fb_all_layer_outputs[i + 1].size(-1) + fb_all_layer_outputs[i].size(-1))
+        )
+        print(f"i: {i}, synops: {curr_synops}")
+        synops += curr_synops
+    for i in range(len(sb_all_layer_outputs)):
+        for j in range(1, len(sb_all_layer_outputs[i]) - 1):
+            # print(sb_all_layer_outputs[i][j].size())
+            curr_synops = (
+                torch.gt(sb_all_layer_outputs[i][j], 0).float().sum()
+                / (T * batch_size)
+                * (sb_all_layer_outputs[i][j + 1].size(-1) + sb_all_layer_outputs[i][j].size(-1))
+            )
+            print(f"i: {i}, j: {j}, synops: {curr_synops}")
+            synops += curr_synops
+
+    if shared_weights:
+        return synops.item()
+    else:
+        return 2 * synops.item()
+
+
 def compute_neuronops(fb_all_layer_outputs, sb_all_layer_outputs):
     # print("Compute neuronops.....")
     neuronops = 0.0
