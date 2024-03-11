@@ -475,30 +475,58 @@ class SpikingFullSubNet(nn.Module):
 
 
 if __name__ == "__main__":
+    from torchinfo import summary
+
+    from audiozen.metric import compute_neuronops, compute_synops, compute_synops_v2
+
     model = SpikingFullSubNet(
         n_fft=512,
         hop_length=128,
         win_length=512,
         fdrc=0.5,
         fb_input_size=64,
-        fb_hidden_size=256,
+        fb_hidden_size=240,
         fb_num_layers=2,
         fb_proj_size=64,
         fb_output_activate_function=None,
-        sb_hidden_size=128,
+        sb_hidden_size=160,
         sb_num_layers=2,
-        freq_cutoffs=[0, 20, 80, 256],
-        df_orders=[2, 2, 2],
-        center_freq_sizes=[2, 10, 22],
-        neighbor_freq_sizes=[8, 16, 32],
+        freq_cutoffs=[0, 32, 128, 256],
+        df_orders=[3, 1, 1],
+        center_freq_sizes=[8, 32, 64],
+        neighbor_freq_sizes=[15, 15, 15],
         use_pre_layer_norm_fb=True,
         use_pre_layer_norm_sb=True,
-        bn=False,
-        shared_weights=False,
+        bn=True,
+        shared_weights=True,
         sequence_model="GSN",
-        num_spks=2,
+        num_spks=1,
     )
 
     input = torch.rand(2, 16000)
-    output = model(input)
-    print(output[0].shape)
+    summary(model, input_data=input)
+    *_, fb_all_layer_outputs, sb_all_layer_outputs = model(input)
+
+    synops = compute_synops(fb_all_layer_outputs, sb_all_layer_outputs, shared_weights=True)
+    synops_v2 = compute_synops_v2(fb_all_layer_outputs, sb_all_layer_outputs, shared_weights=True)
+    neuronops = compute_neuronops(fb_all_layer_outputs, sb_all_layer_outputs)
+
+    buffer_latency = 0.032
+    enc_dec_latency = 0.030 / 1000
+    dns_latency = 0
+    dt = 0.008
+
+    latency = buffer_latency + enc_dec_latency + dns_latency
+    effective_synops_rate = (synops + 10 * neuronops) / dt
+    effective_synops_rate_v2 = (synops_v2 + 10 * neuronops) / dt
+    synops_delay_product = effective_synops_rate * latency
+    synops_delay_product_v2 = effective_synops_rate_v2 * latency
+
+    print(f"synops: {synops}, neuronops: {neuronops}, synops_v2: {synops_v2}")
+    print(synops + 10 * neuronops)
+    print(f"Solution Latency                 : {latency * 1000: .3f} ms")
+    print(f"Power proxy (Effective SynOPS)   : {effective_synops_rate:.3f} ops/s")
+    print(f"PDP proxy (SynOPS-delay product) : {synops_delay_product: .3f} ops")
+
+    print(f"Power proxy v2 (Effective SynOPS)   : {effective_synops_rate_v2 / 1000000 * 0.93 :.3f} ops/s")
+    print(f"PDP proxy v2 (SynOPS-delay product) : {synops_delay_product_v2 / 1000000 * 0.93 : .3f} ops")
