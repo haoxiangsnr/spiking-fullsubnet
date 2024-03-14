@@ -1,0 +1,47 @@
+trainer:
+  output_dir: exp/middle-model__partition-0-32-128-256__grouping-8-32-64__deep-filtering-5-3-1
+  do_train: True
+  resume_from_checkpoint: "no"
+  per_device_train_batch_size: 64
+  eval_batch_size: 8
+  dataloader_num_workers: 8
+  num_train_epochs: 200
+  max_grad_norm: 10
+  save_epoch_interval: 5
+  eval_epoch_interval: 5
+  early_stopping_patience: 20
+  save_total_limit: 20
+
+model:
+  n_fft: 512
+  hop_length: 128
+  win_length: 512
+  fdrc: 0.5
+  fb_input_size: 64
+  fb_hidden_size: 320
+  fb_num_layers: 2
+  fb_proj_size: 64
+  fb_output_activate_function: null
+  sb_hidden_size: 224
+  sb_num_layers: 2
+  freq_cutoffs: [0, 32, 128, 256]
+  df_orders: [5, 3, 1]
+  center_freq_sizes: [8, 32, 64]
+  neighbor_freq_sizes: [15, 15, 15]
+  use_pre_layer_norm_fb: True
+  use_pre_layer_norm_sb: True
+  bn: True
+  shared_weights: True
+  sequence_model: "GSN"
+  num_spks: 1
+
+train_dataset:
+  root: /datasets/datasets_fullband/training_set/
+  limit: False
+  offset: 0
+
+eval_dataset:
+  root: /datasets/datasets_fullband/validation_set/
+  train: False
+  limit: 200
+  offset: 0

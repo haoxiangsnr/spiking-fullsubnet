@@ -1,5 +1,5 @@
 trainer:
-  output_dir: exp/middle_8-32-64_311
+  output_dir: exp/small-model__partition-0-32-128-256__grouping-8-32-64__deep-filtering-5-3-1
   do_train: True
   resume_from_checkpoint: "no"
   per_device_train_batch_size: 64
@@ -18,11 +18,11 @@ model:
   win_length: 512
   fdrc: 0.5
   fb_input_size: 64
-  fb_hidden_size: 320
+  fb_hidden_size: 240
   fb_num_layers: 2
   fb_proj_size: 64
   fb_output_activate_function: null
-  sb_hidden_size: 224
+  sb_hidden_size: 160
   sb_num_layers: 2
   freq_cutoffs: [0, 32, 128, 256]
   df_orders: [5, 3, 1]
