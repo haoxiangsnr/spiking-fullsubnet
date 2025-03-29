@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="../">
 <head>
@@ -5,20 +7,16 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Running an Experiment &mdash; audiozen  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
       <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9d25a2f2" />
 
   
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -96,7 +94,7 @@
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>recipes/intel_ndns/spiking_fullsubnet/
 </pre></div>
 </div>
-<p>In this <code class="docutils literal notranslate"><span class="pre">&lt;model&gt;</span></code> directory, we have an entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code>, dataloaders, and some model directories. We use HugoingFace Accelerate to start an experiment. Don’t worry if you are not familiar with Accelerate. It will help you to run an parallel experiment easily. Please refer to <a class="reference external" href="https://huggingface.co/docs/accelerate/">HuggingFace Accelerate</a> for more details.</p>
+<p>In this <code class="docutils literal notranslate"><span class="pre">&lt;model&gt;</span></code> directory, we have an entry file <code class="docutils literal notranslate"><span class="pre">run.py</span></code>, dataloaders, and some model directories. We use HuggingFace Accelerate to start an experiment. Don’t worry if you are not familiar with Accelerate. It will help you to run an parallel experiment easily. Please refer to <a class="reference external" href="https://huggingface.co/docs/accelerate/">HuggingFace Accelerate</a> for more details.</p>
 <p>First, we need to configuration the GPU usage. Accelerate provides a CLI tool that unifies all launchers, so you only have to remember one command. To use it, run a quick configuration setup first on your machine and answer the questions:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>accelerate<span class="w"> </span>config
 </pre></div>

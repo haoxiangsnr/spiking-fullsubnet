@@ -8,7 +8,7 @@ To run an experiment of a model, we first go to a model directory. For example, 
 cd recipes/intel_ndns/spiking_fullsubnet/
 ```
 
-In this `<model>` directory, we have an entry file `run.py`, dataloaders, and some model directories. We use HugoingFace Accelerate to start an experiment. Don't worry if you are not familiar with Accelerate. It will help you to run an parallel experiment easily. Please refer to [HuggingFace Accelerate](https://huggingface.co/docs/accelerate/) for more details.
+In this `<model>` directory, we have an entry file `run.py`, dataloaders, and some model directories. We use HuggingFace Accelerate to start an experiment. Don't worry if you are not familiar with Accelerate. It will help you to run an parallel experiment easily. Please refer to [HuggingFace Accelerate](https://huggingface.co/docs/accelerate/) for more details.
 
 First, we need to configuration the GPU usage. Accelerate provides a CLI tool that unifies all launchers, so you only have to remember one command. To use it, run a quick configuration setup first on your machine and answer the questions:
 
