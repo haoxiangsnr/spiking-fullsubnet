@@ -1,7 +1,7 @@
 # ----------------- Build System -----------------
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 # ----------------- Metadata -----------------
 [project]
@@ -26,29 +26,43 @@ keywords = [
     "separation",
     "recognition",
 ]
+dependencies = [
+    "accelerate",
+    "einops",
+    "h5py",
+    "joblib",
+    "jupyterlab",
+    "librosa",
+    "matplotlib",
+    "numpy",
+    "openpyxl",
+    "pandas",
+    "pesq",
+    "pre-commit",
+    "pystoi",
+    "pyyaml",
+    "scipy",
+    "simple-parsing>=0.1.8",
+    "soundfile",
+    "tabulate",
+    "tensorboard",
+    "toml",
+    "torchinfo",
+    "tqdm",
+]
+
 [project.optional-dependencies]
+gpu = ["onnxruntime-gpu"]
 test = ["pytest", "pytest-cov"]
 docs = ["importlib_metadata", "sphinx-autoapi", "sphinx-rtd-theme", "myst-parser", "myst-nb"]
-build = ["flit", "python-semantic-release", "sphinx-autobuild"]
+build = ["sphinx-autobuild"]
+
 [project.urls]
 Source = "https://github.com/haoxiangsnr/audiozen"
 # [project.scripts]
 # todo audiozen = "audiozen.main:main" # call the function main() imported from audiozen
 
 # ----------------- Tools Configuration -----------------
-[tool.semantic_release]
-version_toml = "pyproject.toml:project.version" # version location
-branch = "main" # branch to make releases
-changelog_file = "CHANGELOG.md" # changelog file`
-build_command = "flit build" # build dists
-upload_to_release = true # auto-create GitHub release
-upload_to_repository = false # don't auto-upload to PyPI
-remove_dist = false # don't remove dists
-patch_without_tag = false # patch release by default
-commit_author = "haoxiangsnr <haoxiangsnr@gmail.com>"
-commit_subject = "Release {version}"
-commit_message = "" # commit message
-
 [tool.ruff]
 # Never enforce `E501` (line length violations).
 ignore = ["C901", "E501", "E741", "F402", "F823"]
