@@ -1,0 +1,52 @@
+trainer:
+  output_dir: exp/middle-model__partition-0-32-128-256__grouping-8-32-64__deep-filtering-5-3-1__synops-1e-8
+  do_train: True
+  resume_from_checkpoint: "no"
+  per_device_train_batch_size: 128
+  eval_batch_size: 8
+  dataloader_num_workers: 8
+  num_train_epochs: 200
+  max_grad_norm: 10
+  save_epoch_interval: 1
+  eval_epoch_interval: 1
+  early_stopping_patience: 100
+  save_total_limit: 100
+
+model:
+  n_fft: 512
+  hop_length: 128
+  win_length: 512
+  fdrc: 0.5
+  fb_input_size: 64
+  fb_hidden_size: 320
+  fb_num_layers: 2
+  fb_proj_size: 64
+  fb_output_activate_function: null
+  sb_hidden_size: 224
+  sb_num_layers: 2
+  freq_cutoffs: [0, 32, 128, 256]
+  df_orders: [5, 3, 1]
+  center_freq_sizes: [8, 32, 64]
+  neighbor_freq_sizes: [15, 15, 15]
+  use_pre_layer_norm_fb: True
+  use_pre_layer_norm_sb: True
+  bn: True
+  shared_weights: True
+  sequence_model: "GSN"
+  num_spks: 1
+
+train_dataset:
+  root: /data/xhao/datasets_fullband/training_set/
+  limit: -1
+  offset: 0
+
+eval_dataset:
+  root: /home/xhao/proj/spiking-fullsubnet-27-Jan-26/data/validation_set/
+  train: False
+  limit: -1
+  offset: 0
+# eval_dataset:
+#   root: /data/xhao/datasets_fullband/test_set_1/
+#   train: False
+#   limit: -1
+#   offset: 0
