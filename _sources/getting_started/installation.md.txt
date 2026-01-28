@@ -3,50 +3,95 @@
 ## Prerequisites
 
 Spiking-FullSubNet is built on top of PyTorch and provides standard audio signal processing and deep learning tools.
-To install the PyTorch binaries, we recommend [Anaconda](https://www.anaconda.com/products/individual) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) as a Python distribution.
+
+- **Python**: >= 3.10
+- **uv**: We recommend using [uv](https://docs.astral.sh/uv/) as the package manager for faster and more reliable dependency management.
 
 ## Installation
 
-1. First, create a Conda virtual environment with Python. In our project, `python=3.10` is tested.
+### Option 1: Using uv (Recommended)
+
+[uv](https://docs.astral.sh/uv/) is a fast Python package manager that handles virtual environments and dependencies efficiently.
+
+1. **Install uv** (if not already installed):
     ```shell
-    # Create a virtual environment named `spiking-fullsubnet`
-    conda create --name spiking-fullsubnet python=3.10
+    # On macOS/Linux
+    curl -LsSf https://astral.sh/uv/install.sh | sh
 
-    # Activate the environment
-    conda activate spiking-fullsubnet
-    ```
-    The following steps will assume you have activated the `spiking-fullsubnet` environment.
-
-2. Install Conda dependencies. Some dependencies of Spiking-FullSubNet, e.g., PyTorch and Tensorboard, are recommended to be installed using Conda instead of PyPI. First, we install a CUDA-capable PyTorch. Although `pytorch=2.1.1` has been tested, you may also [use other versions](https://pytorch.org/get-started/previous-versions/):
-    ```shell
-    # Install PyTorch
-    conda install pytorch torchvision torchaudio pytorch-cuda=11.8 -c pytorch -c nvidia
-
-    # Install other Conda dependencies
-    conda install tensorboard joblib matplotlib
-
-    # (Optional) If you have "mp3" format audio data in your dataset, install ffmpeg first.
-    conda install ffmpeg -c conda-forge
+    # Or using pip
+    pip install uv
     ```
 
-3. Install PyPI dependencies. Clone the repository and install PyPI dependencies via `pip -r requirements.txt`. Check `requirements.txt` for more details.
+2. **Clone the repository**:
     ```shell
     git clone https://github.com/haoxiangsnr/spiking-fullsubnet.git
-
     cd spiking-fullsubnet
-
-    pip install -r requirements.txt
     ```
 
-4. We integrated all the audio signal processing tools into a package named `audiozen`. We will install the `audiozen` package in editable mode. By installing in editable mode, we can call `audiozen` package in everywhere of code, e.g, in `recipes` and `tools` folders. In addition, we are able to modify the source code of `audiozen` package directly. Any changes to the original package would reflect directly in your conda environment.
+3. **Install PyTorch** (CUDA version):
     ```shell
-    pip install --editable . # or for short: pip install -e .
+    # Install PyTorch with CUDA support first
+    uv pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu121
     ```
 
-Ok, all installations have done. You may speed up the installation by the following tips.
+4. **Sync dependencies and install the project**:
+    ```shell
+    # Install all dependencies (creates .venv automatically)
+    uv sync
+
+    # Or with GPU support (includes onnxruntime-gpu)
+    uv sync --extra gpu
+
+    # Or with all optional dependencies (gpu, test, docs, build)
+    uv sync --all-extras
+    ```
+
+    This will:
+    - Create a virtual environment in `.venv`
+    - Install all dependencies from `uv.lock`
+    - Install `audiozen` in editable mode
+
+5. **Activate the environment** (optional, uv commands auto-detect):
+    ```shell
+    source .venv/bin/activate
+    ```
+
+### Option 2: Using Conda + pip
+
+If you prefer Conda, you can still use the traditional approach:
+
+1. **Create a Conda environment**:
+    ```shell
+    conda create --name spiking-fullsubnet python=3.10
+    conda activate spiking-fullsubnet
+    ```
+
+2. **Install PyTorch**:
+    ```shell
+    conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+    ```
+
+3. **Install the project**:
+    ```shell
+    git clone https://github.com/haoxiangsnr/spiking-fullsubnet.git
+    cd spiking-fullsubnet
+    pip install -e .
+    ```
+
+## Common uv Commands
+
+```shell
+uv sync                    # Sync dependencies from lockfile
+uv sync --extra gpu        # Include GPU dependencies
+uv sync --all-extras       # Include all optional dependencies
+uv add <package>           # Add a new dependency
+uv lock --upgrade          # Upgrade all dependencies
+uv run <command>           # Run a command in the virtual environment
+uv build                   # Build the package
+```
 
 ```{tip}
-- [Speed up your Conda installs with Mamba](https://pythonspeed.com/articles/faster-conda-install/)
-- Use the [THU Anaconda mirror site](https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/) to speed up the Conda installation.
-- Use the [THU PyPi mirror site](https://mirrors.tuna.tsinghua.edu.cn/help/pypi/) to speed up the PyPI installation.
+- uv is significantly faster (10~100x) than pip and handles dependency resolution more reliably.
+- The `uv.lock` file ensures reproducible installations across different machines.
+- Use `uv run python script.py` to run scripts without manually activating the environment.
 ```

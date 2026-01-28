@@ -91,56 +91,106 @@
 <h1>Prerequisites and Installation<a class="headerlink" href="#prerequisites-and-installation" title="Link to this heading"></a></h1>
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
-<p>Spiking-FullSubNet is built on top of PyTorch and provides standard audio signal processing and deep learning tools.
-To install the PyTorch binaries, we recommend <a class="reference external" href="https://www.anaconda.com/products/individual">Anaconda</a> or <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a> as a Python distribution.</p>
+<p>Spiking-FullSubNet is built on top of PyTorch and provides standard audio signal processing and deep learning tools.</p>
+<ul class="simple">
+<li><p><strong>Python</strong>: &gt;= 3.10</p></li>
+<li><p><strong>uv</strong>: We recommend using <a class="reference external" href="https://docs.astral.sh/uv/">uv</a> as the package manager for faster and more reliable dependency management.</p></li>
+</ul>
 </section>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<section id="option-1-using-uv-recommended">
+<h3>Option 1: Using uv (Recommended)<a class="headerlink" href="#option-1-using-uv-recommended" title="Link to this heading"></a></h3>
+<p><a class="reference external" href="https://docs.astral.sh/uv/">uv</a> is a fast Python package manager that handles virtual environments and dependencies efficiently.</p>
 <ol class="arabic">
-<li><p>First, create a Conda virtual environment with Python. In our project, <code class="docutils literal notranslate"><span class="pre">python=3.10</span></code> is tested.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a virtual environment named `spiking-fullsubnet`</span>
-conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>spiking-fullsubnet<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10
+<li><p><strong>Install uv</strong> (if not already installed):</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># On macOS/Linux</span>
+curl<span class="w"> </span>-LsSf<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
 
-<span class="c1"># Activate the environment</span>
-conda<span class="w"> </span>activate<span class="w"> </span>spiking-fullsubnet
-</pre></div>
-</div>
-<p>The following steps will assume you have activated the <code class="docutils literal notranslate"><span class="pre">spiking-fullsubnet</span></code> environment.</p>
-</li>
-<li><p>Install Conda dependencies. Some dependencies of Spiking-FullSubNet, e.g., PyTorch and Tensorboard, are recommended to be installed using Conda instead of PyPI. First, we install a CUDA-capable PyTorch. Although <code class="docutils literal notranslate"><span class="pre">pytorch=2.1.1</span></code> has been tested, you may also <a class="reference external" href="https://pytorch.org/get-started/previous-versions/">use other versions</a>:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install PyTorch</span>
-conda<span class="w"> </span>install<span class="w"> </span>pytorch<span class="w"> </span>torchvision<span class="w"> </span>torchaudio<span class="w"> </span>pytorch-cuda<span class="o">=</span><span class="m">11</span>.8<span class="w"> </span>-c<span class="w"> </span>pytorch<span class="w"> </span>-c<span class="w"> </span>nvidia
-
-<span class="c1"># Install other Conda dependencies</span>
-conda<span class="w"> </span>install<span class="w"> </span>tensorboard<span class="w"> </span>joblib<span class="w"> </span>matplotlib
-
-<span class="c1"># (Optional) If you have &quot;mp3&quot; format audio data in your dataset, install ffmpeg first.</span>
-conda<span class="w"> </span>install<span class="w"> </span>ffmpeg<span class="w"> </span>-c<span class="w"> </span>conda-forge
+<span class="c1"># Or using pip</span>
+pip<span class="w"> </span>install<span class="w"> </span>uv
 </pre></div>
 </div>
 </li>
-<li><p>Install PyPI dependencies. Clone the repository and install PyPI dependencies via <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code>. Check <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> for more details.</p>
+<li><p><strong>Clone the repository</strong>:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/haoxiangsnr/spiking-fullsubnet.git
-
 <span class="nb">cd</span><span class="w"> </span>spiking-fullsubnet
-
-pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
 </pre></div>
 </div>
 </li>
-<li><p>We integrated all the audio signal processing tools into a package named <code class="docutils literal notranslate"><span class="pre">audiozen</span></code>. We will install the <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in editable mode. By installing in editable mode, we can call <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package in everywhere of code, e.g, in <code class="docutils literal notranslate"><span class="pre">recipes</span></code> and <code class="docutils literal notranslate"><span class="pre">tools</span></code> folders. In addition, we are able to modify the source code of <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> package directly. Any changes to the original package would reflect directly in your conda environment.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--editable<span class="w"> </span>.<span class="w"> </span><span class="c1"># or for short: pip install -e .</span>
+<li><p><strong>Install PyTorch</strong> (CUDA version):</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install PyTorch with CUDA support first</span>
+uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">torch</span><span class="o">==</span><span class="m">2</span>.5.1<span class="w"> </span><span class="nv">torchvision</span><span class="o">==</span><span class="m">0</span>.20.1<span class="w"> </span><span class="nv">torchaudio</span><span class="o">==</span><span class="m">2</span>.5.1<span class="w"> </span>--index-url<span class="w"> </span>https://download.pytorch.org/whl/cu121
+</pre></div>
+</div>
+</li>
+<li><p><strong>Sync dependencies and install the project</strong>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install all dependencies (creates .venv automatically)</span>
+uv<span class="w"> </span>sync
+
+<span class="c1"># Or with GPU support (includes onnxruntime-gpu)</span>
+uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>gpu
+
+<span class="c1"># Or with all optional dependencies (gpu, test, docs, build)</span>
+uv<span class="w"> </span>sync<span class="w"> </span>--all-extras
+</pre></div>
+</div>
+<p>This will:</p>
+<ul class="simple">
+<li><p>Create a virtual environment in <code class="docutils literal notranslate"><span class="pre">.venv</span></code></p></li>
+<li><p>Install all dependencies from <code class="docutils literal notranslate"><span class="pre">uv.lock</span></code></p></li>
+<li><p>Install <code class="docutils literal notranslate"><span class="pre">audiozen</span></code> in editable mode</p></li>
+</ul>
+</li>
+<li><p><strong>Activate the environment</strong> (optional, uv commands auto-detect):</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>.venv/bin/activate
 </pre></div>
 </div>
 </li>
 </ol>
-<p>Ok, all installations have done. You may speed up the installation by the following tips.</p>
+</section>
+<section id="option-2-using-conda-pip">
+<h3>Option 2: Using Conda + pip<a class="headerlink" href="#option-2-using-conda-pip" title="Link to this heading"></a></h3>
+<p>If you prefer Conda, you can still use the traditional approach:</p>
+<ol class="arabic">
+<li><p><strong>Create a Conda environment</strong>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>spiking-fullsubnet<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10
+conda<span class="w"> </span>activate<span class="w"> </span>spiking-fullsubnet
+</pre></div>
+</div>
+</li>
+<li><p><strong>Install PyTorch</strong>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>pytorch<span class="w"> </span>torchvision<span class="w"> </span>torchaudio<span class="w"> </span>pytorch-cuda<span class="o">=</span><span class="m">12</span>.1<span class="w"> </span>-c<span class="w"> </span>pytorch<span class="w"> </span>-c<span class="w"> </span>nvidia
+</pre></div>
+</div>
+</li>
+<li><p><strong>Install the project</strong>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/haoxiangsnr/spiking-fullsubnet.git
+<span class="nb">cd</span><span class="w"> </span>spiking-fullsubnet
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+</section>
+<section id="common-uv-commands">
+<h2>Common uv Commands<a class="headerlink" href="#common-uv-commands" title="Link to this heading"></a></h2>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>sync<span class="w">                    </span><span class="c1"># Sync dependencies from lockfile</span>
+uv<span class="w"> </span>sync<span class="w"> </span>--extra<span class="w"> </span>gpu<span class="w">        </span><span class="c1"># Include GPU dependencies</span>
+uv<span class="w"> </span>sync<span class="w"> </span>--all-extras<span class="w">       </span><span class="c1"># Include all optional dependencies</span>
+uv<span class="w"> </span>add<span class="w"> </span>&lt;package&gt;<span class="w">           </span><span class="c1"># Add a new dependency</span>
+uv<span class="w"> </span>lock<span class="w"> </span>--upgrade<span class="w">          </span><span class="c1"># Upgrade all dependencies</span>
+uv<span class="w"> </span>run<span class="w"> </span>&lt;command&gt;<span class="w">           </span><span class="c1"># Run a command in the virtual environment</span>
+uv<span class="w"> </span>build<span class="w">                   </span><span class="c1"># Build the package</span>
+</pre></div>
+</div>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://pythonspeed.com/articles/faster-conda-install/">Speed up your Conda installs with Mamba</a></p></li>
-<li><p>Use the <a class="reference external" href="https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/">THU Anaconda mirror site</a> to speed up the Conda installation.</p></li>
-<li><p>Use the <a class="reference external" href="https://mirrors.tuna.tsinghua.edu.cn/help/pypi/">THU PyPi mirror site</a> to speed up the PyPI installation.</p></li>
+<li><p>uv is significantly faster (10~100x) than pip and handles dependency resolution more reliably.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">uv.lock</span></code> file ensures reproducible installations across different machines.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">run</span> <span class="pre">python</span> <span class="pre">script.py</span></code> to run scripts without manually activating the environment.</p></li>
 </ul>
 </div>
 </section>
