@@ -1,12 +1,15 @@
+from dataclasses import dataclass, field
 from functools import partial
+from typing import List, Optional
 
 import torch
 import torch.nn as nn
+from efficient_spiking_neuron import MemoryState, efficient_spiking_neuron
 from einops import rearrange
+from simple_parsing import Serializable
 from torch.nn import functional as F
 
 from audiozen.acoustics.audio_feature import istft, stft
-from recipes.intel_ndns.spiking_fullsubnet.efficient_spiking_neuron import MemoryState, efficient_spiking_neuron
 
 
 class SequenceModel(nn.Module):
@@ -306,68 +309,74 @@ def deepfiltering(complex_spec, coef, order: int):
     return out
 
 
+@dataclass
+class ModelArgs(Serializable):
+    """Options for the model."""
+
+    n_fft: int = 512
+    hop_length: int = 128
+    win_length: int = 512
+    fdrc: float = 0.5
+    fb_input_size: int = 64
+    fb_hidden_size: int = 320
+    fb_num_layers: int = 2
+    fb_proj_size: int = 64
+    fb_output_activate_function: Optional[str] = None
+    sb_hidden_size: int = 224
+    sb_num_layers: int = 2
+    freq_cutoffs: List[int] = field(default_factory=lambda: [0, 32, 128, 256])
+    df_orders: List[int] = field(default_factory=lambda: [5, 3, 1])
+    center_freq_sizes: List[int] = field(default_factory=lambda: [2, 32, 64])
+    neighbor_freq_sizes: List[int] = field(default_factory=lambda: [15, 15, 15])
+    use_pre_layer_norm_fb: bool = True
+    use_pre_layer_norm_sb: bool = True
+    bn: bool = False
+    shared_weights: bool = False
+    sequence_model: str = "GSN"
+    num_spks: int = 1
+
+
 class SpikingFullSubNet(nn.Module):
-    def __init__(
-        self,
-        n_fft,
-        hop_length,
-        win_length,
-        fdrc,
-        fb_input_size,
-        fb_hidden_size,
-        fb_num_layers,
-        fb_proj_size,
-        fb_output_activate_function,
-        sb_hidden_size,
-        sb_num_layers,
-        freq_cutoffs,
-        df_orders,
-        center_freq_sizes,
-        neighbor_freq_sizes,
-        use_pre_layer_norm_fb=True,
-        use_pre_layer_norm_sb=True,
-        bn=False,
-        shared_weights=False,
-        sequence_model="GSN",
-    ):
+    def __init__(self, args: ModelArgs):
         super().__init__()
+        self.args = args
 
         self.fb_model = SequenceModel(
-            input_size=fb_input_size,
-            hidden_size=fb_hidden_size,
-            num_layers=fb_num_layers,
-            shared_weights=shared_weights,
-            sequence_model=sequence_model,
-            proj_size=fb_proj_size,
-            output_activate_function=fb_output_activate_function,
-            bn=bn,
-            use_pre_layer_norm=use_pre_layer_norm_fb,
+            input_size=args.fb_input_size,
+            hidden_size=args.fb_hidden_size,
+            num_layers=args.fb_num_layers,
+            shared_weights=args.shared_weights,
+            sequence_model=args.sequence_model,
+            proj_size=args.fb_proj_size,
+            output_activate_function=args.fb_output_activate_function,
+            bn=args.bn,
+            use_pre_layer_norm=args.use_pre_layer_norm_fb,
         )
 
         self.sb_model = SubbandModel(
-            freq_cutoffs=freq_cutoffs,
-            center_freq_sizes=center_freq_sizes,
-            neighbor_freq_sizes=neighbor_freq_sizes,
-            df_orders=df_orders,
-            hidden_size=sb_hidden_size,
-            num_layers=sb_num_layers,
-            shared_weights=shared_weights,
-            sequence_model=sequence_model,
-            bn=bn,
-            use_pre_layer_norm=use_pre_layer_norm_sb,
+            freq_cutoffs=args.freq_cutoffs,
+            center_freq_sizes=args.center_freq_sizes,
+            neighbor_freq_sizes=args.neighbor_freq_sizes,
+            df_orders=args.df_orders,
+            hidden_size=args.sb_hidden_size,
+            num_layers=args.sb_num_layers,
+            shared_weights=args.shared_weights,
+            sequence_model=args.sequence_model,
+            bn=args.bn,
+            use_pre_layer_norm=args.use_pre_layer_norm_sb,
         )
 
         self.subband_model = None
 
-        self.stft = partial(stft, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
-        self.istft = partial(istft, n_fft=n_fft, hop_length=hop_length, win_length=win_length)
+        self.stft = partial(stft, n_fft=args.n_fft, hop_length=args.hop_length, win_length=args.win_length)
+        self.istft = partial(istft, n_fft=args.n_fft, hop_length=args.hop_length, win_length=args.win_length)
 
-        self.fb_input_size = fb_input_size
-        self.n_fft = n_fft
-        self.hop_length = hop_length
-        self.win_length = win_length
-        self.fdrc = fdrc
-        self.df_orders = df_orders
+        self.fb_input_size = args.fb_input_size
+        self.n_fft = args.n_fft
+        self.hop_length = args.hop_length
+        self.win_length = args.win_length
+        self.fdrc = args.fdrc
+        self.df_orders = args.df_orders
 
     def forward(self, input):
         """Forward function.
@@ -425,29 +434,36 @@ class SpikingFullSubNet(nn.Module):
 
 
 if __name__ == "__main__":
+    from torchinfo import summary
+
     model = SpikingFullSubNet(
-        n_fft=512,
-        hop_length=128,
-        win_length=512,
-        fdrc=0.5,
-        fb_input_size=64,
-        fb_hidden_size=256,
-        fb_num_layers=2,
-        fb_proj_size=64,
-        fb_output_activate_function=None,
-        sb_hidden_size=128,
-        sb_num_layers=2,
-        freq_cutoffs=[0, 20, 80, 256],
-        df_orders=[2, 2, 2],
-        center_freq_sizes=[2, 10, 22],
-        neighbor_freq_sizes=[8, 16, 32],
-        use_pre_layer_norm_fb=True,
-        use_pre_layer_norm_sb=True,
-        bn=False,
-        shared_weights=False,
-        sequence_model="GSN",
+        args=ModelArgs(
+            n_fft=512,
+            hop_length=128,
+            win_length=512,
+            fdrc=0.5,
+            fb_input_size=64,
+            fb_hidden_size=320,
+            fb_num_layers=2,
+            fb_proj_size=64,
+            fb_output_activate_function=None,
+            sb_hidden_size=224,
+            sb_num_layers=2,
+            freq_cutoffs=[0, 32, 128, 256],
+            df_orders=[3, 1, 1],
+            center_freq_sizes=[8, 32, 64],
+            neighbor_freq_sizes=[15, 15, 15],
+            use_pre_layer_norm_fb=True,
+            use_pre_layer_norm_sb=True,
+            bn=True,
+            shared_weights=True,
+            sequence_model="GSN",
+            num_spks=1,
+        )
     )
 
-    input = torch.rand(2, 16000)
-    output = model(input)
-    print(output[0].shape)
+    input = torch.rand(5, 16000)
+    # enh_y, enh_mag, fb_all_layer_outputs, sb_all_layer_outputs = model(input)
+    # print(f"{len(fb_all_layer_outputs)=}")
+
+    summary(model, input_size=(5, 16000))

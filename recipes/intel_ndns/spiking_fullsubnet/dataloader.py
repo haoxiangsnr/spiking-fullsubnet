@@ -1,6 +1,8 @@
 import glob
+import logging
 import os
 import re
+from dataclasses import dataclass
 
 import numpy as np
 import soundfile as sf
@@ -9,33 +11,49 @@ from torch.utils.data import Dataset
 from audiozen.acoustics.io import subsample
 
 
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class DatasetArgs:
+    """Arguments for the dataset."""
+
+    root: str = "./"
+    limit: int = -1
+    offset: int = 0
+    sublen: int = 6
+    train: bool = True
+
+
 class DNSAudio(Dataset):
-    def __init__(self, root="./", limit=None, offset=0, sublen=6, train=True) -> None:
+    def __init__(self, args: DatasetArgs):
         """Audio dataset loader for DNS.
 
         Args:
             root: Path of the dataset location, by default './'.
         """
         super().__init__()
-        self.root = root
-        print(f"Loading dataset from {root}...")
-        self.noisy_files = glob.glob(root + "noisy/**.wav")
+        self.args = args
 
-        if offset > 0:
-            self.noisy_files = self.noisy_files[offset:]
+        self.root = args.root
+        logger.info(f"Loading dataset from {args.root}...")
+        self.noisy_files = sorted(glob.glob(args.root + "noisy/**.wav"))
 
-        if limit:
-            self.noisy_files = self.noisy_files[:limit]
+        if args.offset > 0:
+            self.noisy_files = self.noisy_files[args.offset :]
 
-        print(f"Found {len(self.noisy_files)} files.")
+        if args.limit > 0:
+            self.noisy_files = self.noisy_files[: args.limit]
+
+        logger.info(f"Found {len(self.noisy_files)} files.")
 
         self.file_id_from_name = re.compile(r"fileid_(\d+)")
         self.snr_from_name = re.compile(r"snr(-?\d+)")
         self.target_level_from_name = re.compile(r"tl(-?\d+)")
         self.source_info_from_name = re.compile("^(.*?)_snr")
 
-        self.train = train
-        self.sublen = sublen
+        self.train = args.train
+        self.sublen = args.sublen
         self.length = len(self.noisy_files)
 
     def __len__(self) -> int:

@@ -1,16 +1,15 @@
 # Spiking-FullSubNet
 
-Spiking-FullSubNet is the winner solution of Intel N-DNS Challenge Track 1 (Algorithmic). This repository serves as the official home of the Spiking-FullSubNet implementation. Here, you will find:
+Spiking-FullSubNet is the 1st Place Winner solution of the Intel N-DNS Challenge (Track 1: Algorithmic). This repository serves as the official implementation for our paper: "Toward Ultralow-Power Neuromorphic Speech Enhancement With Spiking-FullSubNet" (IEEE TNNLS, 2025).
 
-- A PyTorch-based implementation of the Spiking-FullSubNet model described in our paper "Toward Ultralow-Power Neuromorphic Speech Enhancement With Spiking-FullSubNet".
-- Scripts for training the model and evaluating its performance.
-- The pre-trained models in the `model_zoo` directory, ready to be further fine-tuned on the other datasets.
-- The frozen version of the solution used in the Intel N-DNS Challenge in the `38fe020` commit.
+- **SOTA Performance:** Outperforms standard baselines on the Intel N-DNS benchmark.
+- **Ultra-low Power:** Designed with Spiking Neural Networks (SNN) for neuromorphic hardware efficiency.
+- **Reproducible:** We provide pre-trained models and a carefully selected validation set for quick verification.
 
 ## Updates
 
-- 2026-01-27: The `main` branch shows the implementation of the Spiking-FullSubNet model as described in our published paper "Toward Ultralow-Power Neuromorphic Speech Enhancement With Spiking-FullSubNet", which includes several improvements and optimizations over the challenge version. We recommend using this branch for the citation and further research.
-- 2024-02-26: The **frozen version**, which serves as a backup for the submitted solution used in the Intel N-DNS Challenge. This solution has been checked and verified by Intel during the challenge. If you need to check the experimental results from that time, please refer to this specific commit: [38fe020](https://github.com/haoxiangsnr/spiking-fullsubnet/tree/38fe020cdb803d2fdc76a0df4b06311879c8e370). There you will find everything you need. After switching to this commit, you can place the checkpoints from the `model_zoo` into the `exp` directory and use `-M test` for inference or `-M train` to retrain the model. After challenge, we made some improvements and optimizations to the solution and published a paper (IEEE TNNLS) based on these improvements. Please check the `main` branch for the published paper version.
+- [2026.01] **Paper Accepted:** Our paper has been accepted by IEEE TNNLS! The main branch now hosts the improved, research-friendly version of the model (recommended for citation & research). The current codebase has been updated to reflect the changes in the published paper.
+- [2024-02] **Frozen Version:** This serves as a backup of the submitted solution used in the Intel N-DNS Challenge. This solution was checked and verified by Intel during the challenge. If you need to check the experimental results from that time, please refer to this specific commit: [38fe020](https://github.com/haoxiangsnr/spiking-fullsubnet/tree/38fe020cdb803d2fdc76a0df4b06311879c8e370). There you will find everything you need. After switching to this commit, you can place the checkpoints from the `model_zoo` into the `exp` directory and use `-M test` for inference or `-M train` to retrain the model. After the challenge, we made improvements and optimizations to the solution and published a paper (IEEE TNNLS) based on these improvements. Please check the `main` branch for the published paper version.
 
 ## Quick Start
 
@@ -18,7 +17,7 @@ You can either clone the repository, setup an environment and start with the scr
 
 ## Environment Setup
 
-We really like [uv](https://docs.astral.sh/uv/) and recommend using it as your package manager. But feel free to use whichever you prefer.
+We really like [uv](https://docs.astral.sh/uv/) and recommend using it as your package manager, but feel free to use whichever you prefer.
 
 > [!TIP]
 > uv is significantly faster (10~100x) than pip and handles dependency resolution more reliably.
@@ -60,19 +59,26 @@ conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvi
 pip install -e .
 ```
 
-## Inference on Validation Set
+## Dataset Preparation
 
-Since the official test set requires a long time (10 hours+) for inference on a single GPU,
+Since the official test set requires a long time (10+ hours) for inference on a single GPU,
 we provide a mini-validation set to quickly verify. The validation set contains 341 noisy-clean pairs generated in the same way as the official test set. In our experience, performance gains on this set are highly positively correlated with the official test set.
 
-```bash
-# Download validation set from Github Releases
-cd <your_project_root>
-mkdir data && cd data
+### 1. Mini-Validation Set (Recommended)
 
-# Download and extract validation set
+Running the full official test set requires 8 GPUs and 10+ hours. **For quick verification**, we provide a **Mini-Validation Set (341 samples)**.
+
+> **Note:** In our experiments, performance trends on this mini-set are highly positively correlated with the official test set.
+
+```bash
+cd <your_project_root>
+mkdir -p data
+cd data
+
+# Download validation set (hosted on GitHub Releases)
 wget https://github.com/haoxiangsnr/spiking-fullsubnet/releases/download/data/validation_set.tar.gz
 tar -xzvf validation_set.tar.gz
+
 
 # folder structure:
 .
@@ -91,9 +97,21 @@ tar -xzvf validation_set.tar.gz
     │       ├── book_09739_chp_0003_..._fileid_275.wav
     │       └── German_Wikiped_..._fileid_246.wav
     └── validation_set.tar.gz
+
+cd ..
 ```
 
-To run inference on the validation set using the pre-trained model, use the following command:
+### 2. Official Test Set (Optional)
+
+If you require the full Intel N-DNS test set for comparison, we have hosted a backup copy here:  https://github.com/haoxiangsnr/IntelNeuromorphicDNSChallenge/releases.
+
+The official test set is large (about 37 GB, 12000 files). Please ensure you have sufficient disk space and a stable internet connection before downloading.
+
+The method for downloading and extracting the official test set is similar to the mini-validation set.
+
+## Inference
+
+To run inference on the validation set using the pre-trained model, use the following commands:
 
 ```bash
 cd <your_project_root>
@@ -118,15 +136,21 @@ accelerate launch --multi_gpu \
     --do_eval true 
 ```
 
-Depending on your software environment, you may have the results like below:
+On the Mini-Validation Set, you should obtain results close to:
 
 |        set |  si_sdr |    P808 |    OVRL |     SIG |     BAK |
 | ---------: | ------: | ------: | ------: | ------: | ------: |
 | validation | 15.0127 | 3.61135 | 3.01281 | 3.33227 | 3.93021 |
 
+On the Official Test Set, you should obtain results close to:
+
+|  set |  si_sdr |    P808 |    OVRL |     SIG |     BAK |
+| ---: | ------: | ------: | ------: | ------: | ------: |
+| test | 15.2008 | 3.62772 | 3.03368 | 3.35132 | 3.94128 |
+
 ## Citation
 
-If you find this repository useful for your research, please consider citing the following papers:
+If you find this repository useful, please consider citing our work:
 
 ```bibtex
 @ARTICLE{hao2025toward,
