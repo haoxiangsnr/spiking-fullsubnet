@@ -1,6 +1,6 @@
 # Spiking-FullSubNet
 
-Spiking-FullSubNet is the 1st Place Winner solution of the Intel N-DNS Challenge (Track 1: Algorithmic). This repository serves as the official implementation for our paper: "Toward Ultralow-Power Neuromorphic Speech Enhancement With Spiking-FullSubNet" (IEEE TNNLS, 2025).
+Spiking-FullSubNet is the 1st Place Winner solution of the Intel N-DNS Challenge (Track 1: Algorithmic). This repository serves as the official implementation of our paper: "Toward Ultralow-Power Neuromorphic Speech Enhancement With Spiking-FullSubNet" (IEEE TNNLS, 2025).
 
 - **SOTA Performance:** Outperforms standard baselines on the Intel N-DNS benchmark.
 - **Ultra-low Power:** Designed with Spiking Neural Networks (SNN) for neuromorphic hardware efficiency.
@@ -8,12 +8,12 @@ Spiking-FullSubNet is the 1st Place Winner solution of the Intel N-DNS Challenge
 
 ## Updates
 
-- [2026.01] **Paper Accepted:** Our paper has been accepted by IEEE TNNLS! The main branch now hosts the improved, research-friendly version of the model (recommended for citation & research). The current codebase has been updated to reflect the changes in the published paper.
+- [2026.01] **Paper Accepted:** Our paper has been accepted by IEEE TNNLS. The main branch now hosts the improved, research-friendly version of the model (recommended for citation & research). The current codebase has been updated to reflect the changes in the published paper.
 - [2024-02] **Frozen Version:** This serves as a backup of the submitted solution used in the Intel N-DNS Challenge. This solution was checked and verified by Intel during the challenge. If you need to check the experimental results from that time, please refer to this specific commit: [38fe020](https://github.com/haoxiangsnr/spiking-fullsubnet/tree/38fe020cdb803d2fdc76a0df4b06311879c8e370). There you will find everything you need. After switching to this commit, you can place the checkpoints from the `model_zoo` into the `exp` directory and use `-M test` for inference or `-M train` to retrain the model. After the challenge, we made improvements and optimizations to the solution and published a paper (IEEE TNNLS) based on these improvements. Please check the `main` branch for the published paper version.
 
 ## Quick Start
 
-You can either clone the repository, setup an environment and start with the scripts, or directly open in Colab (under construction).
+You can either clone the repository, setup an environment and start with the scripts, or directly open in Colab (under construction...).
 
 ## Environment Setup
 
@@ -66,7 +66,7 @@ we provide a mini-validation set to quickly verify. The validation set contains 
 
 ### 1. Mini-Validation Set (Recommended)
 
-Running the full official test set requires 8 GPUs and 10+ hours. **For quick verification**, we provide a **Mini-Validation Set (341 samples)**.
+Running the full official test set typically requires 8 GPUs and over 10 hours. **For quick verification**, we provide a **Mini-Validation Set (341 samples)**.
 
 > **Note:** In our experiments, performance trends on this mini-set are highly positively correlated with the official test set.
 
@@ -107,7 +107,7 @@ If you require the full Intel N-DNS test set for comparison, we have hosted a ba
 
 The official test set is large (about 37 GB, 12000 files). Please ensure you have sufficient disk space and a stable internet connection before downloading.
 
-The method for downloading and extracting the official test set is similar to the mini-validation set.
+The method for downloading and extracting the official test set is similar to the mini Validation Set.
 
 ## Inference
 
@@ -136,7 +136,7 @@ accelerate launch --multi_gpu \
     --do_eval true 
 ```
 
-On the Mini-Validation Set, you should obtain results close to:
+On the Mini Validation Set, you should obtain results close to:
 
 |        set |  si_sdr |    P808 |    OVRL |     SIG |     BAK |
 | ---------: | ------: | ------: | ------: | ------: | ------: |
@@ -147,6 +147,101 @@ On the Official Test Set, you should obtain results close to:
 |  set |  si_sdr |    P808 |    OVRL |     SIG |     BAK |
 | ---: | ------: | ------: | ------: | ------: | ------: |
 | test | 15.2008 | 3.62772 | 3.03368 | 3.35132 | 3.94128 |
+
+
+## Project Structure
+
+You don't need to understand project structure to run experiments. However, if you want to modify the code or add new models, this section may help you.
+
+<details>
+
+<summary>Click to expand</summary>
+
+Let's take a look at the overall structure of the project. You may familiar with this project structure (`recipes/<dataset>/<model>`) if you have used [ESPNet](https://github.com/espnet/espnet) and [SpeechBrain](https://github.com/speechbrain/speechbrain) before.
+This project is inspired by them, but it is more simpler. This project includes a core package (`audiozen/`) and a series of training recipes (`recipes/`).The core package is named `audiozen`, which provides common audio signal processing tools and deep learning trainers. As we have installed `audiozen` in editable mode, we can call `audiozen` package everywhere in the project. In addition, we can modify the source code of `audiozen` package directly. Any changes to the original package would reflect directly in your environment. For example, we can call `audiozen` package in `recipes` folder to train models on specific datasets and call `audiozen` package in `tools` folder to preprocess data. The recipes in the `recipes` folder are used to research the audio/speech signal processing. The recipe concept was introduced by [Kaldi](https://kaldi-asr.org/doc/about.html) first, providing a convenient and reproducible way to organize and save the deep learning training pipelines.
+
+
+The directory structure is as follows:
+
+```shell
+├── audiozen/
+│   ├── acoustics/
+│   ├── dataset/
+│   ├── model/
+│   │   ├── module/
+│   └── trainer/
+├── docs/
+├── notebooks/
+├── recipes/
+│   └── intel_ndns/
+│       ├── sdnn_delays/
+│       │   ├── baseline.toml
+│       │   ├── model.py
+│       │   └── trainer.py
+│       ├── dataloader.py
+│       ├── loss.py
+│       └── run.py
+└── tools/
+```
+
+
+- `audiozen/`: The core of the project. After installing `audiozen` in the editable mode, we can call `audiozen` package everywhere in the project.
+    - `acoustics/`: Contain the code for audio signal processing.
+    - `dataset/`: Contain the data loading and processing code.
+    - `model/`: Contain the code for model definition and training.
+    - `trainer/`: Contain the code for training and evaluation.
+    - ...
+- `docs/`: Contains the project's documentation. We use [Sphinx Documentation Generator](https://www.sphinx-doc.org/en/master/) to build the documentation.
+- `recipes/`: Contains the recipes for specific experiments. It follows a `<dataset_name>/<model_name>` structure.
+- `tools/`: Contains the code for additional tools, such as data preprocessing, model conversion, etc.
+
+In the `recipes` folder, we name the subdirectory after the dataset. create a subdirectory for the dataset named after the model.
+For example, `recipes/intel_ndns/` saves the models trained on the Intel Neuromorphic DNS Challenge dataset. It contains commonly-used data loading classes, training, and inference scripts.
+
+- `run.py`: The entry of the entire project, which can be used to train and evaluate all models in the `intel_ndns` directory.
+- `dataloader.py`: The data loading and processing code for the Intel Neuromorphic DNS Challenge dataset.
+- `loss.py`: The loss function commonly used in the Intel Neuromorphic DNS Challenge dataset.
+
+</details>
+
+## Logging and Visualization
+
+You don't need to understand logging and visualization to run experiments. However, if you want to monitor the training process, this section may help you.
+
+<details>
+<summary>Click to expand</summary>
+
+After the training process has been completed, the log information will be stored in the `save_dir` directory. Assuming that:
+
+
+- The filename of the training configuration file is: `baseline.toml`
+- The value of the `save_dir` parameter in the `baseline.toml` is `sdnn_delays/exp`
+
+Then, the log information will be stored in the `sdnn_delays/exp/baseline` directory, which contains the following information:
+
+```shell
+.
+├── baseline.log
+├── checkpoints
+├── config__2023_01_13--10_27_42.toml
+├── enhanced
+└── tb_log
+    └── events.out.tfevents.1673576862.VM-97-67-ubuntu.3747605.0
+```
+
+- `baseline.log`: the log information.
+- `checkpoints/`: model checkpoints.
+- `config__2023_04_13--10_27_42.toml`: a backup of the training configuration file.
+- `enhanced`: the enhanced audio files when running in test mode
+- `tb_log/`: `tensorBoard` log information, we can visualize it through TensorBoard
+
+Currently, we only support TensorBoard for visualization. Assuming that the value of the `save_dir` parameter in the `basline.toml` is `sdnn_delays/exp`, then we can use the following command to visualize the log information:
+
+```shell
+tensorboard --logdir sdnn_delays/exp --bind_all
+```
+</details>
+
 
 ## Citation
 

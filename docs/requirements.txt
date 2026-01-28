@@ -1,4 +1,0 @@
-myst-nb
-sphinx
-sphinx-rtd-theme
-sphinxcontrib-napoleon
